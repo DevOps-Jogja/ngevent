@@ -1,0 +1,560 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Navbar from '@/components/Navbar';
+import { supabase } from '@/lib/supabase';
+import { Database } from '@/lib/database.types';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
+import toast from 'react-hot-toast';
+
+type Profile = Database['public']['Tables']['profiles']['Row'];
+type Event = Database['public']['Tables']['events']['Row'];
+type Registration = Database['public']['Tables']['registrations']['Row'];
+
+export default function DashboardPage() {
+    const router = useRouter();
+    const [user, setUser] = useState<any>(null);
+    const [profile, setProfile] = useState<Profile | null>(null);
+    const [myEvents, setMyEvents] = useState<Event[]>([]);
+    const [myRegistrations, setMyRegistrations] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [authChecked, setAuthChecked] = useState(false);
+
+    const checkAuth = async () => {
+        try {
+            const { data: { user }, error } = await supabase.auth.getUser();
+
+            if (error || !user) {
+                toast.error('Silakan login terlebih dahulu untuk mengakses dashboard');
+                router.push('/auth/login');
+                return;
+            }
+
+            setUser(user);
+            await loadProfile(user.id);
+            setAuthChecked(true);
+        } catch (error) {
+            toast.error('Terjadi kesalahan saat verifikasi login');
+            router.push('/auth/login');
+        }
+    };
+
+    useEffect(() => {
+        checkAuth();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const loadProfile = async (userId: string) => {
+        try {
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
+
+            setProfile(profileData);
+
+            if (profileData?.role === 'organizer') {
+                loadMyEvents(userId);
+            } else {
+                loadMyRegistrations(userId);
+            }
+        } catch (error) {
+            console.error('Error loading profile:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadMyEvents = async (userId: string) => {
+        const { data } = await supabase
+            .from('events')
+            .select('*')
+            .eq('organizer_id', userId)
+            .order('created_at', { ascending: false });
+
+        setMyEvents(data || []);
+    };
+
+    const loadMyRegistrations = async (userId: string) => {
+        const { data } = await supabase
+            .from('registrations')
+            .select(`
+        *,
+        events (*)
+      `)
+            .eq('user_id', userId)
+            .order('registered_at', { ascending: false });
+
+        setMyRegistrations(data || []);
+    };
+
+    const handleSignOut = async () => {
+        await supabase.auth.signOut();
+        router.push('/');
+    };
+
+    const updateRole = async (newRole: 'participant' | 'organizer') => {
+        if (!user) return;
+
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ role: newRole })
+                .eq('id', user.id);
+
+            if (error) throw error;
+
+            toast.success('Role berhasil diupdate!');
+            await loadProfile(user.id);
+        } catch (error: any) {
+            toast.error(error.message);
+        }
+    };
+
+    if (loading || !authChecked) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-primary">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600 dark:border-primary-400"></div>
+            </div>
+        );
+    }
+
+    if (!user) {
+        return null;
+    }
+
+    return (
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-primary">
+            <Navbar />
+
+            <div className="container mx-auto px-4 py-12 max-w-7xl">
+                <div className="max-w-6xl mx-auto">
+                    {/* Profile Section */}
+                    <div className="bg-white dark:bg-dark-card rounded-lg shadow-md dark:shadow-xl p-6 mb-8 border border-transparent dark:border-gray-700">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                                    Welcome, {profile?.full_name || user?.email}!
+                                </h1>
+                                <p className="text-gray-600 dark:text-gray-400">
+                                    Role: <span className="font-semibold capitalize">{profile?.role}</span>
+                                </p>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => updateRole('participant')}
+                                    className={`px-4 py-2 rounded-lg ${profile?.role === 'participant'
+                                        ? 'bg-primary-600 text-white'
+                                        : 'bg-gray-200 dark:bg-dark-secondary text-gray-700 dark:text-gray-300'
+                                        }`}
+                                >
+                                    Participant
+                                </button>
+                                <button
+                                    onClick={() => updateRole('organizer')}
+                                    className={`px-4 py-2 rounded-lg ${profile?.role === 'organizer'
+                                        ? 'bg-primary-600 text-white'
+                                        : 'bg-gray-200 dark:bg-dark-secondary text-gray-700 dark:text-gray-300'
+                                        }`}
+                                >
+                                    Organizer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Organizer Dashboard */}
+                    {profile?.role === 'organizer' && (
+                        <div>
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">My Events</h2>
+                                <Link
+                                    href="/dashboard/events/create"
+                                    className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700"
+                                >
+                                    + Create Event
+                                </Link>
+                            </div>
+
+                            {myEvents.length === 0 ? (
+                                <div className="bg-white dark:bg-dark-card rounded-lg shadow-md dark:shadow-xl p-12 text-center border border-transparent dark:border-gray-700">
+                                    <svg
+                                        className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600 mb-4"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                        />
+                                    </svg>
+                                    <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
+                                        Belum ada event
+                                    </h3>
+                                    <p className="text-gray-500 dark:text-gray-400 mb-6">
+                                        Mulai buat event pertama Anda sekarang!
+                                    </p>
+                                    <Link
+                                        href="/dashboard/events/create"
+                                        className="inline-block bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700"
+                                    >
+                                        Create Event
+                                    </Link>
+                                </div>
+                            ) : (
+                                <div className="grid gap-6">
+                                    {myEvents.map((event) => (
+                                        <div
+                                            key={event.id}
+                                            className="bg-white dark:bg-dark-card rounded-xl shadow-md dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all border border-gray-200 dark:border-gray-700 overflow-hidden"
+                                        >
+                                            <div className="flex flex-col md:flex-row">
+                                                {/* Event Image */}
+                                                {event.image_url ? (
+                                                    <div className="md:w-64 h-48 md:h-auto flex-shrink-0 bg-gray-200 dark:bg-gray-700">
+                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                        <img
+                                                            src={event.image_url}
+                                                            alt={event.title}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="md:w-64 h-48 md:h-auto flex-shrink-0 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 flex items-center justify-center">
+                                                        <svg className="w-16 h-16 text-primary-400 dark:text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                        </svg>
+                                                    </div>
+                                                )}
+
+                                                {/* Event Details */}
+                                                <div className="flex-1 p-6">
+                                                    <div className="flex items-start justify-between mb-4">
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                                                    {event.title}
+                                                                </h3>
+                                                                <span
+                                                                    className={`px-3 py-1 text-xs font-semibold rounded-full ${event.status === 'published'
+                                                                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400'
+                                                                        : event.status === 'draft'
+                                                                            ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400'
+                                                                            : event.status === 'cancelled'
+                                                                                ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400'
+                                                                                : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'
+                                                                        }`}
+                                                                >
+                                                                    {event.status}
+                                                                </span>
+                                                            </div>
+                                                            {event.category && (
+                                                                <span className="inline-block px-2 py-1 text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 rounded mb-2">
+                                                                    {event.category}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                                                        {event.description}
+                                                    </p>
+
+                                                    {/* Event Meta Information */}
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                                                        {/* Date & Time */}
+                                                        <div className="flex items-start gap-2">
+                                                            <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            </svg>
+                                                            <div>
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">Date</div>
+                                                                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                    {format(new Date(event.start_date), 'dd MMM yyyy', { locale: id })}
+                                                                </div>
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                                    {format(new Date(event.start_date), 'HH:mm', { locale: id })}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Location */}
+                                                        {event.location && (
+                                                            <div className="flex items-start gap-2">
+                                                                <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                </svg>
+                                                                <div>
+                                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Location</div>
+                                                                    <div className="text-sm font-medium text-gray-900 dark:text-white line-clamp-1">
+                                                                        {event.location}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Capacity */}
+                                                        {event.capacity && (
+                                                            <div className="flex items-start gap-2">
+                                                                <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                                </svg>
+                                                                <div>
+                                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Capacity</div>
+                                                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                        {event.capacity} people
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Registration Fee */}
+                                                        <div className="flex items-start gap-2">
+                                                            <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                            <div>
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">Fee</div>
+                                                                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                    {event.registration_fee && event.registration_fee > 0
+                                                                        ? `Rp ${event.registration_fee.toLocaleString('id-ID')}`
+                                                                        : 'FREE'}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Action Buttons */}
+                                                    <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                                        <Link
+                                                            href={`/dashboard/events/${event.id}/edit`}
+                                                            className="flex-1 sm:flex-none px-4 py-2 bg-gray-100 dark:bg-dark-secondary text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-center font-medium"
+                                                        >
+                                                            ✏️ Edit
+                                                        </Link>
+                                                        <Link
+                                                            href={`/events/${event.id}`}
+                                                            className="flex-1 sm:flex-none px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-center font-medium"
+                                                        >
+                                                            View
+                                                        </Link>
+                                                        <Link
+                                                            href={`/dashboard/events/${event.id}/registrations`}
+                                                            className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-center font-medium"
+                                                        >
+                                                            Data Registrations
+                                                        </Link>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Participant Dashboard */}
+                    {profile?.role === 'participant' && (
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">My Registrations</h2>
+
+                            {myRegistrations.length === 0 ? (
+                                <div className="bg-white dark:bg-dark-card rounded-lg shadow-md dark:shadow-xl p-12 text-center border border-transparent dark:border-gray-700">
+                                    <svg
+                                        className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600 mb-4"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                                        />
+                                    </svg>
+                                    <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
+                                        Belum ada pendaftaran
+                                    </h3>
+                                    <p className="text-gray-500 dark:text-gray-400 mb-6">
+                                        Jelajahi event menarik dan daftar sekarang!
+                                    </p>
+                                    <Link
+                                        href="/events"
+                                        className="inline-block bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700"
+                                    >
+                                        Browse Events
+                                    </Link>
+                                </div>
+                            ) : (
+                                <div className="grid gap-6">
+                                    {myRegistrations.map((registration) => {
+                                        const event = registration.events as Event;
+                                        return (
+                                            <div
+                                                key={registration.id}
+                                                className="bg-white dark:bg-dark-card rounded-xl shadow-md dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all border border-gray-200 dark:border-gray-700 overflow-hidden"
+                                            >
+                                                <div className="flex flex-col md:flex-row">
+                                                    {/* Event Image */}
+                                                    {event.image_url ? (
+                                                        <div className="md:w-64 h-48 md:h-auto flex-shrink-0 bg-gray-200 dark:bg-gray-700">
+                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                            <img
+                                                                src={event.image_url}
+                                                                alt={event.title}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="md:w-64 h-48 md:h-auto flex-shrink-0 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 flex items-center justify-center">
+                                                            <svg className="w-16 h-16 text-primary-400 dark:text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            </svg>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Event Details */}
+                                                    <div className="flex-1 p-6">
+                                                        <div className="flex items-start justify-between mb-4">
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center gap-2 mb-2">
+                                                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                                                        {event.title}
+                                                                    </h3>
+                                                                    <span
+                                                                        className={`px-3 py-1 text-xs font-semibold rounded-full ${registration.status === 'registered'
+                                                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400'
+                                                                            : registration.status === 'attended'
+                                                                                ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400'
+                                                                                : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400'
+                                                                            }`}
+                                                                    >
+                                                                        {registration.status}
+                                                                    </span>
+                                                                </div>
+                                                                {event.category && (
+                                                                    <span className="inline-block px-2 py-1 text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 rounded mb-2">
+                                                                        {event.category}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                                                            {event.description}
+                                                        </p>
+
+                                                        {/* Event Meta Information */}
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                                                            {/* Date & Time */}
+                                                            <div className="flex items-start gap-2">
+                                                                <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                </svg>
+                                                                <div>
+                                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Date</div>
+                                                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                        {format(new Date(event.start_date), 'dd MMM yyyy', { locale: id })}
+                                                                    </div>
+                                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                                        {format(new Date(event.start_date), 'HH:mm', { locale: id })}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Location */}
+                                                            {event.location && (
+                                                                <div className="flex items-start gap-2">
+                                                                    <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                    </svg>
+                                                                    <div>
+                                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Location</div>
+                                                                        <div className="text-sm font-medium text-gray-900 dark:text-white line-clamp-1">
+                                                                            {event.location}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Registered Date */}
+                                                            <div className="flex items-start gap-2">
+                                                                <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                                                </svg>
+                                                                <div>
+                                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Registered</div>
+                                                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                        {format(new Date(registration.registered_at), 'dd MMM yyyy', { locale: id })}
+                                                                    </div>
+                                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                                        {format(new Date(registration.registered_at), 'HH:mm', { locale: id })}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Registration Fee */}
+                                                            <div className="flex items-start gap-2">
+                                                                <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                </svg>
+                                                                <div>
+                                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Fee</div>
+                                                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                        {event.registration_fee && event.registration_fee > 0
+                                                                            ? `Rp ${event.registration_fee.toLocaleString('id-ID')}`
+                                                                            : 'FREE'}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Action Buttons */}
+                                                        <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                                            <Link
+                                                                href={`/events/${event.id}`}
+                                                                className="flex-1 sm:flex-none px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-center font-medium"
+                                                            >
+                                                                👁️ View Event
+                                                            </Link>
+                                                            {registration.status === 'registered' && (
+                                                                <div className="flex-1 sm:flex-none px-4 py-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg text-center font-medium border border-green-200 dark:border-green-800">
+                                                                    ✅ Confirmed
+                                                                </div>
+                                                            )}
+                                                            {registration.status === 'attended' && (
+                                                                <div className="flex-1 sm:flex-none px-4 py-2 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 rounded-lg text-center font-medium border border-purple-200 dark:border-purple-800">
+                                                                    🎉 Attended
+                                                                </div>
+                                                            )}
+                                                            {registration.status === 'cancelled' && (
+                                                                <div className="flex-1 sm:flex-none px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg text-center font-medium border border-red-200 dark:border-red-800">
+                                                                    ❌ Cancelled
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}

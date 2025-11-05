@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --foreground-rgb: 0, 0, 0;
+    --background-rgb: 255, 255, 255;
+  }
+
+  .dark {
+    --foreground-rgb: 255, 255, 255;
+    --background-rgb: 15, 20, 25;
+  }
+
+  body {
+    color: rgb(var(--foreground-rgb));
+    background: rgb(var(--background-rgb));
+  }
+
+  /* Dark mode solid blue background untuk semua halaman */
+  .dark .bg-gray-50,
+  .dark .dark\:bg-dark-primary,
+  .dark .bg-dark-primary {
+    background: #0f172a !important;
+  }
+
+  /* Override untuk container dengan background di dark mode */
+  .dark [class*="bg-gray-50"],
+  .dark [class*="dark:bg-dark"] {
+    background: #0f172a !important;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Custom scrollbar untuk dark mode */
+  .dark ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .dark ::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
+  
+  .dark ::-webkit-scrollbar-thumb {
+    background: #22c55e;
+    border-radius: 4px;
+  }
+  
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: #16a34a;
+  }
+
+  /* Gradient Orange Dark Background */
+  .bg-gradient-orange-dark {
+    background: linear-gradient(to bottom right, #431407, #111827, #7c2d12);
+  }
+
+  /* Blob Animation */
+  @keyframes blob {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+
+  .animate-blob {
+    animation: blob 7s infinite !important;
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s !important;
+  }
+
+  .animation-delay-4000 {
+    animation-delay: 4s !important;
+  }
+
+  /* Gradient Overlays */
+  .bg-blob-orange {
+    background-color: rgba(249, 115, 22, 0.2);
+  }
+
+  .bg-blob-amber {
+    background-color: rgba(245, 158, 11, 0.15);
+  }
+
+  .bg-blob-red {
+    background-color: rgba(239, 68, 68, 0.1);
+  }
+}

@@ -1,0 +1,153 @@
+/* Markdown Editor Custom Styles */
+.markdown-editor-wrapper {
+  @apply rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600;
+}
+
+/* Light Mode */
+.markdown-editor-wrapper .rc-md-editor {
+  @apply bg-white border-0;
+}
+
+.markdown-editor-wrapper .rc-md-navigation {
+  @apply bg-gray-50 border-b border-gray-200;
+}
+
+.markdown-editor-wrapper .button-type-separator {
+  @apply bg-gray-300;
+}
+
+.markdown-editor-wrapper .editor-container {
+  @apply bg-white;
+}
+
+.markdown-editor-wrapper .editor-container .sec-md .input {
+  @apply bg-white text-gray-900;
+}
+
+.markdown-editor-wrapper .editor-container .sec-html {
+  @apply bg-gray-50;
+}
+
+.markdown-editor-wrapper .custom-html-style {
+  @apply bg-gray-50 text-gray-900;
+}
+
+/* Dark Mode */
+.dark .markdown-editor-wrapper .rc-md-editor {
+  @apply bg-gray-800 border-0;
+}
+
+.dark .markdown-editor-wrapper .rc-md-navigation {
+  @apply bg-gray-900 border-b border-gray-700;
+}
+
+.dark .markdown-editor-wrapper .rc-md-navigation .button-wrap .button {
+  @apply text-gray-300 hover:text-white hover:bg-gray-700;
+}
+
+.dark .markdown-editor-wrapper .button-type-separator {
+  @apply bg-gray-600;
+}
+
+.dark .markdown-editor-wrapper .editor-container {
+  @apply bg-gray-800;
+}
+
+.dark .markdown-editor-wrapper .editor-container .sec-md .input {
+  @apply bg-gray-800 text-gray-100;
+}
+
+.dark .markdown-editor-wrapper .editor-container .sec-html {
+  @apply bg-gray-900;
+}
+
+.dark .markdown-editor-wrapper .custom-html-style {
+  @apply bg-gray-900 text-gray-100;
+}
+
+.dark .markdown-editor-wrapper .drop-wrap {
+  @apply bg-gray-800 border-gray-600;
+}
+
+/* Markdown Preview Styles */
+.markdown-preview {
+  @apply p-4 prose prose-sm max-w-none;
+}
+
+.dark .markdown-preview {
+  @apply prose-invert;
+}
+
+.markdown-preview h1 {
+  @apply text-2xl font-bold mb-4 text-gray-900 dark:text-white;
+}
+
+.markdown-preview h2 {
+  @apply text-xl font-bold mb-3 text-gray-900 dark:text-white;
+}
+
+.markdown-preview h3 {
+  @apply text-lg font-bold mb-2 text-gray-900 dark:text-white;
+}
+
+.markdown-preview p {
+  @apply mb-4 text-gray-700 dark:text-gray-300;
+}
+
+.markdown-preview ul,
+.markdown-preview ol {
+  @apply mb-4 pl-6 text-gray-700 dark:text-gray-300;
+}
+
+.markdown-preview ul {
+  @apply list-disc;
+}
+
+.markdown-preview ol {
+  @apply list-decimal;
+}
+
+.markdown-preview li {
+  @apply mb-1;
+}
+
+.markdown-preview code {
+  @apply bg-gray-100 dark:bg-gray-800 text-pink-600 dark:text-pink-400 px-1 py-0.5 rounded text-sm;
+}
+
+.markdown-preview pre {
+  @apply bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto mb-4;
+}
+
+.markdown-preview pre code {
+  @apply bg-transparent text-gray-900 dark:text-gray-100 p-0;
+}
+
+.markdown-preview blockquote {
+  @apply border-l-4 border-primary-500 pl-4 italic text-gray-700 dark:text-gray-300 mb-4;
+}
+
+.markdown-preview a {
+  @apply text-primary-600 dark:text-primary-400 hover:underline;
+}
+
+.markdown-preview img {
+  @apply rounded-lg max-w-full h-auto;
+}
+
+.markdown-preview table {
+  @apply w-full border-collapse mb-4;
+}
+
+.markdown-preview th,
+.markdown-preview td {
+  @apply border border-gray-300 dark:border-gray-600 px-4 py-2;
+}
+
+.markdown-preview th {
+  @apply bg-gray-100 dark:bg-gray-800 font-bold;
+}
+
+.markdown-preview hr {
+  @apply my-4 border-gray-300 dark:border-gray-600;
+}

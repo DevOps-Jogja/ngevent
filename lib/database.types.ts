@@ -1,0 +1,201 @@
+export type Json =
+    | string
+    | number
+    | boolean
+    | null
+    | { [key: string]: Json | undefined }
+    | Json[]
+
+export interface Database {
+    public: {
+        Tables: {
+            profiles: {
+                Row: {
+                    id: string
+                    full_name: string | null
+                    role: 'participant' | 'organizer'
+                    avatar_url: string | null
+                    phone: string | null
+                    institution: string | null
+                    position: string | null
+                    city: string | null
+                    created_at: string
+                }
+                Insert: {
+                    id: string
+                    full_name?: string | null
+                    role?: 'participant' | 'organizer'
+                    avatar_url?: string | null
+                    phone?: string | null
+                    institution?: string | null
+                    position?: string | null
+                    city?: string | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    full_name?: string | null
+                    role?: 'participant' | 'organizer'
+                    avatar_url?: string | null
+                    phone?: string | null
+                    institution?: string | null
+                    position?: string | null
+                    city?: string | null
+                    created_at?: string
+                }
+            }
+            events: {
+                Row: {
+                    id: string
+                    organizer_id: string
+                    title: string
+                    description: string | null
+                    start_date: string
+                    end_date: string
+                    location: string | null
+                    image_url: string | null
+                    capacity: number | null
+                    status: 'draft' | 'published' | 'cancelled' | 'completed'
+                    category: string | null
+                    registration_fee: number | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    organizer_id: string
+                    title: string
+                    description?: string | null
+                    start_date: string
+                    end_date: string
+                    location?: string | null
+                    image_url?: string | null
+                    capacity?: number | null
+                    status?: 'draft' | 'published' | 'cancelled' | 'completed'
+                    category?: string | null
+                    registration_fee?: number | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    organizer_id?: string
+                    title?: string
+                    description?: string | null
+                    start_date?: string
+                    end_date?: string
+                    location?: string | null
+                    image_url?: string | null
+                    capacity?: number | null
+                    status?: 'draft' | 'published' | 'cancelled' | 'completed'
+                    category?: string | null
+                    registration_fee?: number | null
+                    created_at?: string
+                    updated_at?: string
+                }
+            }
+            registrations: {
+                Row: {
+                    id: string
+                    event_id: string
+                    user_id: string
+                    registration_data: Json | null
+                    status: 'registered' | 'attended' | 'cancelled'
+                    registered_at: string
+                }
+                Insert: {
+                    id?: string
+                    event_id: string
+                    user_id: string
+                    registration_data?: Json | null
+                    status?: 'registered' | 'attended' | 'cancelled'
+                    registered_at?: string
+                }
+                Update: {
+                    id?: string
+                    event_id?: string
+                    user_id?: string
+                    registration_data?: Json | null
+                    status?: 'registered' | 'attended' | 'cancelled'
+                    registered_at?: string
+                }
+            }
+            form_fields: {
+                Row: {
+                    id: string
+                    event_id: string
+                    field_name: string
+                    field_type: string
+                    is_required: boolean
+                    options: Json | null
+                    order_index: number
+                }
+                Insert: {
+                    id?: string
+                    event_id: string
+                    field_name: string
+                    field_type: string
+                    is_required?: boolean
+                    options?: Json | null
+                    order_index: number
+                }
+                Update: {
+                    id?: string
+                    event_id?: string
+                    field_name?: string
+                    field_type?: string
+                    is_required?: boolean
+                    options?: Json | null
+                    order_index?: number
+                }
+            }
+            speakers: {
+                Row: {
+                    id: string
+                    event_id: string
+                    name: string
+                    title: string | null
+                    company: string | null
+                    bio: string | null
+                    photo_url: string | null
+                    linkedin_url: string | null
+                    twitter_url: string | null
+                    website_url: string | null
+                    order_index: number
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    event_id: string
+                    name: string
+                    title?: string | null
+                    company?: string | null
+                    bio?: string | null
+                    photo_url?: string | null
+                    linkedin_url?: string | null
+                    twitter_url?: string | null
+                    website_url?: string | null
+                    order_index?: number
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    event_id?: string
+                    name?: string
+                    title?: string | null
+                    company?: string | null
+                    bio?: string | null
+                    photo_url?: string | null
+                    linkedin_url?: string | null
+                    twitter_url?: string | null
+                    website_url?: string | null
+                    order_index?: number
+                    created_at?: string
+                    updated_at?: string
+                }
+            }
+        }
+    }
+}
