@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import LanguageToggle from '@/components/LanguageToggle';
 
 export default function MobileLogo() {
     const [isDarkMode, setIsDarkMode] = useState(false);
@@ -28,7 +29,8 @@ export default function MobileLogo() {
     return (
         <div className="lg:hidden sticky top-0 left-0 z-40 w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-sm">
             <div className="container mx-auto px-4">
-                <div className="flex items-center justify-center py-3">
+                <div className="flex items-center justify-between py-3">
+                    {/* Left: Logo */}
                     <Link href="/" className="flex items-center gap-2">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
@@ -47,6 +49,11 @@ export default function MobileLogo() {
                             Ngevent
                         </span>
                     </Link>
+
+                    {/* Right: Language Toggle */}
+                    <div className="flex items-center">
+                        <LanguageToggle />
+                    </div>
                 </div>
             </div>
         </div>

@@ -49,7 +49,7 @@ export default function MarkdownEditor({ value, onChange, placeholder = 'Write d
                 onChange={handleEditorChange}
                 placeholder={placeholder}
                 view={{ menu: true, md: true, html: true }}
-                canView={{ menu: true, md: true, html: true, fullScreen: true, hideMenu: true }}
+                canView={{ menu: true, md: true, html: true, both: true, fullScreen: true, hideMenu: true }}
                 config={{
                     view: {
                         menu: true,

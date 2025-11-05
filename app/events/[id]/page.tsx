@@ -15,9 +15,10 @@ type Event = Database['public']['Tables']['events']['Row'];
 type FormField = Database['public']['Tables']['form_fields']['Row'];
 type Speaker = Database['public']['Tables']['speakers']['Row'];
 
-export default function EventDetailPage({ params }: { params: { id: string } }) {
+export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { t, language } = useLanguage();
     const router = useRouter();
+    const [eventId, setEventId] = useState<string>('');
     const [event, setEvent] = useState<Event | null>(null);
     const [formFields, setFormFields] = useState<FormField[]>([]);
     const [speakers, setSpeakers] = useState<Speaker[]>([]);
@@ -29,6 +30,20 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
     const [filePreview, setFilePreview] = useState<Record<string, string>>({});
     const [profile, setProfile] = useState<any>(null);
     const [isProfileComplete, setIsProfileComplete] = useState(false);
+
+    useEffect(() => {
+        params.then((resolvedParams) => {
+            setEventId(resolvedParams.id);
+        });
+    }, [params]);
+
+    useEffect(() => {
+        if (eventId) {
+            loadEvent();
+            checkAuth();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [eventId]);
 
     const checkAuth = async () => {
         const { data: { user } } = await supabase.auth.getUser();
@@ -55,10 +70,12 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
     };
 
     const checkRegistration = async (userId: string) => {
+        if (!eventId) return;
+
         const { data } = await supabase
             .from('registrations')
             .select('*')
-            .eq('event_id', params.id)
+            .eq('event_id', eventId)
             .eq('user_id', userId)
             .single();
 
@@ -66,21 +83,29 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
     };
 
     const loadEvent = async () => {
+        if (!eventId) {
+            return;
+        }
+
         try {
             const { data: eventData, error: eventError } = await supabase
                 .from('events')
                 .select('*')
-                .eq('id', params.id)
+                .eq('id', eventId)
                 .single();
 
-            if (eventError) throw eventError;
+            if (eventError) {
+                console.error('Error loading event:', eventError);
+                throw eventError;
+            }
+
             setEvent(eventData);
 
             // Load form fields
             const { data: fieldsData } = await supabase
                 .from('form_fields')
                 .select('*')
-                .eq('event_id', params.id)
+                .eq('event_id', eventId)
                 .order('order_index', { ascending: true });
 
             setFormFields(fieldsData || []);
@@ -89,13 +114,13 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
             const { data: speakersData } = await supabase
                 .from('speakers')
                 .select('*')
-                .eq('event_id', params.id)
+                .eq('event_id', eventId)
                 .order('order_index', { ascending: true });
 
             setSpeakers(speakersData || []);
-        } catch (error) {
-            console.error('Error loading event:', error);
-            toast.error('Event tidak ditemukan');
+        } catch (error: any) {
+            console.error('Error loading event:', error?.message || error);
+            toast.error(t('event.notFound') || 'Event tidak ditemukan');
         } finally {
             setLoading(false);
         }
@@ -105,7 +130,7 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
         loadEvent();
         checkAuth();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [params.id]);
+    }, [eventId]);
 
     const handleFileUpload = async (fieldName: string, file: File): Promise<string | null> => {
         try {
@@ -167,7 +192,7 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
 
         try {
             const { error } = await supabase.from('registrations').insert({
-                event_id: params.id,
+                event_id: eventId,
                 user_id: user.id,
                 registration_data: formData,
                 status: 'registered',
@@ -220,7 +245,17 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
                     {/* Left Column - Event Details */}
                     <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-
+                        {/* Event Image - Mobile Only (atas) */}
+                        {event.image_url && (
+                            <div className="block lg:hidden w-full rounded-xl sm:rounded-2xl overflow-hidden shadow-lg">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src={event.image_url}
+                                    alt={event.title}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        )}
 
                         {/* Event Title & Description */}
                         <div>
@@ -380,14 +415,14 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
                     <div className="lg:col-span-1">
                         {/* Poster  */}
                         <div className="lg:sticky lg:top-24">
-                            {/* Event Image in About Section */}
+                            {/* Event Image - Desktop Only (sidebar) */}
                             {event.image_url && (
-                                <div className="rounded-lg sm:rounded-xl overflow-hidden mb-4 sm:mb-6">
+                                <div className="hidden lg:block rounded-lg sm:rounded-xl overflow-hidden mb-4 sm:mb-6 shadow-lg">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
                                         src={event.image_url}
                                         alt={event.title}
-                                        className="w-full h-auto"
+                                        className="w-full h-auto object-cover"
                                     />
                                 </div>
                             )}

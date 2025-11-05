@@ -12,8 +12,9 @@ import { Database } from '@/lib/database.types';
 type Event = Database['public']['Tables']['events']['Row'];
 type FormField = Database['public']['Tables']['form_fields']['Row'];
 
-export default function EditEventPage({ params }: { params: { id: string } }) {
+export default function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
+    const [eventId, setEventId] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [loadingData, setLoadingData] = useState(true);
     const [authChecked, setAuthChecked] = useState(false);
@@ -40,9 +41,17 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
     const [activeTab, setActiveTab] = useState<'basic' | 'registration' | 'speakers'>('basic');
 
     useEffect(() => {
-        checkAuth();
+        params.then((resolvedParams) => {
+            setEventId(resolvedParams.id);
+        });
+    }, [params]);
+
+    useEffect(() => {
+        if (eventId) {
+            checkAuth();
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [eventId]);
 
     const checkAuth = async () => {
         try {
@@ -68,7 +77,7 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
             const { data: eventData, error: eventError } = await supabase
                 .from('events')
                 .select('*')
-                .eq('id', params.id)
+                .eq('id', eventId)
                 .single();
 
             if (eventError) throw eventError;
@@ -105,7 +114,7 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
             const { data: fieldsData, error: fieldsError } = await supabase
                 .from('form_fields')
                 .select('*')
-                .eq('event_id', params.id)
+                .eq('event_id', eventId)
                 .order('order_index', { ascending: true });
 
             if (fieldsError) throw fieldsError;
@@ -116,7 +125,7 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
             const { data: speakersData, error: speakersError } = await supabase
                 .from('speakers')
                 .select('*')
-                .eq('event_id', params.id)
+                .eq('event_id', eventId)
                 .order('order_index', { ascending: true });
 
             if (speakersError) throw speakersError;
@@ -205,7 +214,7 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
                     image_url: imageUrl,
                     updated_at: new Date().toISOString(),
                 })
-                .eq('id', params.id);
+                .eq('id', eventId);
 
             if (eventError) throw eventError;
 
@@ -242,7 +251,7 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
                     const { error: insertError } = await supabase
                         .from('form_fields')
                         .insert({
-                            event_id: params.id,
+                            event_id: eventId,
                             field_name: field.field_name,
                             field_type: field.field_type,
                             is_required: field.is_required,
@@ -292,7 +301,7 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
                     const { error: insertError } = await supabase
                         .from('speakers')
                         .insert({
-                            event_id: params.id,
+                            event_id: eventId,
                             name: speaker.name,
                             title: speaker.title,
                             company: speaker.company,

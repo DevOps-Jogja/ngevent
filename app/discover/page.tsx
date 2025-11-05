@@ -167,7 +167,7 @@ export default function DiscoverPage() {
                                         className="group bg-white dark:bg-dark-card rounded-lg sm:rounded-xl shadow-md dark:shadow-xl overflow-hidden border border-transparent dark:border-gray-700 hover:shadow-lg dark:hover:shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95"
                                     >
                                         {event.image_url ? (
-                                            <div className="h-40 sm:h-44 md:h-48 overflow-hidden">
+                                            <div className="aspect-[4/5] overflow-hidden">
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img
                                                     src={event.image_url}
@@ -176,7 +176,7 @@ export default function DiscoverPage() {
                                                 />
                                             </div>
                                         ) : (
-                                            <div className="h-40 sm:h-44 md:h-48 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 flex items-center justify-center">
+                                            <div className="aspect-[4/5] bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 flex items-center justify-center">
                                                 <svg className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 text-primary-400 dark:text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                 </svg>

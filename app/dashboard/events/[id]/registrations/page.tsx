@@ -18,14 +18,28 @@ type Registration = Database['public']['Tables']['registrations']['Row'] & {
     };
 };
 
-export default function EventRegistrationsPage({ params }: { params: { id: string } }) {
+export default function EventRegistrationsPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
+    const [eventId, setEventId] = useState<string>('');
     const [event, setEvent] = useState<Event | null>(null);
     const [registrations, setRegistrations] = useState<Registration[]>([]);
     const [loading, setLoading] = useState(true);
     const [authChecked, setAuthChecked] = useState(false);
     const [filter, setFilter] = useState<'all' | 'registered' | 'attended' | 'cancelled'>('all');
     const [searchQuery, setSearchQuery] = useState('');
+
+    useEffect(() => {
+        params.then((resolvedParams) => {
+            setEventId(resolvedParams.id);
+        });
+    }, [params]);
+
+    useEffect(() => {
+        if (eventId) {
+            checkAuth();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [eventId]);
 
     useEffect(() => {
         checkAuth();
@@ -51,12 +65,16 @@ export default function EventRegistrationsPage({ params }: { params: { id: strin
     };
 
     const loadData = async (userId: string) => {
+        if (!eventId) {
+            return;
+        }
+
         try {
             // Load event data
             const { data: eventData, error: eventError } = await supabase
                 .from('events')
                 .select('*')
-                .eq('id', params.id)
+                .eq('id', eventId)
                 .single();
 
             if (eventError) throw eventError;
@@ -80,7 +98,7 @@ export default function EventRegistrationsPage({ params }: { params: { id: strin
                         avatar_url
                     )
                 `)
-                .eq('event_id', params.id)
+                .eq('event_id', eventId)
                 .order('registered_at', { ascending: false });
 
             if (registrationsError) throw registrationsError;
@@ -283,8 +301,8 @@ export default function EventRegistrationsPage({ params }: { params: { id: strin
                                 <button
                                     onClick={() => setFilter('all')}
                                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'all'
-                                            ? 'bg-primary-600 text-white'
-                                            : 'bg-gray-100 dark:bg-dark-secondary text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                        ? 'bg-primary-600 text-white'
+                                        : 'bg-gray-100 dark:bg-dark-secondary text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                                         }`}
                                 >
                                     All
@@ -292,8 +310,8 @@ export default function EventRegistrationsPage({ params }: { params: { id: strin
                                 <button
                                     onClick={() => setFilter('registered')}
                                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'registered'
-                                            ? 'bg-green-600 text-white'
-                                            : 'bg-gray-100 dark:bg-dark-secondary text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                        ? 'bg-green-600 text-white'
+                                        : 'bg-gray-100 dark:bg-dark-secondary text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                                         }`}
                                 >
                                     Registered
@@ -301,8 +319,8 @@ export default function EventRegistrationsPage({ params }: { params: { id: strin
                                 <button
                                     onClick={() => setFilter('attended')}
                                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'attended'
-                                            ? 'bg-purple-600 text-white'
-                                            : 'bg-gray-100 dark:bg-dark-secondary text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                        ? 'bg-purple-600 text-white'
+                                        : 'bg-gray-100 dark:bg-dark-secondary text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                                         }`}
                                 >
                                     Attended
@@ -310,8 +328,8 @@ export default function EventRegistrationsPage({ params }: { params: { id: strin
                                 <button
                                     onClick={() => setFilter('cancelled')}
                                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'cancelled'
-                                            ? 'bg-red-600 text-white'
-                                            : 'bg-gray-100 dark:bg-dark-secondary text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                        ? 'bg-red-600 text-white'
+                                        : 'bg-gray-100 dark:bg-dark-secondary text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                                         }`}
                                 >
                                     Cancelled
@@ -379,10 +397,10 @@ export default function EventRegistrationsPage({ params }: { params: { id: strin
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className={`px-3 py-1 text-xs font-semibold rounded-full ${registration.status === 'registered'
-                                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400'
-                                                            : registration.status === 'attended'
-                                                                ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400'
-                                                                : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400'
+                                                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400'
+                                                        : registration.status === 'attended'
+                                                            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400'
+                                                            : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400'
                                                         }`}>
                                                         {registration.status}
                                                     </span>

@@ -28,11 +28,15 @@ export default function HomePage() {
 
     const loadEvents = async () => {
         try {
+            console.log('🔍 Loading events from Supabase...');
             const { data, error } = await supabase
                 .from('events')
                 .select('*')
                 .eq('status', 'published')
                 .order('start_date', { ascending: true });
+
+            console.log('📊 Events data:', data);
+            console.log('❌ Events error:', error);
 
             if (error) throw error;
 
@@ -169,7 +173,7 @@ function EventCard({ event, t }: { event: EventWithSpeakers; t: (key: string) =>
             <div className="bg-white dark:bg-dark-card rounded-xl shadow-md dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all overflow-hidden border border-gray-200 dark:border-gray-700 h-full flex flex-col">
                 {/* Event Image */}
                 {event.image_url ? (
-                    <div className="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden flex-shrink-0">
+                    <div className="aspect-[4/5] bg-gray-200 dark:bg-gray-700 overflow-hidden flex-shrink-0">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={event.image_url}
@@ -178,7 +182,7 @@ function EventCard({ event, t }: { event: EventWithSpeakers; t: (key: string) =>
                         />
                     </div>
                 ) : (
-                    <div className="h-48 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 flex items-center justify-center flex-shrink-0">
+                    <div className="aspect-[4/5] bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 flex items-center justify-center flex-shrink-0">
                         <svg className="w-16 h-16 text-primary-400 dark:text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>

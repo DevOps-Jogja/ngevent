@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { supabase } from '@/lib/supabase';
@@ -18,7 +18,7 @@ type EventWithSpeakers = Event & {
     speakers: Speaker[];
 };
 
-export default function EventsPage() {
+function EventsContent() {
     const { t } = useLanguage();
     const searchParams = useSearchParams();
     const [events, setEvents] = useState<EventWithSpeakers[]>([]);
@@ -177,7 +177,7 @@ export default function EventsPage() {
                         </p>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredEvents.map((event) => (
                             <EventCard key={event.id} event={event} />
                         ))}
@@ -209,135 +209,122 @@ function EventCard({ event }: { event: EventWithSpeakers }) {
 
     return (
         <Link href={`/events/${event.id}`}>
-            <div className="bg-white dark:bg-dark-card rounded-lg hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="flex flex-col sm:flex-row gap-4 p-4">
-                    {/* Date Section - Left */}
-                    <div className="flex-shrink-0 text-center sm:w-20">
-                        <div className="inline-block sm:block">
-                            <div className="text-sm text-gray-500 dark:text-gray-400 uppercase">
-                                {format(eventDate, 'MMM', { locale: id })}
-                            </div>
-                            <div className="text-3xl font-bold text-gray-900 dark:text-white">
-                                {format(eventDate, 'dd', { locale: id })}
-                            </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                                {format(eventDate, 'EEEE', { locale: id })}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Event Details - Middle */}
-                    <div className="flex-1 min-w-0">
-                        {/* Time */}
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                            {format(eventDate, 'h:mm a', { locale: id })}
-                        </div>
-
-                        {/* Title */}
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
-                            {event.title}
-                        </h3>
-
-                        {/* Speakers */}
-                        {event.speakers && event.speakers.length > 0 ? (
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="flex -space-x-2">
-                                    {event.speakers.slice(0, 3).map((speaker) => (
-                                        speaker.photo_url ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img
-                                                key={speaker.id}
-                                                src={speaker.photo_url}
-                                                alt={speaker.name}
-                                                className="w-6 h-6 rounded-full border-2 border-white dark:border-dark-card object-cover"
-                                            />
-                                        ) : (
-                                            <div
-                                                key={speaker.id}
-                                                className="w-6 h-6 bg-primary-600 dark:bg-primary-500 rounded-full border-2 border-white dark:border-dark-card flex items-center justify-center text-white text-xs font-semibold"
-                                            >
-                                                {speaker.name.charAt(0).toUpperCase()}
-                                            </div>
-                                        )
-                                    ))}
-                                </div>
-                                <span className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                                    {event.speakers.slice(0, 2).map(s => s.name).join(', ')}
-                                    {event.speakers.length > 2 && ` & ${event.speakers.length - 2} more`}
-                                </span>
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="flex -space-x-2">
-                                    <div className="w-6 h-6 bg-gray-300 dark:bg-gray-600 rounded-full border-2 border-white dark:border-dark-card"></div>
-                                </div>
-                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                    Event Organizer
+            <div className="group bg-white dark:bg-dark-card rounded-xl shadow-md dark:shadow-xl hover:shadow-2xl dark:hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 h-full flex flex-col hover:-translate-y-1">
+                {/* Event Image */}
+                {event.image_url ? (
+                    <div className="aspect-[4/5] overflow-hidden bg-gray-200 dark:bg-gray-700 relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src={event.image_url}
+                            alt={event.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        {/* Category Badge on Image */}
+                        {event.category && (
+                            <div className="absolute top-3 left-3">
+                                <span className="px-3 py-1 text-xs font-semibold bg-white/90 dark:bg-gray-900/90 text-gray-900 dark:text-white backdrop-blur-sm rounded-full shadow-lg">
+                                    {event.category}
                                 </span>
                             </div>
                         )}
-
-                        {/* Location */}
-                        {event.location && (
-                            <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                {event.location}
+                    </div>
+                ) : (
+                    <div className="aspect-[4/5] bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 flex items-center justify-center relative">
+                        <svg className="w-16 h-16 text-primary-400 dark:text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {/* Category Badge */}
+                        {event.category && (
+                            <div className="absolute top-3 left-3">
+                                <span className="px-3 py-1 text-xs font-semibold text-primary-600 dark:text-primary-400 bg-white dark:bg-gray-900 rounded-full shadow-lg">
+                                    {event.category}
+                                </span>
                             </div>
                         )}
+                    </div>
+                )}
 
-                        {/* Price and Waitlist */}
-                        <div className="flex items-center justify-between gap-2 mt-3">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">
-                                    Waitlist
-                                </span>
-                                <div className="flex -space-x-2">
-                                    {registrations.slice(0, 3).map((reg, idx) => (
-                                        <div
-                                            key={idx}
-                                            className="w-6 h-6 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full border-2 border-white dark:border-dark-card flex items-center justify-center text-white text-xs font-semibold"
-                                        >
-                                            {reg.profiles?.full_name?.charAt(0).toUpperCase() || '?'}
-                                        </div>
-                                    ))}
-                                </div>
-                                {registrations.length > 3 && (
-                                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                                        +{registrations.length - 3}
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* Price Badge */}
-                            {event.registration_fee && event.registration_fee > 0 ? (
-                                <span className="text-xs font-semibold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-2 py-1 rounded">
-                                    Rp {event.registration_fee.toLocaleString('id-ID')}
-                                </span>
-                            ) : (
-                                <span className="text-xs font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded">
-                                    FREE
-                                </span>
-                            )}
-                        </div>
+                {/* Event Content */}
+                <div className="p-5 flex flex-col flex-1">
+                    {/* Date & Time */}
+                    <div className="flex items-center gap-2 mb-3 text-sm text-gray-600 dark:text-gray-400">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="font-medium">
+                            {format(eventDate, 'dd MMM yyyy', { locale: id })} • {format(eventDate, 'HH:mm', { locale: id })}
+                        </span>
                     </div>
 
-                    {/* Thumbnail - Right */}
-                    {event.image_url && (
-                        <div className="flex-shrink-0 w-full sm:w-32 h-32 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                                src={event.image_url}
-                                alt={event.title}
-                                className="w-full h-full object-cover"
-                            />
+                    {/* Title */}
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                        {event.title}
+                    </h3>
+
+                    {/* Location */}
+                    {event.location && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span className="line-clamp-1">{event.location}</span>
                         </div>
                     )}
+
+                    {/* Footer */}
+                    <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        {/* Registrants */}
+                        <div className="flex items-center gap-2">
+                            {registrations.length > 0 ? (
+                                <>
+                                    <div className="flex -space-x-2">
+                                        {registrations.slice(0, 3).map((reg, idx) => (
+                                            <div
+                                                key={idx}
+                                                className="w-7 h-7 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full border-2 border-white dark:border-dark-card flex items-center justify-center text-white text-xs font-semibold"
+                                            >
+                                                {reg.profiles?.full_name?.charAt(0).toUpperCase() || '?'}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                                        {registrations.length} {registrations.length === 1 ? 'participant' : 'participants'}
+                                    </span>
+                                </>
+                            ) : (
+                                <span className="text-xs text-gray-500 dark:text-gray-400">No participants yet</span>
+                            )}
+                        </div>
+
+                        {/* Price Badge */}
+                        {event.registration_fee && event.registration_fee > 0 ? (
+                            <span className="text-sm font-bold text-primary-600 dark:text-primary-400">
+                                Rp {(event.registration_fee / 1000).toFixed(0)}K
+                            </span>
+                        ) : (
+                            <span className="text-sm font-bold text-green-600 dark:text-green-400">
+                                FREE
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
-            <br></br>
         </Link>
+    );
+}
+
+export default function EventsPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+                <Navbar />
+                <div className="container mx-auto px-4 py-8">
+                    <div className="text-center">Loading...</div>
+                </div>
+            </div>
+        }>
+            <EventsContent />
+        </Suspense>
     );
 }
