@@ -43,9 +43,9 @@ function MilkdownEditorInner({ value, onChange, placeholder = 'Write something..
     }, [value]);
 
     return (
-        <div 
-            className="milkdown-wrapper" 
-            style={{ 
+        <div
+            className="milkdown-wrapper"
+            style={{
                 minHeight: height,
                 border: '1px solid #d1d5db',
                 borderRadius: '0.5rem',
@@ -67,7 +67,7 @@ export default function MilkdownEditor({ value, onChange, placeholder, height }:
 
     if (!mounted) {
         return (
-            <div 
+            <div
                 className="h-64 bg-gray-100 dark:bg-dark-secondary animate-pulse rounded-lg"
                 style={{ minHeight: height }}
             />
@@ -76,11 +76,11 @@ export default function MilkdownEditor({ value, onChange, placeholder, height }:
 
     return (
         <MilkdownProvider>
-            <MilkdownEditorInner 
-                value={value} 
-                onChange={onChange} 
-                placeholder={placeholder} 
-                height={height} 
+            <MilkdownEditorInner
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                height={height}
             />
             <style jsx global>{`
                 .milkdown-wrapper {
