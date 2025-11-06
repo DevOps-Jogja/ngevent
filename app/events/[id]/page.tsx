@@ -8,6 +8,8 @@ import { supabase } from '@/lib/supabase';
 import { Database } from '@/lib/database.types';
 import { format } from 'date-fns';
 import { id, enUS } from 'date-fns/locale';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/lib/language-context';
 
@@ -469,10 +471,11 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                         {/* About the Event Section */}
                         <div className="bg-white dark:bg-dark-card rounded-xl shadow-md dark:shadow-xl p-4 sm:p-6 border border-transparent dark:border-gray-700">
                             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">{t('event.aboutEvent')}</h2>
-                            <div
-                                className="prose prose-sm sm:prose-base dark:prose-invert max-w-none ql-editor-content"
-                                dangerouslySetInnerHTML={{ __html: event.description || '' }}
-                            />
+                            <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none markdown-content">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {event.description || ''}
+                                </ReactMarkdown>
+                            </div>
 
                             {/* Category Tag */}
                             {event.category && (
