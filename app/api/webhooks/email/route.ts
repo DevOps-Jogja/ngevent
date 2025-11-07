@@ -10,6 +10,7 @@ console.log('📝 Environment Variables Check:');
 console.log('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? '✅ Set' : '❌ Not set');
 console.log('SUPABASE_SERVICE_ROLE_KEY:', supabaseServiceKey ? '✅ Set' : '❌ Not set');
 console.log('RESEND_API_KEY:', resendApiKey ? `✅ Set (${resendApiKey.substring(0, 8)}...)` : '❌ Not set');
+console.log('NODE_ENV:', process.env.NODE_ENV || 'development');
 
 // Validate required environment variables
 if (!supabaseUrl) {
@@ -17,10 +18,19 @@ if (!supabaseUrl) {
 }
 if (!supabaseServiceKey) {
     console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY is not set - email system will not work');
+    if (process.env.NODE_ENV === 'production') {
+        console.error('🚨 CRITICAL: Email system disabled in production! Set SUPABASE_SERVICE_ROLE_KEY');
+    }
 }
 if (!resendApiKey) {
     console.warn('⚠️ RESEND_API_KEY is not set - emails will not be sent');
-    console.warn('💡 Make sure RESEND_API_KEY is in .env.local and server is restarted');
+    if (process.env.NODE_ENV === 'production') {
+        console.error('🚨 CRITICAL: Emails disabled in production! Set RESEND_API_KEY in your hosting platform');
+        console.error('💡 Vercel: Project Settings → Environment Variables');
+        console.error('💡 Netlify: Site Settings → Environment Variables');
+    } else {
+        console.warn('💡 Make sure RESEND_API_KEY is in .env.local and server is restarted');
+    }
 } else {
     // Verify API key format (should start with 're_')
     if (!resendApiKey.startsWith('re_')) {
@@ -111,12 +121,18 @@ export async function POST(request: NextRequest) {
         }
 
         // Replace template variables
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        // Determine base URL - support multiple env var names and deployment platforms
+        const baseUrl =
+            process.env.NEXT_PUBLIC_APP_URL ||
+            process.env.NEXT_PUBLIC_SITE_URL ||
+            (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+            'http://localhost:3000';
+
+        console.log('🌐 Using base URL for emails:', baseUrl);
+
         let htmlBody = template.html_body;
         let textBody = template.text_body || '';
-        let subject = template.subject;
-
-        // Replace common variables
+        let subject = template.subject;        // Replace common variables
         htmlBody = htmlBody.replace(/{{user_name}}/g, payload.name || 'User');
         htmlBody = htmlBody.replace(/{{base_url}}/g, baseUrl);
         textBody = textBody.replace(/{{user_name}}/g, payload.name || 'User');
