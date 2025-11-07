@@ -5,20 +5,28 @@ import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/lib/language-context';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import LoginSkeleton from '@/components/LoginSkeleton';
 import Link from 'next/link';
 
-export default function LoginPage() {
+export default function RegisterPage() {
     const { t } = useLanguage();
     const router = useRouter();
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isAuthenticating, setIsAuthenticating] = useState(false);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+    const [formData, setFormData] = useState({
+        fullName: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+    });
+    const [errors, setErrors] = useState<{
+        fullName?: string;
+        email?: string;
+        password?: string;
+        confirmPassword?: string;
+    }>({});
 
     useEffect(() => {
         // Check initial theme
@@ -43,25 +51,40 @@ export default function LoginPage() {
     }, []);
 
     const validateForm = () => {
-        const newErrors: { email?: string; password?: string } = {};
+        const newErrors: {
+            fullName?: string;
+            email?: string;
+            password?: string;
+            confirmPassword?: string;
+        } = {};
 
-        if (!email) {
+        if (!formData.fullName.trim()) {
+            newErrors.fullName = t('auth.nameRequired');
+        }
+
+        if (!formData.email) {
             newErrors.email = t('auth.emailRequired');
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
             newErrors.email = 'Email tidak valid';
         }
 
-        if (!password) {
+        if (!formData.password) {
             newErrors.password = t('auth.passwordRequired');
-        } else if (password.length < 6) {
+        } else if (formData.password.length < 6) {
             newErrors.password = t('auth.passwordMinLength');
+        }
+
+        if (!formData.confirmPassword) {
+            newErrors.confirmPassword = t('auth.passwordRequired');
+        } else if (formData.password !== formData.confirmPassword) {
+            newErrors.confirmPassword = t('auth.passwordMismatch');
         }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleEmailLogin = async (e: React.FormEvent) => {
+    const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!validateForm()) {
@@ -70,24 +93,53 @@ export default function LoginPage() {
 
         try {
             setIsAuthenticating(true);
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
+
+            // Register user with Supabase Auth
+            const redirectUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email: formData.email,
+                password: formData.password,
+                options: {
+                    data: {
+                        full_name: formData.fullName,
+                    },
+                    emailRedirectTo: `${redirectUrl}/auth/callback`,
+                },
             });
 
-            if (error) {
-                if (error.message.includes('Invalid login credentials')) {
-                    throw new Error(t('auth.invalidCredentials'));
+            if (authError) {
+                if (authError.message.includes('already registered')) {
+                    throw new Error(t('auth.emailAlreadyExists'));
                 }
-                throw error;
+                throw authError;
             }
 
-            if (data.user) {
-                toast.success('Login berhasil!');
-                router.push('/dashboard');
+            if (authData.user) {
+                // Create profile in profiles table (email is stored in auth.users, not profiles)
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .insert({
+                        id: authData.user.id,
+                        full_name: formData.fullName,
+                        role: 'participant', // Default role
+                    });
+
+                if (profileError) {
+                    console.error('Profile creation error:', profileError);
+                    // Don't fail the registration if profile creation fails
+                    // The trigger might handle it automatically
+                }
+
+                toast.success(t('auth.registerSuccess'));
+
+                // Redirect to login page after successful registration
+                setTimeout(() => {
+                    router.push('/auth/login');
+                }, 2000);
             }
         } catch (error: any) {
-            toast.error(error.message || t('auth.loginError'));
+            console.error('Registration error:', error);
+            toast.error(error.message || t('auth.registerError'));
             setIsAuthenticating(false);
         }
     };
@@ -107,6 +159,12 @@ export default function LoginPage() {
         } catch (error: any) {
             toast.error(error.message || t('auth.loginError'));
             setIsAuthenticating(false);
+        }
+    }; const handleInputChange = (field: string, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        // Clear error for this field when user starts typing
+        if (errors[field as keyof typeof errors]) {
+            setErrors(prev => ({ ...prev, [field]: undefined }));
         }
     };
 
@@ -144,18 +202,37 @@ export default function LoginPage() {
                             />
                         </div>
                         <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                            {t('auth.loginTitle')}
+                            {t('auth.registerTitle')}
                         </h2>
                         <p className="text-gray-600 dark:text-gray-400 animate-fade-in" style={{ animationDelay: '0.25s' }}>
-                            {t('auth.loginSubtitle')}
+                            {t('auth.registerSubtitle')}
                         </p>
                     </div>
 
-                    {/* Login Card */}
+                    {/* Register Card */}
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 space-y-6 animate-fade-in hover:shadow-md transition-shadow duration-300" style={{ animationDelay: '0.3s' }}>
 
-                        {/* Email Login Form */}
-                        <form onSubmit={handleEmailLogin} className="space-y-4">
+                        {/* Email Register Form */}
+                        <form onSubmit={handleRegister} className="space-y-4">
+                            {/* Full Name Field */}
+                            <div>
+                                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    {t('auth.fullName')}
+                                </label>
+                                <input
+                                    id="fullName"
+                                    type="text"
+                                    value={formData.fullName}
+                                    onChange={(e) => handleInputChange('fullName', e.target.value)}
+                                    className={`w-full px-4 py-3 border ${errors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
+                                    placeholder="John Doe"
+                                    disabled={isAuthenticating}
+                                />
+                                {errors.fullName && (
+                                    <p className="mt-1 text-sm text-red-500">{errors.fullName}</p>
+                                )}
+                            </div>
+
                             {/* Email Field */}
                             <div>
                                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -164,8 +241,8 @@ export default function LoginPage() {
                                 <input
                                     id="email"
                                     type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    value={formData.email}
+                                    onChange={(e) => handleInputChange('email', e.target.value)}
                                     className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
                                     placeholder="nama@email.com"
                                     disabled={isAuthenticating}
@@ -183,8 +260,8 @@ export default function LoginPage() {
                                 <input
                                     id="password"
                                     type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    value={formData.password}
+                                    onChange={(e) => handleInputChange('password', e.target.value)}
                                     className={`w-full px-4 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
                                     placeholder="••••••••"
                                     disabled={isAuthenticating}
@@ -194,7 +271,26 @@ export default function LoginPage() {
                                 )}
                             </div>
 
-                            {/* Login Button */}
+                            {/* Confirm Password Field */}
+                            <div>
+                                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    {t('auth.confirmPassword')}
+                                </label>
+                                <input
+                                    id="confirmPassword"
+                                    type="password"
+                                    value={formData.confirmPassword}
+                                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                                    className={`w-full px-4 py-3 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
+                                    placeholder="••••••••"
+                                    disabled={isAuthenticating}
+                                />
+                                {errors.confirmPassword && (
+                                    <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>
+                                )}
+                            </div>
+
+                            {/* Register Button */}
                             <button
                                 type="submit"
                                 disabled={isAuthenticating}
@@ -203,10 +299,10 @@ export default function LoginPage() {
                                 {isAuthenticating ? (
                                     <div className="flex items-center justify-center gap-2">
                                         <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
-                                        <span>{t('auth.loggingIn')}</span>
+                                        <span>Mendaftar...</span>
                                     </div>
                                 ) : (
-                                    t('auth.login')
+                                    t('auth.createAccount')
                                 )}
                             </button>
                         </form>
@@ -259,18 +355,18 @@ export default function LoginPage() {
                             )}
                         </button>
 
-                        {/* Register Link */}
+                        {/* Login Link */}
                         <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-                            {t('auth.dontHaveAccount')}{' '}
-                            <Link href="/auth/register" className="text-primary-600 dark:text-primary-400 hover:underline font-medium transition-colors">
-                                {t('auth.registerNow')}
+                            {t('auth.alreadyHaveAccount')}{' '}
+                            <Link href="/auth/login" className="text-primary-600 dark:text-primary-400 hover:underline font-medium transition-colors">
+                                {t('auth.login')}
                             </Link>
                         </p>
                     </div>
 
                     {/* Terms */}
                     <p className="text-center text-sm text-gray-500 dark:text-gray-400 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                        Dengan masuk, Anda menyetujui{' '}
+                        Dengan mendaftar, Anda menyetujui{' '}
                         <a href="/terms" className="text-primary-600 dark:text-primary-400 hover:underline transition-colors">
                             Syarat & Ketentuan
                         </a>

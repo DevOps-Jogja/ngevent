@@ -99,34 +99,32 @@ export default function EditProfilePage() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('User not found');
 
-            const fileExt = avatarFile.name.split('.').pop();
-            const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-            const filePath = `avatars/${fileName}`;
-
             // Delete old avatar if exists
             if (formData.avatar_url) {
-                const oldPath = formData.avatar_url.split('/').pop();
+                const oldPath = formData.avatar_url.split('/storage/v1/object/public/events/')[1];
                 if (oldPath) {
-                    await supabase.storage
-                        .from('events')
-                        .remove([`avatars/${oldPath}`]);
+                    await fetch(`/api/upload?path=${encodeURIComponent(oldPath)}`, {
+                        method: 'DELETE',
+                    });
                 }
             }
 
-            const { error: uploadError } = await supabase.storage
-                .from('events')
-                .upload(filePath, avatarFile, {
-                    cacheControl: '3600',
-                    upsert: false
-                });
+            // Use API endpoint to upload (bypasses RLS with service role)
+            const uploadFormData = new FormData();
+            uploadFormData.append('file', avatarFile);
 
-            if (uploadError) throw uploadError;
+            const response = await fetch('/api/upload?folder=avatars', {
+                method: 'POST',
+                body: uploadFormData,
+            });
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('events')
-                .getPublicUrl(filePath);
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Upload failed');
+            }
 
-            return publicUrl;
+            const { url } = await response.json();
+            return url;
         } catch (error: any) {
             console.error('Error uploading avatar:', error);
             toast.error('Gagal upload foto');

@@ -105,22 +105,23 @@ export default function CreateEventPage() {
 
         try {
             setUploading(true);
-            const fileExt = imageFile.name.split('.').pop();
-            const fileName = `${userId}-${Date.now()}.${fileExt}`;
-            const filePath = `event-images/${fileName}`;
 
-            const { error: uploadError } = await supabase.storage
-                .from('events')
-                .upload(filePath, imageFile);
+            // Use API endpoint to upload (bypasses RLS with service role)
+            const formData = new FormData();
+            formData.append('file', imageFile);
 
-            if (uploadError) throw uploadError;
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
 
-            // Get public URL
-            const { data } = supabase.storage
-                .from('events')
-                .getPublicUrl(filePath);
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Upload failed');
+            }
 
-            return data.publicUrl;
+            const { url } = await response.json();
+            return url;
         } catch (error: any) {
             console.error('Error uploading image:', error);
             toast.error('Gagal upload gambar');

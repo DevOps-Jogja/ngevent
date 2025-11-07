@@ -42,8 +42,9 @@ export async function GET(request: Request) {
             if (profile) {
                 try {
                     console.log('📧 Attempting to send welcome email...');
-                    // Send welcome email via our API
-                    const response = await fetch(`${requestUrl.origin}/api/webhooks/email`, {
+                    // Use NEXT_PUBLIC_SITE_URL for API calls
+                    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin;
+                    const response = await fetch(`${siteUrl}/api/webhooks/email`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -69,6 +70,7 @@ export async function GET(request: Request) {
         }
     }
 
-    // Redirect to dashboard after successful login
-    return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
+    // Use NEXT_PUBLIC_SITE_URL for redirect, fallback to requestUrl.origin
+    const redirectUrl = process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin;
+    return NextResponse.redirect(new URL('/dashboard', redirectUrl));
 }

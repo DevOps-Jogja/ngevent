@@ -203,30 +203,25 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
             setUploadingFiles(prev => ({ ...prev, [fieldName]: true }));
 
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-            const filePath = `payment-proofs/${fileName}`;
+            // Use API endpoint to upload (bypasses RLS with service role)
+            const formData = new FormData();
+            formData.append('file', file);
 
-            console.log('📂 Uploading to path:', filePath);
+            const response = await fetch('/api/upload?folder=payment-proofs', {
+                method: 'POST',
+                body: formData,
+            });
 
-            const { error: uploadError } = await supabase.storage
-                .from('events')
-                .upload(filePath, file);
-
-            if (uploadError) {
-                console.error('❌ Upload error:', uploadError);
-                throw uploadError;
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Upload failed');
             }
 
-            // Get public URL
-            const { data } = supabase.storage
-                .from('events')
-                .getPublicUrl(filePath);
-
-            console.log('✅ File uploaded successfully:', data.publicUrl);
+            const { url } = await response.json();
+            console.log('✅ File uploaded successfully:', url);
 
             setUploadingFiles(prev => ({ ...prev, [fieldName]: false }));
-            return data.publicUrl;
+            return url;
         } catch (error: any) {
             console.error('❌ Error uploading file:', error);
 

@@ -14,6 +14,10 @@ const nextConfig = {
                 protocol: 'https',
                 hostname: '**.supabase.co',
             },
+            {
+                protocol: 'https',
+                hostname: 'supabase.noma.my.id',
+            },
         ],
     },
     experimental: {
@@ -21,6 +25,11 @@ const nextConfig = {
             bodySizeLimit: '5mb',
         },
     },
+    // Allow dev server to accept requests from custom domain
+    allowedDevOrigins: [
+        'ngevent.noma.my.id',
+        'https://ngevent.noma.my.id',
+    ],
 }
 
 module.exports = nextConfig

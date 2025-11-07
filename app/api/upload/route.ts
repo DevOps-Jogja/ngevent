@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
-async function createClient() {
+async function createAuthClient() {
     const cookieStore = await cookies();
 
     return createServerClient(
@@ -23,10 +24,24 @@ async function createClient() {
     );
 }
 
+// Create admin client with service role for storage operations (bypasses RLS)
+function createAdminClient() {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
+            }
+        }
+    );
+}
+
 export async function POST(request: NextRequest) {
     try {
-        // Check authentication
-        const supabase = await createClient();
+        // Check authentication using auth client
+        const supabase = await createAuthClient();
         const { data: { user }, error: authError } = await supabase.auth.getUser();
 
         if (authError || !user) {
@@ -54,10 +69,23 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
+        // Validate file type based on folder
+        const url = new URL(request.url);
+        const folder = url.searchParams.get('folder') || 'event-images';
+
+        // Allow images for most folders, but allow PDF for payment-proofs
+        const allowedTypes = folder === 'payment-proofs'
+            ? ['image/', 'application/pdf']
+            : ['image/'];
+
+        const isValidType = allowedTypes.some(type => file.type.startsWith(type));
+
+        if (!isValidType) {
+            const allowedTypesStr = folder === 'payment-proofs'
+                ? 'images and PDF files'
+                : 'image files';
             return NextResponse.json(
-                { error: 'Only image files are allowed' },
+                { error: `Only ${allowedTypesStr} are allowed` },
                 { status: 400 }
             );
         }
@@ -65,10 +93,9 @@ export async function POST(request: NextRequest) {
         // Generate unique filename
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-        const filePath = `custom-images/${fileName}`;
-
-        // Upload to Supabase Storage
-        const { error: uploadError } = await supabase.storage
+        const filePath = `${folder}/${fileName}`;        // Use admin client for storage upload to bypass RLS
+        const adminClient = createAdminClient();
+        const { error: uploadError } = await adminClient.storage
             .from('events')
             .upload(filePath, file, {
                 contentType: file.type,
@@ -84,7 +111,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Get public URL
-        const { data: urlData } = supabase.storage
+        const { data: urlData } = adminClient.storage
             .from('events')
             .getPublicUrl(filePath);
 
@@ -103,8 +130,8 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
     try {
-        // Check authentication
-        const supabase = await createClient();
+        // Check authentication using auth client
+        const supabase = await createAuthClient();
         const { data: { user }, error: authError } = await supabase.auth.getUser();
 
         if (authError || !user) {
@@ -124,8 +151,9 @@ export async function DELETE(request: NextRequest) {
             );
         }
 
-        // Delete from Supabase Storage
-        const { error: deleteError } = await supabase.storage
+        // Use admin client for storage delete to bypass RLS
+        const adminClient = createAdminClient();
+        const { error: deleteError } = await adminClient.storage
             .from('events')
             .remove([path]);
 
