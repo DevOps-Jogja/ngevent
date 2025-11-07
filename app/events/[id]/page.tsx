@@ -246,23 +246,70 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
     const handleFileChange = async (fieldName: string, e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
+        if (!file) {
+            console.log('No file selected');
+            return;
+        }
+
+        console.log('📱 File selected:', {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            fieldName
+        });
+
+        // Validate file size (max 5MB)
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+            toast.error('Ukuran file terlalu besar. Maksimal 5MB');
+            e.target.value = ''; // Reset input
+            return;
+        }
+
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+        if (!validTypes.includes(file.type)) {
+            toast.error('Format file tidak didukung. Gunakan JPG, PNG, WEBP, atau PDF');
+            e.target.value = ''; // Reset input
+            return;
+        }
+
+        try {
             // Create preview for images
             if (file.type.startsWith('image/')) {
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     setFilePreview(prev => ({ ...prev, [fieldName]: reader.result as string }));
                 };
+                reader.onerror = () => {
+                    console.error('Error reading file');
+                    toast.error('Gagal membaca file');
+                };
                 reader.readAsDataURL(file);
+            } else if (file.type === 'application/pdf') {
+                // For PDF, show file name instead of preview
+                setFilePreview(prev => ({ ...prev, [fieldName]: 'PDF_FILE' }));
             }
 
             // Upload file
             const uploadedUrl = await handleFileUpload(fieldName, file);
             if (uploadedUrl) {
-                console.log('File uploaded successfully:', fieldName, uploadedUrl);
+                console.log('✅ File uploaded successfully:', fieldName, uploadedUrl);
                 setFormData(prev => ({ ...prev, [fieldName]: uploadedUrl }));
                 toast.success(t('event.fileUploadSuccess') || 'File berhasil diupload');
+            } else {
+                // Clear preview if upload failed
+                setFilePreview(prev => {
+                    const newPreview = { ...prev };
+                    delete newPreview[fieldName];
+                    return newPreview;
+                });
+                e.target.value = ''; // Reset input
             }
+        } catch (error) {
+            console.error('Error in handleFileChange:', error);
+            toast.error('Terjadi kesalahan saat memproses file');
+            e.target.value = ''; // Reset input
         }
     };
 
@@ -679,51 +726,98 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                                                                 ))}
                                                             </select>
                                                         ) : field.field_type === 'file' ? (
-                                                            <div>
+                                                            <div className="space-y-2">
                                                                 {filePreview[field.field_name] ? (
-                                                                    <div className="relative">
-                                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                                        <img
-                                                                            src={filePreview[field.field_name]}
-                                                                            alt="Preview"
-                                                                            className="w-full h-48 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
-                                                                        />
-                                                                        <div className="mt-2 flex items-center gap-2">
-                                                                            <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                                            </svg>
-                                                                            <span className="text-sm text-green-600 dark:text-green-400">{t('event.fileUploadSuccess')}</span>
+                                                                    <div className="space-y-3">
+                                                                        <div className="relative rounded-lg overflow-hidden border-2 border-green-500 dark:border-green-400">
+                                                                            {filePreview[field.field_name] === 'PDF_FILE' ? (
+                                                                                <div className="w-full h-48 bg-gray-100 dark:bg-dark-secondary flex flex-col items-center justify-center">
+                                                                                    <svg className="w-16 h-16 text-red-500 mb-2" fill="currentColor" viewBox="0 0 24 24">
+                                                                                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" />
+                                                                                        <path d="M14 2v6h6" />
+                                                                                        <path d="M10 13h4M10 17h4" />
+                                                                                    </svg>
+                                                                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">PDF File</p>
+                                                                                </div>
+                                                                            ) : (
+                                                                                // eslint-disable-next-line @next/next/no-img-element
+                                                                                <img
+                                                                                    src={filePreview[field.field_name]}
+                                                                                    alt="Preview"
+                                                                                    className="w-full h-48 object-cover"
+                                                                                />
+                                                                            )}
+                                                                            <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-2">
+                                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                                </svg>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex items-center justify-between gap-2">
+                                                                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                                                <svg className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                                </svg>
+                                                                                <span className="text-sm text-green-600 dark:text-green-400 truncate">{t('event.fileUploadSuccess')}</span>
+                                                                            </div>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    setFilePreview(prev => {
+                                                                                        const newPreview = { ...prev };
+                                                                                        delete newPreview[field.field_name];
+                                                                                        return newPreview;
+                                                                                    });
+                                                                                    setFormData(prev => {
+                                                                                        const newData = { ...prev };
+                                                                                        delete newData[field.field_name];
+                                                                                        return newData;
+                                                                                    });
+                                                                                    toast.success('File dihapus. Silakan upload ulang jika diperlukan');
+                                                                                }}
+                                                                                className="px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex-shrink-0"
+                                                                            >
+                                                                                Ganti
+                                                                            </button>
                                                                         </div>
                                                                     </div>
                                                                 ) : (
-                                                                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-dark-secondary hover:bg-gray-100 dark:hover:bg-dark-primary transition-colors">
-                                                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                                                            {uploadingFiles[field.field_name] ? (
-                                                                                <>
-                                                                                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-600 dark:border-primary-400 mb-2"></div>
-                                                                                    <p className="text-sm text-gray-500 dark:text-gray-400">{t('event.uploading')}</p>
-                                                                                </>
-                                                                            ) : (
-                                                                                <>
-                                                                                    <svg className="w-8 h-8 mb-2 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                                                                    </svg>
-                                                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                                                        <span className="font-semibold">{t('event.clickToUpload')}</span> {t('event.orDragDrop')}
-                                                                                    </p>
-                                                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('event.fileFormat')}</p>
-                                                                                </>
-                                                                            )}
-                                                                        </div>
+                                                                    <div className="relative">
                                                                         <input
                                                                             type="file"
-                                                                            className="hidden"
+                                                                            id={`file-${field.id}`}
+                                                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                                                             accept="image/*,.pdf"
+                                                                            capture="environment"
                                                                             required={field.is_required}
                                                                             onChange={(e) => handleFileChange(field.field_name, e)}
                                                                             disabled={uploadingFiles[field.field_name]}
                                                                         />
-                                                                    </label>
+                                                                        <label 
+                                                                            htmlFor={`file-${field.id}`}
+                                                                            className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-dark-secondary hover:bg-gray-100 dark:hover:bg-dark-primary transition-colors active:bg-gray-200 dark:active:bg-dark-800"
+                                                                        >
+                                                                            <div className="flex flex-col items-center justify-center pt-5 pb-6 pointer-events-none">
+                                                                                {uploadingFiles[field.field_name] ? (
+                                                                                    <>
+                                                                                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-600 dark:border-primary-400 mb-2"></div>
+                                                                                        <p className="text-sm text-gray-500 dark:text-gray-400">{t('event.uploading')}</p>
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <svg className="w-8 h-8 mb-2 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                                        </svg>
+                                                                                        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center px-2">
+                                                                                            <span className="font-semibold">{t('event.clickToUpload')}</span>
+                                                                                            <span className="hidden sm:inline"> {t('event.orDragDrop')}</span>
+                                                                                        </p>
+                                                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('event.fileFormat')}</p>
+                                                                                    </>
+                                                                                )}
+                                                                            </div>
+                                                                        </label>
+                                                                    </div>
                                                                 )}
 
                                                                 <br />
