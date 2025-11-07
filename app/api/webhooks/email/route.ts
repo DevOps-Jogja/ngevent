@@ -34,7 +34,7 @@ if (!supabaseServiceKey) {
         impact: 'email system will not work',
         node_env: process.env.NODE_ENV
     }));
-    
+
     if (process.env.NODE_ENV === 'production') {
         console.log(JSON.stringify({
             timestamp: new Date().toISOString(),
@@ -52,7 +52,7 @@ if (!resendApiKey) {
         impact: 'emails will not be sent',
         node_env: process.env.NODE_ENV
     }));
-    
+
     if (process.env.NODE_ENV === 'production') {
         console.log(JSON.stringify({
             timestamp: new Date().toISOString(),
@@ -118,11 +118,11 @@ interface EmailPayload {
 
 export async function POST(request: NextRequest) {
     const startTime = Date.now();
-    
+
     try {
         // Runtime check: Re-read environment variable
         const runtimeResendKey = process.env.RESEND_API_KEY;
-        
+
         // Use structured logging for Vercel
         console.log(JSON.stringify({
             timestamp: new Date().toISOString(),
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
         }));
 
         const payload: EmailPayload = await request.json();
-        
+
         console.log(JSON.stringify({
             timestamp: new Date().toISOString(),
             level: 'info',
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
                     user_id: !payload.user_id
                 }
             }));
-            
+
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
                 message: 'Email system not configured',
                 reason: 'SUPABASE_SERVICE_ROLE_KEY missing'
             }));
-            
+
             return NextResponse.json(
                 {
                     success: true,
@@ -298,7 +298,7 @@ export async function POST(request: NextRequest) {
                 email_type: payload.type,
                 recipient: payload.email
             }));
-            
+
             return NextResponse.json({
                 success: true,
                 message: 'Email logged (Resend not configured)',
@@ -363,13 +363,13 @@ export async function POST(request: NextRequest) {
                     error: resendData,
                     recipient: payload.email
                 }));
-                
+
                 throw new Error(`Resend API error: ${JSON.stringify(resendData)}`);
             }
 
             emailSent = true;
             resendId = resendData.id;
-            
+
             console.log(JSON.stringify({
                 timestamp: new Date().toISOString(),
                 level: 'info',
