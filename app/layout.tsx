@@ -11,6 +11,7 @@ import BottomNav from "@/components/BottomNav";
 import FloatingThemeToggle from "@/components/FloatingThemeToggle";
 import MobileLogo from "@/components/MobileLogo";
 import NavigationLoader from "@/components/NavigationLoader";
+import CacheInitializer from "@/components/CacheInitializer";
 import { Analytics } from "@vercel/analytics/next"
 import "@/lib/suppress-extension-errors";
 
@@ -56,6 +57,7 @@ export default function RootLayout({
                 <ReactQueryProvider>
                     <ThemeProvider>
                         <LanguageProvider>
+                            <CacheInitializer />
                             <NavigationLoader />
                             <MobileLogo />
                             <div className="flex-1 pb-16 lg:pb-0">

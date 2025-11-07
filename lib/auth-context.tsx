@@ -5,6 +5,7 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/lib/database.types';
 import { refreshAuthSession } from '@/lib/storage-cleanup';
+import { getCache, setCache, clearCache, CacheKeys, CACHE_DURATION } from '@/lib/cache-helpers';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -70,6 +71,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         }
 
+        async function loadProfile(userId: string) {
+            try {
+                // Check cache first
+                const cached = getCache<Profile>(CacheKeys.profile(userId));
+                if (cached) {
+                    console.log('📦 Profile loaded from cache (AuthContext)');
+                    setProfile(cached);
+                    setLoading(false);
+
+                    // Fetch fresh data in background
+                    fetchAndCacheProfile(userId);
+                    return;
+                }
+
+                // Fetch from Supabase
+                await fetchAndCacheProfile(userId);
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                setLoading(false);
+            }
+        }
+
+        async function fetchAndCacheProfile(userId: string) {
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+
+                if (error) throw error;
+
+                // Update state and cache
+                setProfile(data);
+                setCache(CacheKeys.profile(userId), data, CACHE_DURATION.PROFILE);
+            } finally {
+                setLoading(false);
+            }
+        }
+
         initAuth();
 
         initAuth();
@@ -97,27 +138,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
     }, [retryCount]);
 
-    const loadProfile = async (userId: string) => {
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', userId)
-                .single();
-
-            if (error) throw error;
-            setProfile(data);
-        } catch (error) {
-            console.error('Error loading profile:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const signOut = async () => {
         await supabase.auth.signOut();
         setUser(null);
         setProfile(null);
+
+        // Clear all caches on logout
+        if (user) {
+            clearCache(CacheKeys.profile(user.id));
+            clearCache(CacheKeys.userEvents(user.id));
+            clearCache(CacheKeys.userRegistrations(user.id));
+            clearCache(CacheKeys.notifications(user.id));
+            clearCache(CacheKeys.dashboardStats(user.id));
+        }
     };
 
     return (
