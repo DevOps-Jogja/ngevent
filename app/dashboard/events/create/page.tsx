@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import MilkdownEditor from '@/components/MilkdownEditor';
 import CustomImagesUpload from '@/components/CustomImagesUpload';
+import CreateEventSkeleton from '@/components/CreateEventSkeleton';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -291,14 +292,15 @@ export default function CreateEventPage() {
 
     if (!authChecked) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-primary">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600 dark:border-primary-400"></div>
-            </div>
+            <>
+                <Navbar />
+                <CreateEventSkeleton />
+            </>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-dark-primary">
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-primary animate-fade-in">
             <Navbar />
 
             <div className="container mx-auto px-4 py-12 max-w-6xl">

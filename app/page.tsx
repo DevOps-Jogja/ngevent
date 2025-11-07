@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { useLanguage } from "@/lib/language-context";
 import { useEventsWithSpeakers } from "@/hooks/useSupabaseQuery";
+import { EventCardSkeletonGrid } from "@/components/EventCardSkeleton";
 
 type EventWithSpeakers = {
     id: string;
@@ -48,6 +49,40 @@ export default function HomePage() {
     const upcomingEvents = events.filter(event => new Date(event.start_date) >= now).slice(0, 6);
     const pastEvents = events.filter(event => new Date(event.start_date) < now).slice(0, 6);
     const displayEvents = showUpcoming ? upcomingEvents : pastEvents;
+
+    // Handle error state with user-friendly message
+    if (isError) {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-dark-primary">
+                <Navbar />
+                <div className="container mx-auto px-4 py-12 max-w-4xl">
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+                        <div className="flex items-start gap-4">
+                            <svg className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div className="flex-1">
+                                <h3 className="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">
+                                    {(error as any)?.message?.includes('timeout') ? 'Request Timeout' : 'Gagal Memuat Data'}
+                                </h3>
+                                <p className="text-sm text-red-700 dark:text-red-300 mb-4">
+                                    {(error as any)?.message?.includes('timeout')
+                                        ? 'Server membutuhkan waktu terlalu lama. Silakan coba refresh halaman.'
+                                        : 'Terjadi kesalahan saat memuat event. Silakan coba lagi.'}
+                                </p>
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                                >
+                                    Refresh Halaman
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-primary transition-colors">
@@ -92,10 +127,7 @@ export default function HomePage() {
 
                         {/* Events Grid */}
                         {loading ? (
-                            <div className="text-center py-12">
-                                <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600 dark:border-primary-400"></div>
-                                <p className="mt-4 text-gray-600 dark:text-gray-400">{t('home.loading')}</p>
-                            </div>
+                            <EventCardSkeletonGrid count={6} />
                         ) : displayEvents.length === 0 ? (
                             <div className="text-center py-12">
                                 <svg

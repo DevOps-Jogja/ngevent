@@ -1,5 +1,10 @@
 import { supabase } from './supabase';
 
+// Test Supabase connection on module load
+console.log('🔍 Testing Supabase connection...');
+console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...');
+console.log('Supabase client initialized:', !!supabase);
+
 // Cache untuk menyimpan data sementara
 const cache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -7,7 +12,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 // Retry configuration
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
-const REQUEST_TIMEOUT = 15000; // 15 seconds
+const REQUEST_TIMEOUT = 30000; // 30 seconds (increased from 15s)
 
 /**
  * Sleep helper for retry delay
@@ -26,7 +31,13 @@ async function withRetry<T>(
         return await fn();
     } catch (error: any) {
         if (retries === 0) {
-            console.error('❌ Max retries reached:', error);
+            console.error('❌ Max retries reached:', error.message || error);
+            throw error;
+        }
+
+        // Don't retry on timeout errors
+        if (error.message?.includes('timeout')) {
+            console.error('❌ Request timeout (not retrying):', error.message);
             throw error;
         }
 
@@ -41,7 +52,9 @@ async function withRetry<T>(
             throw error;
         }
 
-        console.warn(`⚠️ Retrying... (${MAX_RETRIES - retries + 1}/${MAX_RETRIES})`, error.message || error);
+        if (process.env.NODE_ENV === 'development') {
+            console.warn(`⚠️ Retrying... (${MAX_RETRIES - retries + 1}/${MAX_RETRIES})`, error.message || error);
+        }
         await sleep(delay);
         return withRetry(fn, retries - 1, delay * 2); // Exponential backoff
     }
@@ -64,26 +77,31 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = REQUEST_T
 export async function getCached<T>(
     key: string,
     fetcher: () => Promise<T>,
-    cacheDuration: number = CACHE_DURATION
+    cacheDuration: number = CACHE_DURATION,
+    timeoutMs: number = REQUEST_TIMEOUT
 ): Promise<T> {
     const cached = cache.get(key);
     const now = Date.now();
 
     if (cached && (now - cached.timestamp) < cacheDuration) {
-        console.log(`✅ Cache hit for: ${key}`);
+        // Reduce console noise - only log in development
+        console.log(`✅ Cache hit: ${key}`);
         return cached.data as T;
     }
 
-    console.log(`🔄 Cache miss, fetching: ${key}`);
+    // Only log cache misses in development
+    console.log(`🔄 Fetching: ${key}`);
 
     try {
-        const data = await withRetry(() => withTimeout(fetcher()));
+        const data = await withRetry(() => withTimeout(fetcher(), timeoutMs));
         // Only cache successful results
         cache.set(key, { data, timestamp: now });
+        console.log(`✅ Cached ${key}, data:`, Array.isArray(data) ? `Array(${data.length})` : typeof data);
         return data;
-    } catch (error) {
+    } catch (error: any) {
         // Don't cache errors - let them propagate
-        console.error(`❌ Error fetching ${key}:`, error);
+        console.error(`❌ Error fetching ${key}:`, error.message || error);
+        cache.delete(key); // Remove any stale cache on error
         throw error;
     }
 }
@@ -140,36 +158,21 @@ export async function getEventsWithSpeakers(
     search?: string,
     limit?: number
 ) {
-    const cacheKey = `events_speakers_${category}_${search}_${limit}`;
+    // Create a clean cache key without undefined values
+    const cacheKey = `events_speakers_${category || 'all'}_${search || 'all'}_${limit || 'all'}`;
 
+    console.log('🔍 getEventsWithSpeakers called with:', { category, search, limit });
+
+    // Use longer timeout for complex JOIN query, with graceful fallback if embed fails
     return getCached(cacheKey, async () => {
+        console.log('🔍 Building query for events with speakers...');
+
         let query = supabase
             .from('events')
             .select(`
-                id,
-                title,
-                description,
-                start_date,
-                end_date,
-                location,
-                category,
-                capacity,
-                registration_fee,
-                image_url,
-                status,
-                organizer_id,
-                created_at,
+                *,
                 speakers (
-                    id,
-                    name,
-                    title,
-                    company,
-                    bio,
-                    photo_url,
-                    linkedin_url,
-                    twitter_url,
-                    website_url,
-                    order_index
+                    *
                 )
             `)
             .eq('status', 'published')
@@ -177,9 +180,7 @@ export async function getEventsWithSpeakers(
 
         if (category) {
             query = query.eq('category', category);
-        }
-
-        if (search) {
+        } if (search) {
             query = query.ilike('title', `%${search}%`);
         }
 
@@ -187,15 +188,32 @@ export async function getEventsWithSpeakers(
             query = query.limit(limit);
         }
 
+        console.log('🔍 Executing query to Supabase...');
         const { data, error } = await query;
 
         if (error) {
-            console.error('Error fetching events with speakers:', error);
-            throw error;
+            // If relational embed fails, gracefully fallback to plain events
+            console.warn('⚠️ Embed query failed, falling back to plain events:', error.message || error);
+            let fallback = supabase
+                .from('events')
+                .select('*')
+                .eq('status', 'published')
+                .order('start_date', { ascending: true });
+            if (category) fallback = fallback.eq('category', category);
+            if (search) fallback = fallback.ilike('title', `%${search}%`);
+            if (limit) fallback = fallback.limit(limit);
+            const { data: plainData, error: plainError } = await fallback;
+            if (plainError) {
+                console.error('❌ Plain events query also failed:', plainError);
+                throw plainError;
+            }
+            console.log('✅ Fallback query successful, received', plainData?.length || 0, 'events');
+            return plainData || [];
         }
 
+        console.log('✅ Query successful, received', data?.length || 0, 'events');
         return data || [];
-    }, 2 * 60 * 1000);
+    }, 2 * 60 * 1000, 45000); // 2 min cache, 45s timeout for complex JOIN
 }
 
 /**
@@ -207,28 +225,16 @@ export async function getEventsOptimized(
     category?: string,
     search?: string
 ) {
-    const cacheKey = `events_${page}_${pageSize}_${category}_${search}`;
+    // Create a clean cache key without undefined values
+    const cacheKey = `events_${page}_${pageSize}_${category || 'all'}_${search || 'all'}`;
 
     return getCached(cacheKey, async () => {
         let query = supabase
             .from('events')
             .select(`
-                id,
-                title,
-                start_date,
-                end_date,
-                location,
-                category,
-                capacity,
-                registration_fee,
-                image_url,
-                status,
+                *,
                 speakers (
-                    id,
-                    name,
-                    title,
-                    photo_url,
-                    order_index
+                    *
                 )
             `, { count: 'exact' })
             .eq('status', 'published')
@@ -508,20 +514,7 @@ export async function getOrganizerEvents(userId: string) {
     return getCached(`organizer_events_${userId}`, async () => {
         const { data, error } = await supabase
             .from('events')
-            .select(`
-                id,
-                title,
-                description,
-                start_date,
-                end_date,
-                location,
-                category,
-                capacity,
-                registration_fee,
-                status,
-                image_url,
-                created_at
-            `)
+            .select('*')
             .eq('organizer_id', userId)
             .order('created_at', { ascending: false });
 

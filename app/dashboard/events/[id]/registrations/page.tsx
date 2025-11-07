@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import RegistrationsSkeleton from '@/components/RegistrationsSkeleton';
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/lib/database.types';
 import { format } from 'date-fns';
@@ -261,14 +262,15 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
 
     if (!authChecked || loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-primary">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600 dark:border-primary-400"></div>
-            </div>
+            <>
+                <Navbar />
+                <RegistrationsSkeleton />
+            </>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-dark-primary">
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-primary animate-fade-in">
             <Navbar />
 
             <div className="container mx-auto px-4 py-12 max-w-7xl">

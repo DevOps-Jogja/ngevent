@@ -14,7 +14,16 @@ export default function ReactQueryProvider({ children }: { children: ReactNode }
                         refetchOnWindowFocus: false, // Tidak refetch saat window focus
                         refetchOnReconnect: true, // Refetch saat reconnect
                         refetchOnMount: true, // Refetch saat component mount jika data stale
-                        retry: 3, // Retry 3x jika gagal
+                        retry: (failureCount, error: any) => {
+                            console.log('🔄 React Query retry check:', { failureCount, error: error?.message });
+                            // Don't retry on timeout errors
+                            if (error?.message?.includes('timeout')) {
+                                console.warn('⏱️ Request timeout - not retrying');
+                                return false;
+                            }
+                            // Retry up to 3 times for other errors
+                            return failureCount < 3;
+                        },
                         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
                     },
                     mutations: {

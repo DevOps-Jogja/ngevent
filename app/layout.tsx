@@ -10,6 +10,8 @@ import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import FloatingThemeToggle from "@/components/FloatingThemeToggle";
 import MobileLogo from "@/components/MobileLogo";
+import NavigationLoader from "@/components/NavigationLoader";
+import "@/lib/suppress-extension-errors";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -45,6 +47,7 @@ export default function RootLayout({
                 <ReactQueryProvider>
                     <ThemeProvider>
                         <LanguageProvider>
+                            <NavigationLoader />
                             <MobileLogo />
                             <div className="flex-1 pb-16 lg:pb-0">
                                 {children}

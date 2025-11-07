@@ -9,6 +9,7 @@ import { useSearchParams } from 'next/navigation';
 import { CATEGORIES } from '@/lib/constants';
 import { useLanguage } from '@/lib/language-context';
 import { useEventsWithSpeakers } from '@/hooks/useSupabaseQuery';
+import { EventCardSkeletonGrid } from '@/components/EventCardSkeleton';
 
 type EventWithSpeakers = {
     id: string;
@@ -128,10 +129,7 @@ function EventsContent() {
 
                 {/* Events Grid */}
                 {loading ? (
-                    <div className="text-center py-12">
-                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600 dark:border-primary-400"></div>
-                        <p className="mt-4 text-gray-600 dark:text-gray-400">{t('common.loading')}</p>
-                    </div>
+                    <EventCardSkeletonGrid count={9} />
                 ) : filteredEvents.length === 0 ? (
                     <div className="text-center py-12">
                         <svg

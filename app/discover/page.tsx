@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import { CATEGORIES } from '@/lib/constants';
 import { useLanguage } from '@/lib/language-context';
 import { useCategoryCounts, useUpcomingEvents } from '@/hooks/useSupabaseQuery';
+import { EventCardSkeletonGrid } from '@/components/EventCardSkeleton';
 
 interface CategoryCount {
     category: string;
@@ -104,17 +105,7 @@ export default function DiscoverPage() {
                         </div>
 
                         {loadingEvents ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-                                {[1, 2, 3, 4, 5, 6].map((i) => (
-                                    <div key={i} className="bg-white dark:bg-dark-card rounded-lg sm:rounded-xl shadow-md dark:shadow-xl overflow-hidden border border-transparent dark:border-gray-700 animate-pulse">
-                                        <div className="h-40 sm:h-44 md:h-48 bg-gray-200 dark:bg-gray-700"></div>
-                                        <div className="p-3 sm:p-4">
-                                            <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
-                                            <div className="h-2 sm:h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                            <EventCardSkeletonGrid count={6} />
                         ) : upcomingEvents.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
                                 {upcomingEvents.map((event) => (

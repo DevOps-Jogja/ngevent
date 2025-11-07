@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import EventDetailSkeleton from '@/components/EventDetailSkeleton';
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/lib/database.types';
 import { format } from 'date-fns';
@@ -280,15 +281,17 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-primary">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600 dark:border-primary-400"></div>
-            </div>
+            <>
+                <Navbar />
+                <EventDetailSkeleton />
+            </>
         );
     }
 
     if (!event) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-primary">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-primary animate-fade-in">
+                <Navbar />
                 <div className="text-center">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{t('event.notFound')}</h1>
                     <Link href="/events" className="text-primary-600 dark:text-primary-400 hover:underline">
@@ -300,7 +303,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-dark-primary">
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-primary animate-fade-in">
             <Navbar />
 
             <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-7xl">

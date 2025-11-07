@@ -11,6 +11,7 @@ import { id } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import { useMyEvents, useMyRegistrations } from '@/hooks/useSupabaseQuery';
 import { useQueryClient } from '@tanstack/react-query';
+import DashboardSkeleton from '@/components/DashboardSkeleton';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -131,9 +132,10 @@ export default function DashboardPage() {
 
     if (loading || !authChecked) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-primary">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600 dark:border-primary-400"></div>
-            </div>
+            <>
+                <Navbar />
+                <DashboardSkeleton />
+            </>
         );
     }
 
@@ -142,7 +144,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-dark-primary">
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-primary animate-fade-in">
             <Navbar />
 
             <div className="container mx-auto px-4 py-12 max-w-7xl">
@@ -224,10 +226,11 @@ export default function DashboardPage() {
                                 </div>
                             ) : (
                                 <div className="grid gap-6">
-                                    {myEvents.map((event) => (
+                                    {myEvents.map((event, index) => (
                                         <div
                                             key={event.id}
-                                            className="bg-white dark:bg-dark-card rounded-xl shadow-md dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all border border-gray-200 dark:border-gray-700 overflow-hidden"
+                                            className="bg-white dark:bg-dark-card rounded-xl shadow-md dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all border border-gray-200 dark:border-gray-700 overflow-hidden animate-fade-in"
+                                            style={{ animationDelay: `${index * 0.1}s` }}
                                         >
                                             <div className="flex flex-col md:flex-row">
                                                 {/* Event Image */}
@@ -417,14 +420,15 @@ export default function DashboardPage() {
                                 </div>
                             ) : (
                                 <div className="grid gap-6">
-                                    {myRegistrations.map((registration: any) => {
+                                    {myRegistrations.map((registration: any, index) => {
                                         const eventData = registration.events;
                                         if (!eventData) return null;
 
                                         return (
                                             <div
                                                 key={registration.id}
-                                                className="bg-white dark:bg-dark-card rounded-xl shadow-md dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all border border-gray-200 dark:border-gray-700 overflow-hidden"
+                                                className="bg-white dark:bg-dark-card rounded-xl shadow-md dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all border border-gray-200 dark:border-gray-700 overflow-hidden animate-fade-in"
+                                                style={{ animationDelay: `${index * 0.1}s` }}
                                             >
                                                 <div className="flex flex-col md:flex-row">
                                                     {/* Event Image */}

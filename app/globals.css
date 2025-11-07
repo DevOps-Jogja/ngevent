@@ -338,4 +338,70 @@
   .ql-editor-content em {
     font-style: italic;
   }
+
+  /* Progress Bar Animation */
+  @keyframes progress-bar {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-progress-bar {
+    animation: progress-bar 1.5s ease-in-out infinite;
+  }
+
+  /* Skeleton Loading Animation */
+  @keyframes skeleton-loading {
+    0% {
+      background-position: -200px 0;
+    }
+    100% {
+      background-position: calc(200px + 100%) 0;
+    }
+  }
+
+  .animate-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 0%, #e0e0e0 50%, #f0f0f0 100%);
+    background-size: 200px 100%;
+    animation: skeleton-loading 1.2s ease-in-out infinite;
+  }
+
+  .dark .animate-skeleton {
+    background: linear-gradient(90deg, #1e293b 0%, #334155 50%, #1e293b 100%);
+    background-size: 200px 100%;
+  }
+
+  /* Fade In Animation */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  /* Smooth Page Transition */
+  .page-transition {
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  }
+
+  .page-transition-enter {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  .page-transition-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
