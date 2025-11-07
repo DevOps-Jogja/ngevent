@@ -11,6 +11,7 @@ import BottomNav from "@/components/BottomNav";
 import FloatingThemeToggle from "@/components/FloatingThemeToggle";
 import MobileLogo from "@/components/MobileLogo";
 import NavigationLoader from "@/components/NavigationLoader";
+import { Analytics } from "@vercel/analytics/next"
 import "@/lib/suppress-extension-errors";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -67,6 +68,7 @@ export default function RootLayout({
                                     },
                                 }}
                             />
+                            <Analytics />
                         </LanguageProvider>
                     </ThemeProvider>
                 </ReactQueryProvider>
