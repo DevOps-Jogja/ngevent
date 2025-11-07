@@ -9,11 +9,17 @@ export default function ReactQueryProvider({ children }: { children: ReactNode }
             new QueryClient({
                 defaultOptions: {
                     queries: {
-                        staleTime: 5 * 60 * 1000, // 5 minutes
-                        gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
-                        refetchOnWindowFocus: false,
-                        refetchOnReconnect: true,
-                        retry: 1,
+                        staleTime: 2 * 60 * 1000, // 2 minutes - data dianggap fresh
+                        gcTime: 10 * 60 * 1000, // 10 minutes - cache cleanup (formerly cacheTime)
+                        refetchOnWindowFocus: false, // Tidak refetch saat window focus
+                        refetchOnReconnect: true, // Refetch saat reconnect
+                        refetchOnMount: true, // Refetch saat component mount jika data stale
+                        retry: 3, // Retry 3x jika gagal
+                        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+                    },
+                    mutations: {
+                        retry: 1, // Retry 1x untuk mutations
+                        retryDelay: 1000,
                     },
                 },
             })

@@ -4,8 +4,62 @@ import { supabase } from './supabase';
 const cache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
+// Retry configuration
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
+const REQUEST_TIMEOUT = 15000; // 15 seconds
+
 /**
- * Get cached data atau fetch dari Supabase
+ * Sleep helper for retry delay
+ */
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Retry wrapper with exponential backoff
+ */
+async function withRetry<T>(
+    fn: () => Promise<T>,
+    retries: number = MAX_RETRIES,
+    delay: number = RETRY_DELAY
+): Promise<T> {
+    try {
+        return await fn();
+    } catch (error: any) {
+        if (retries === 0) {
+            console.error('❌ Max retries reached:', error);
+            throw error;
+        }
+
+        // Don't retry on certain errors
+        if (error.code === 'PGRST116' || error.message?.includes('not found')) {
+            throw error;
+        }
+
+        // Don't retry on syntax or permission errors
+        if (error.code === 'PGRST301' || error.code === 'PGRST204' || error.message?.includes('syntax')) {
+            console.error('❌ Query error (not retrying):', error.message || error);
+            throw error;
+        }
+
+        console.warn(`⚠️ Retrying... (${MAX_RETRIES - retries + 1}/${MAX_RETRIES})`, error.message || error);
+        await sleep(delay);
+        return withRetry(fn, retries - 1, delay * 2); // Exponential backoff
+    }
+}
+
+/**
+ * Timeout wrapper
+ */
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = REQUEST_TIMEOUT): Promise<T> {
+    const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Request timeout after ${timeoutMs}ms`)), timeoutMs)
+    );
+    return Promise.race([promise, timeout]);
+}
+
+/**
+ * Get cached data atau fetch dari Supabase with retry and timeout
+ * IMPORTANT: Don't cache errors or empty results from errors
  */
 export async function getCached<T>(
     key: string,
@@ -16,12 +70,22 @@ export async function getCached<T>(
     const now = Date.now();
 
     if (cached && (now - cached.timestamp) < cacheDuration) {
+        console.log(`✅ Cache hit for: ${key}`);
         return cached.data as T;
     }
 
-    const data = await fetcher();
-    cache.set(key, { data, timestamp: now });
-    return data;
+    console.log(`🔄 Cache miss, fetching: ${key}`);
+
+    try {
+        const data = await withRetry(() => withTimeout(fetcher()));
+        // Only cache successful results
+        cache.set(key, { data, timestamp: now });
+        return data;
+    } catch (error) {
+        // Don't cache errors - let them propagate
+        console.error(`❌ Error fetching ${key}:`, error);
+        throw error;
+    }
 }
 
 /**
@@ -60,13 +124,82 @@ export async function getEventOptimized(eventId: string) {
             .eq('id', eventId)
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error('Error fetching event:', error);
+            throw error;
+        }
         return data;
     });
 }
 
 /**
- * Optimized events list - dengan pagination
+ * Get events with speakers in single query (JOIN) - menghindari N+1 problem
+ */
+export async function getEventsWithSpeakers(
+    category?: string,
+    search?: string,
+    limit?: number
+) {
+    const cacheKey = `events_speakers_${category}_${search}_${limit}`;
+
+    return getCached(cacheKey, async () => {
+        let query = supabase
+            .from('events')
+            .select(`
+                id,
+                title,
+                description,
+                start_date,
+                end_date,
+                location,
+                category,
+                capacity,
+                registration_fee,
+                image_url,
+                status,
+                organizer_id,
+                created_at,
+                speakers (
+                    id,
+                    name,
+                    title,
+                    company,
+                    bio,
+                    photo_url,
+                    linkedin_url,
+                    twitter_url,
+                    website_url,
+                    order_index
+                )
+            `)
+            .eq('status', 'published')
+            .order('start_date', { ascending: true });
+
+        if (category) {
+            query = query.eq('category', category);
+        }
+
+        if (search) {
+            query = query.ilike('title', `%${search}%`);
+        }
+
+        if (limit) {
+            query = query.limit(limit);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+            console.error('Error fetching events with speakers:', error);
+            throw error;
+        }
+
+        return data || [];
+    }, 2 * 60 * 1000);
+}
+
+/**
+ * Optimized events list - dengan pagination dan server-side filtering
  */
 export async function getEventsOptimized(
     page: number = 0,
@@ -89,13 +222,20 @@ export async function getEventsOptimized(
                 capacity,
                 registration_fee,
                 image_url,
-                status
+                status,
+                speakers (
+                    id,
+                    name,
+                    title,
+                    photo_url,
+                    order_index
+                )
             `, { count: 'exact' })
             .eq('status', 'published')
             .order('start_date', { ascending: true })
             .range(page * pageSize, (page + 1) * pageSize - 1);
 
-        if (category) {
+        if (category && category !== 'all') {
             query = query.eq('category', category);
         }
 
@@ -105,8 +245,11 @@ export async function getEventsOptimized(
 
         const { data, error, count } = await query;
 
-        if (error) throw error;
-        return { data, count };
+        if (error) {
+            console.error('Error fetching events:', error);
+            throw error;
+        }
+        return { data: data || [], count: count || 0 };
     }, 2 * 60 * 1000); // 2 minutes cache untuk list
 }
 
@@ -121,7 +264,10 @@ export async function getFormFieldsOptimized(eventId: string) {
             .eq('event_id', eventId)
             .order('order_index', { ascending: true });
 
-        if (error) throw error;
+        if (error) {
+            console.error('Error fetching form fields:', error);
+            throw error;
+        }
         return data || [];
     });
 }
@@ -137,7 +283,10 @@ export async function getSpeakersOptimized(eventId: string) {
             .eq('event_id', eventId)
             .order('order_index', { ascending: true });
 
-        if (error) throw error;
+        if (error) {
+            console.error('Error fetching speakers:', error);
+            throw error;
+        }
         return data || [];
     });
 }
@@ -153,31 +302,235 @@ export async function getOrganizerOptimized(userId: string) {
             .eq('id', userId)
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error('Error fetching organizer:', error);
+            throw error;
+        }
         return data;
     }, 10 * 60 * 1000); // 10 minutes cache for profiles
 }
 
 /**
- * Batch fetch untuk multiple resources
+ * Get event with all relations in optimized way using JOIN
  */
 export async function getEventWithRelations(eventId: string) {
     return getCached(`event_full_${eventId}`, async () => {
-        const [event, formFields, speakers] = await Promise.all([
-            getEventOptimized(eventId),
-            getFormFieldsOptimized(eventId),
-            getSpeakersOptimized(eventId)
-        ]);
+        // Single query with JOIN untuk menghindari multiple requests
+        const { data: event, error: eventError } = await supabase
+            .from('events')
+            .select(`
+                id,
+                title,
+                description,
+                start_date,
+                end_date,
+                location,
+                category,
+                capacity,
+                registration_fee,
+                status,
+                image_url,
+                organizer_id,
+                created_at,
+                speakers (
+                    id,
+                    name,
+                    title,
+                    company,
+                    bio,
+                    photo_url,
+                    linkedin_url,
+                    twitter_url,
+                    website_url,
+                    order_index
+                ),
+                form_fields (
+                    id,
+                    field_name,
+                    field_type,
+                    is_required,
+                    options,
+                    order_index
+                )
+            `)
+            .eq('id', eventId)
+            .single();
 
-        const organizer = await getOrganizerOptimized(event.organizer_id);
+        if (eventError) {
+            console.error('Error fetching event with relations:', eventError);
+            throw eventError;
+        }
+
+        // Fetch organizer separately (karena tidak bisa JOIN ke profiles dari events)
+        const { data: organizer, error: organizerError } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url, city')
+            .eq('id', event.organizer_id)
+            .single();
+
+        if (organizerError) {
+            console.warn('Error fetching organizer:', organizerError);
+        }
 
         return {
-            event,
-            formFields,
-            speakers,
-            organizer
+            ...event,
+            organizer: organizer || null,
+            speakers: event.speakers || [],
+            formFields: event.form_fields || []
         };
     }, 3 * 60 * 1000); // 3 minutes cache
+}
+
+/**
+ * Get category counts efficiently
+ */
+export async function getCategoryCounts() {
+    return getCached('category_counts', async () => {
+        const { data, error } = await supabase
+            .from('events')
+            .select('category')
+            .eq('status', 'published');
+
+        if (error) {
+            console.error('Error fetching category counts:', error);
+            throw error;
+        }
+
+        // Count occurrences
+        const counts: Record<string, number> = {};
+        (data || []).forEach((event: any) => {
+            counts[event.category] = (counts[event.category] || 0) + 1;
+        });
+
+        return counts;
+    }, 5 * 60 * 1000);
+}
+
+/**
+ * Get upcoming events with limit
+ */
+export async function getUpcomingEvents(limit: number = 6) {
+    return getCached(`upcoming_events_${limit}`, async () => {
+        const now = new Date().toISOString();
+        const { data, error } = await supabase
+            .from('events')
+            .select(`
+                id,
+                title,
+                description,
+                start_date,
+                end_date,
+                location,
+                category,
+                capacity,
+                image_url,
+                speakers (
+                    id,
+                    name,
+                    photo_url
+                )
+            `)
+            .eq('status', 'published')
+            .gte('start_date', now)
+            .order('start_date', { ascending: true })
+            .limit(limit);
+
+        if (error) {
+            console.error('Error fetching upcoming events:', error);
+            throw error;
+        }
+        return data || [];
+    }, 2 * 60 * 1000);
+}
+
+/**
+ * Get user's registrations with event details
+ */
+/**
+ * Get user's registrations with event details
+ */
+export async function getUserRegistrations(userId: string) {
+    return getCached(`user_registrations_${userId}`, async () => {
+        // Fetch registrations first (only fields that exist in schema)
+        const { data: registrations, error: regError } = await supabase
+            .from('registrations')
+            .select('id, status, registered_at, event_id')
+            .eq('user_id', userId)
+            .order('registered_at', { ascending: false });
+
+        if (regError) {
+            console.error('❌ Error fetching registrations:', regError);
+            throw new Error(`Failed to fetch registrations: ${regError.message || 'Unknown error'}`);
+        }
+
+        if (!registrations || registrations.length === 0) {
+            console.log('ℹ️ No registrations found for user:', userId);
+            return [];
+        }
+
+        // Fetch events separately for better compatibility
+        const eventIds = registrations.map(r => r.event_id).filter(Boolean);
+        if (eventIds.length === 0) {
+            console.warn('⚠️ No event_id found in registrations');
+            return registrations.map(reg => ({
+                ...reg,
+                events: null
+            }));
+        }
+
+        const { data: events, error: eventsError } = await supabase
+            .from('events')
+            .select('id, title, description, start_date, end_date, location, category, registration_fee, image_url')
+            .in('id', eventIds);
+
+        if (eventsError) {
+            console.error('❌ Error fetching events for registrations:', eventsError);
+            // Return registrations without event details instead of throwing
+            return registrations.map(reg => ({
+                ...reg,
+                events: null
+            }));
+        }
+
+        // Combine data
+        const eventsMap = new Map(events?.map(e => [e.id, e]));
+        return registrations.map(reg => ({
+            ...reg,
+            events: eventsMap.get(reg.event_id) || null
+        }));
+    }, 1 * 60 * 1000); // 1 minute cache
+}
+
+/**
+ * Get organizer's events
+ */
+export async function getOrganizerEvents(userId: string) {
+    return getCached(`organizer_events_${userId}`, async () => {
+        const { data, error } = await supabase
+            .from('events')
+            .select(`
+                id,
+                title,
+                description,
+                start_date,
+                end_date,
+                location,
+                category,
+                capacity,
+                registration_fee,
+                status,
+                image_url,
+                created_at
+            `)
+            .eq('organizer_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching organizer events:', error);
+            throw error;
+        }
+        return data || [];
+    }, 1 * 60 * 1000);
 }
 
 /**

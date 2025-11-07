@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import { supabase } from '@/lib/supabase';
 import { CATEGORIES } from '@/lib/constants';
 import { useLanguage } from '@/lib/language-context';
+import { useCategoryCounts, useUpcomingEvents } from '@/hooks/useSupabaseQuery';
 
 interface CategoryCount {
     category: string;
@@ -14,62 +13,20 @@ interface CategoryCount {
     color: string;
 }
 
-const initialCategories: CategoryCount[] = CATEGORIES.map(cat => ({
-    category: cat.value,
-    count: 0,
-    icon: cat.icon,
-    color: cat.color,
-}));
-
 export default function DiscoverPage() {
     const { t } = useLanguage();
-    const [categoryCounts, setCategoryCounts] = useState<CategoryCount[]>(initialCategories);
-    const [loading, setLoading] = useState(true);
-    const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
 
-    useEffect(() => {
-        loadCategoryCounts();
-        loadUpcomingEvents();
-    }, []);
+    // Menggunakan React Query hooks
+    const { data: categoryCounts = {}, isLoading: loadingCounts } = useCategoryCounts();
+    const { data: upcomingEvents = [], isLoading: loadingEvents } = useUpcomingEvents(6);
 
-    const loadCategoryCounts = async () => {
-        try {
-            const { data: events } = await supabase
-                .from('events')
-                .select('category')
-                .eq('status', 'published');
-
-            if (events) {
-                const counts = initialCategories.map((cat: CategoryCount) => {
-                    const count = events.filter((e: any) => e.category === cat.category).length;
-                    return { ...cat, count };
-                });
-                setCategoryCounts(counts);
-            }
-        } catch (error) {
-            console.error('Error loading categories:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const loadUpcomingEvents = async () => {
-        try {
-            const now = new Date().toISOString();
-            const { data, error } = await supabase
-                .from('events')
-                .select('*')
-                .eq('status', 'published')
-                .gte('start_date', now)
-                .order('start_date', { ascending: true })
-                .limit(6);
-
-            if (error) throw error;
-            setUpcomingEvents(data || []);
-        } catch (error) {
-            console.error('Error loading upcoming events:', error);
-        }
-    };
+    // Map category counts ke format yang dibutuhkan
+    const categoryList: CategoryCount[] = CATEGORIES.map(cat => ({
+        category: cat.value,
+        count: categoryCounts[cat.value] || 0,
+        icon: cat.icon,
+        color: cat.color,
+    }));
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-primary">
@@ -94,7 +51,7 @@ export default function DiscoverPage() {
                         </h2>
 
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                            {categoryCounts.map((category) => (
+                            {categoryList.map((category) => (
                                 <Link
                                     key={category.category}
                                     href={`/events?category=${encodeURIComponent(category.category)}`}
@@ -110,7 +67,7 @@ export default function DiscoverPage() {
                                                     {category.category}
                                                 </h3>
                                                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                                                    {loading ? '...' : `${category.count} ${t('discover.events')}`}
+                                                    {loadingCounts ? '...' : `${category.count} ${t('discover.events')}`}
                                                 </p>
                                             </div>
                                             <svg
@@ -146,7 +103,7 @@ export default function DiscoverPage() {
                             </Link>
                         </div>
 
-                        {loading ? (
+                        {loadingEvents ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
                                 {[1, 2, 3, 4, 5, 6].map((i) => (
                                     <div key={i} className="bg-white dark:bg-dark-card rounded-lg sm:rounded-xl shadow-md dark:shadow-xl overflow-hidden border border-transparent dark:border-gray-700 animate-pulse">

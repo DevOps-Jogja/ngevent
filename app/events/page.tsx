@@ -1,78 +1,54 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import { supabase } from '@/lib/supabase';
-import { Database } from '@/lib/database.types';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { useSearchParams } from 'next/navigation';
 import { CATEGORIES } from '@/lib/constants';
 import { useLanguage } from '@/lib/language-context';
+import { useEventsWithSpeakers } from '@/hooks/useSupabaseQuery';
 
-type Event = Database['public']['Tables']['events']['Row'];
-type Speaker = Database['public']['Tables']['speakers']['Row'];
-
-type EventWithSpeakers = Event & {
-    speakers: Speaker[];
+type EventWithSpeakers = {
+    id: string;
+    title: string;
+    description: string;
+    start_date: string;
+    end_date: string;
+    location: string;
+    category: string;
+    capacity: number;
+    registration_fee: number;
+    image_url: string;
+    status: string;
+    speakers: Array<{
+        id: string;
+        name: string;
+        title: string;
+        photo_url: string;
+        order_index: number;
+    }>;
 };
 
 function EventsContent() {
     const { t } = useLanguage();
     const searchParams = useSearchParams();
-    const [events, setEvents] = useState<EventWithSpeakers[]>([]);
-    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState('all');
+    const [categoryFilter, setCategoryFilter] = useState(() => searchParams.get('category') || 'all');
 
-    useEffect(() => {
-        // Read category from URL query parameter
-        const categoryFromUrl = searchParams.get('category');
-        if (categoryFromUrl) {
-            setCategoryFilter(categoryFromUrl);
+    // Menggunakan React Query hook dengan optimized query
+    const { data: allEvents = [], isLoading: loading, isError, error } = useEventsWithSpeakers(
+        categoryFilter !== 'all' ? categoryFilter : undefined,
+        searchQuery || undefined
+    );
+
+    // Client-side filtering untuk search (karena sudah di-optimize di server)
+    const filteredEvents = allEvents.filter((event) => {
+        if (searchQuery) {
+            return event.title.toLowerCase().includes(searchQuery.toLowerCase());
         }
-        loadEvents();
-    }, [searchParams]);
-
-    const loadEvents = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('events')
-                .select('*')
-                .eq('status', 'published')
-                .order('start_date', { ascending: true });
-
-            if (error) throw error;
-
-            // Load speakers for each event
-            const eventsWithSpeakers = await Promise.all(
-                (data || []).map(async (event: Event) => {
-                    const { data: speakersData } = await supabase
-                        .from('speakers')
-                        .select('*')
-                        .eq('event_id', event.id)
-                        .order('order_index', { ascending: true });
-
-                    return {
-                        ...event,
-                        speakers: speakersData || [],
-                    };
-                })
-            );
-
-            setEvents(eventsWithSpeakers);
-        } catch (error) {
-            console.error('Error loading events:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const filteredEvents = events.filter((event) => {
-        const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory = categoryFilter === 'all' || event.category === categoryFilter;
-        return matchesSearch && matchesCategory;
+        return true;
     });
 
     return (
@@ -190,22 +166,6 @@ function EventsContent() {
 
 function EventCard({ event }: { event: EventWithSpeakers }) {
     const eventDate = new Date(event.start_date);
-    const [registrations, setRegistrations] = useState<any[]>([]);
-
-    const loadRegistrations = async () => {
-        const { data } = await supabase
-            .from('registrations')
-            .select('user_id, profiles(full_name, avatar_url)')
-            .eq('event_id', event.id)
-            .limit(5);
-
-        setRegistrations(data || []);
-    };
-
-    useEffect(() => {
-        loadRegistrations();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     return (
         <Link href={`/events/${event.id}`}>
@@ -274,26 +234,31 @@ function EventCard({ event }: { event: EventWithSpeakers }) {
 
                     {/* Footer */}
                     <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                        {/* Registrants */}
+                        {/* Speakers */}
                         <div className="flex items-center gap-2">
-                            {registrations.length > 0 ? (
+                            {event.speakers && event.speakers.length > 0 ? (
                                 <>
                                     <div className="flex -space-x-2">
-                                        {registrations.slice(0, 3).map((reg, idx) => (
+                                        {event.speakers.slice(0, 3).map((speaker, idx) => (
                                             <div
                                                 key={idx}
-                                                className="w-7 h-7 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full border-2 border-white dark:border-dark-card flex items-center justify-center text-white text-xs font-semibold"
+                                                className="w-7 h-7 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full border-2 border-white dark:border-dark-card flex items-center justify-center text-white text-xs font-semibold overflow-hidden"
                                             >
-                                                {reg.profiles?.full_name?.charAt(0).toUpperCase() || '?'}
+                                                {speaker.photo_url ? (
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img src={speaker.photo_url} alt={speaker.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    speaker.name.charAt(0).toUpperCase()
+                                                )}
                                             </div>
                                         ))}
                                     </div>
                                     <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
-                                        {registrations.length} {registrations.length === 1 ? 'participant' : 'participants'}
+                                        {event.speakers.length} {event.speakers.length === 1 ? 'speaker' : 'speakers'}
                                     </span>
                                 </>
                             ) : (
-                                <span className="text-xs text-gray-500 dark:text-gray-400">No participants yet</span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">No speakers yet</span>
                             )}
                         </div>
 

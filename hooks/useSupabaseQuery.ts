@@ -5,6 +5,11 @@ import {
     getEventWithRelations,
     getFormFieldsOptimized,
     getSpeakersOptimized,
+    getEventsWithSpeakers,
+    getCategoryCounts,
+    getUpcomingEvents,
+    getUserRegistrations,
+    getOrganizerEvents,
     clearCache
 } from '@/lib/supabase-optimized';
 import { supabase } from '@/lib/supabase';
@@ -41,6 +46,43 @@ export function useEvents(page: number = 0, pageSize: number = 10, category?: st
         queryKey: ['events', page, pageSize, category, search],
         queryFn: () => getEventsOptimized(page, pageSize, category, search),
         staleTime: 2 * 60 * 1000, // 2 minutes
+        retry: 2,
+    });
+}
+
+/**
+ * Hook untuk fetch events dengan speakers (untuk homepage & events list)
+ */
+export function useEventsWithSpeakers(category?: string, search?: string, limit?: number) {
+    return useQuery({
+        queryKey: ['events-speakers', category, search, limit],
+        queryFn: () => getEventsWithSpeakers(category, search, limit),
+        staleTime: 2 * 60 * 1000,
+        retry: 2,
+    });
+}
+
+/**
+ * Hook untuk fetch upcoming events
+ */
+export function useUpcomingEvents(limit: number = 6) {
+    return useQuery({
+        queryKey: ['upcoming-events', limit],
+        queryFn: () => getUpcomingEvents(limit),
+        staleTime: 2 * 60 * 1000,
+        retry: 2,
+    });
+}
+
+/**
+ * Hook untuk fetch category counts
+ */
+export function useCategoryCounts() {
+    return useQuery({
+        queryKey: ['category-counts'],
+        queryFn: getCategoryCounts,
+        staleTime: 5 * 60 * 1000,
+        retry: 2,
     });
 }
 
@@ -74,20 +116,27 @@ export function useSpeakers(eventId: string | null) {
 export function useMyEvents(userId: string | null) {
     return useQuery({
         queryKey: ['my-events', userId],
-        queryFn: async () => {
-            if (!userId) return [];
-
-            const { data, error } = await supabase
-                .from('events')
-                .select('id, title, start_date, status, image_url, category')
-                .eq('organizer_id', userId)
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-            return data || [];
-        },
+        queryFn: () => userId ? getOrganizerEvents(userId) : [],
         enabled: !!userId,
         staleTime: 1 * 60 * 1000, // 1 minute for dashboard
+        retry: 2,
+    });
+}
+
+/**
+ * Hook untuk fetch user's registrations (dashboard)
+ */
+export function useMyRegistrations(userId: string | null) {
+    return useQuery({
+        queryKey: ['my-registrations', userId],
+        queryFn: () => {
+            if (!userId) return Promise.resolve([]);
+            return getUserRegistrations(userId);
+        },
+        enabled: !!userId,
+        staleTime: 1 * 60 * 1000,
+        retry: 2,
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     });
 }
 

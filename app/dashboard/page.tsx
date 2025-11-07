@@ -9,19 +9,23 @@ import { Database } from '@/lib/database.types';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import toast from 'react-hot-toast';
+import { useMyEvents, useMyRegistrations } from '@/hooks/useSupabaseQuery';
+import { useQueryClient } from '@tanstack/react-query';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
-type Event = Database['public']['Tables']['events']['Row'];
-type Registration = Database['public']['Tables']['registrations']['Row'];
 
 export default function DashboardPage() {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const [user, setUser] = useState<any>(null);
     const [profile, setProfile] = useState<Profile | null>(null);
-    const [myEvents, setMyEvents] = useState<Event[]>([]);
-    const [myRegistrations, setMyRegistrations] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
     const [authChecked, setAuthChecked] = useState(false);
+
+    // Menggunakan React Query hooks
+    const { data: myEvents = [], isLoading: loadingEvents, refetch: refetchEvents } = useMyEvents(user?.id);
+    const { data: myRegistrations = [], isLoading: loadingRegistrations } = useMyRegistrations(user?.id);
+
+    const loading = loadingEvents || loadingRegistrations;
 
     const checkAuth = async () => {
         try {
@@ -56,41 +60,14 @@ export default function DashboardPage() {
                 .single();
 
             setProfile(profileData);
-
-            if (profileData?.role === 'organizer') {
-                loadMyEvents(userId);
-            } else {
-                loadMyRegistrations(userId);
-            }
         } catch (error) {
             console.error('Error loading profile:', error);
-        } finally {
-            setLoading(false);
         }
     };
 
-    const loadMyEvents = async (userId: string) => {
-        const { data } = await supabase
-            .from('events')
-            .select('*')
-            .eq('organizer_id', userId)
-            .order('created_at', { ascending: false });
-
-        setMyEvents(data || []);
-    };
-
-    const loadMyRegistrations = async (userId: string) => {
-        const { data } = await supabase
-            .from('registrations')
-            .select(`
-        *,
-        events (*)
-      `)
-            .eq('user_id', userId)
-            .order('registered_at', { ascending: false });
-
-        setMyRegistrations(data || []);
-    };
+    // Functions no longer needed as we use React Query
+    // const loadMyEvents = async (userId: string) => {...}
+    // const loadMyRegistrations = async (userId: string) => {...}
 
     const handleSignOut = async () => {
         await supabase.auth.signOut();
@@ -143,10 +120,9 @@ export default function DashboardPage() {
 
             toast.success('Event berhasil dihapus!');
 
-            // Reload events
-            if (user) {
-                loadMyEvents(user.id);
-            }
+            // Reload events menggunakan React Query
+            queryClient.invalidateQueries({ queryKey: ['my-events', user.id] });
+            refetchEvents();
         } catch (error: any) {
             console.error('Error deleting event:', error);
             toast.error(error.message || 'Gagal menghapus event');
@@ -441,8 +417,10 @@ export default function DashboardPage() {
                                 </div>
                             ) : (
                                 <div className="grid gap-6">
-                                    {myRegistrations.map((registration) => {
-                                        const event = registration.events as Event;
+                                    {myRegistrations.map((registration: any) => {
+                                        const eventData = registration.events;
+                                        if (!eventData) return null;
+
                                         return (
                                             <div
                                                 key={registration.id}
@@ -450,12 +428,12 @@ export default function DashboardPage() {
                                             >
                                                 <div className="flex flex-col md:flex-row">
                                                     {/* Event Image */}
-                                                    {event.image_url ? (
+                                                    {eventData.image_url ? (
                                                         <div className="md:w-64 h-48 md:h-auto flex-shrink-0 bg-gray-200 dark:bg-gray-700">
                                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                                             <img
-                                                                src={event.image_url}
-                                                                alt={event.title}
+                                                                src={eventData.image_url}
+                                                                alt={eventData.title}
                                                                 className="w-full h-full object-cover"
                                                             />
                                                         </div>
@@ -473,7 +451,7 @@ export default function DashboardPage() {
                                                             <div className="flex-1">
                                                                 <div className="flex items-center gap-2 mb-2">
                                                                     <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                                                                        {event.title}
+                                                                        {eventData.title}
                                                                     </h3>
                                                                     <span
                                                                         className={`px-3 py-1 text-xs font-semibold rounded-full ${registration.status === 'registered'
@@ -486,16 +464,16 @@ export default function DashboardPage() {
                                                                         {registration.status}
                                                                     </span>
                                                                 </div>
-                                                                {event.category && (
+                                                                {eventData.category && (
                                                                     <span className="inline-block px-2 py-1 text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 rounded mb-2">
-                                                                        {event.category}
+                                                                        {eventData.category}
                                                                     </span>
                                                                 )}
                                                             </div>
                                                         </div>
 
                                                         <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
-                                                            {event.description}
+                                                            {eventData.description}
                                                         </p>
 
                                                         {/* Event Meta Information */}
@@ -508,16 +486,16 @@ export default function DashboardPage() {
                                                                 <div>
                                                                     <div className="text-xs text-gray-500 dark:text-gray-400">Date</div>
                                                                     <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                                                        {format(new Date(event.start_date), 'dd MMM yyyy', { locale: id })}
+                                                                        {format(new Date(eventData.start_date), 'dd MMM yyyy', { locale: id })}
                                                                     </div>
                                                                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                                        {format(new Date(event.start_date), 'HH:mm', { locale: id })}
+                                                                        {format(new Date(eventData.start_date), 'HH:mm', { locale: id })}
                                                                     </div>
                                                                 </div>
                                                             </div>
 
                                                             {/* Location */}
-                                                            {event.location && (
+                                                            {eventData.location && (
                                                                 <div className="flex items-start gap-2">
                                                                     <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -526,7 +504,7 @@ export default function DashboardPage() {
                                                                     <div>
                                                                         <div className="text-xs text-gray-500 dark:text-gray-400">Location</div>
                                                                         <div className="text-sm font-medium text-gray-900 dark:text-white line-clamp-1">
-                                                                            {event.location}
+                                                                            {eventData.location}
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -556,8 +534,8 @@ export default function DashboardPage() {
                                                                 <div>
                                                                     <div className="text-xs text-gray-500 dark:text-gray-400">Fee</div>
                                                                     <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                                                        {event.registration_fee && event.registration_fee > 0
-                                                                            ? `Rp ${event.registration_fee.toLocaleString('id-ID')}`
+                                                                        {eventData.registration_fee && eventData.registration_fee > 0
+                                                                            ? `Rp ${eventData.registration_fee.toLocaleString('id-ID')}`
                                                                             : 'FREE'}
                                                                     </div>
                                                                 </div>
@@ -567,7 +545,7 @@ export default function DashboardPage() {
                                                         {/* Action Buttons */}
                                                         <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                                                             <Link
-                                                                href={`/events/${event.id}`}
+                                                                href={`/events/${eventData.id}`}
                                                                 className="flex-1 sm:flex-none px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-center font-medium"
                                                             >
                                                                 👁️ View Event

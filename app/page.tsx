@@ -2,68 +2,48 @@
 
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { Database } from "@/lib/database.types";
+import { useState } from "react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { useLanguage } from "@/lib/language-context";
+import { useEventsWithSpeakers } from "@/hooks/useSupabaseQuery";
 
-type Event = Database['public']['Tables']['events']['Row'];
-type Speaker = Database['public']['Tables']['speakers']['Row'];
-
-type EventWithSpeakers = Event & {
-    speakers: Speaker[];
+type EventWithSpeakers = {
+    id: string;
+    title: string;
+    description: string;
+    start_date: string;
+    end_date: string;
+    location: string;
+    category: string;
+    capacity: number;
+    registration_fee: number;
+    image_url: string;
+    status: string;
+    organizer_id: string;
+    created_at: string;
+    speakers: Array<{
+        id: string;
+        name: string;
+        title: string;
+        company: string;
+        bio: string;
+        photo_url: string;
+        linkedin_url: string;
+        twitter_url: string;
+        website_url: string;
+        order_index: number;
+    }>;
 };
 
 export default function HomePage() {
     const { t } = useLanguage();
-    const [events, setEvents] = useState<EventWithSpeakers[]>([]);
-    const [loading, setLoading] = useState(true);
     const [showUpcoming, setShowUpcoming] = useState(true);
 
-    useEffect(() => {
-        loadEvents();
-    }, []);
+    // Menggunakan React Query hook untuk fetch data dengan caching dan retry
+    const { data: events = [], isLoading: loading, isError, error } = useEventsWithSpeakers();
 
-    const loadEvents = async () => {
-        try {
-            console.log('🔍 Loading events from Supabase...');
-            const { data, error } = await supabase
-                .from('events')
-                .select('*')
-                .eq('status', 'published')
-                .order('start_date', { ascending: true });
-
-            console.log('📊 Events data:', data);
-            console.log('❌ Events error:', error);
-
-            if (error) throw error;
-
-            // Load speakers for each event
-            const eventsWithSpeakers = await Promise.all(
-                (data || []).map(async (event: Event) => {
-                    const { data: speakersData } = await supabase
-                        .from('speakers')
-                        .select('*')
-                        .eq('event_id', event.id)
-                        .order('order_index', { ascending: true });
-
-                    return {
-                        ...event,
-                        speakers: speakersData || [],
-                    };
-                })
-            );
-
-            setEvents(eventsWithSpeakers);
-        } catch (error) {
-            console.error('Error loading events:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
+    // Filter events berdasarkan upcoming/past
     const now = new Date();
     const upcomingEvents = events.filter(event => new Date(event.start_date) >= now).slice(0, 6);
     const pastEvents = events.filter(event => new Date(event.start_date) < now).slice(0, 6);
