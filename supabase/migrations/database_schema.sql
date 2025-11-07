@@ -130,11 +130,11 @@ CREATE POLICY "Public profiles are viewable by everyone"
 
 CREATE POLICY "Users can insert their own profile"
   ON public.profiles FOR INSERT
-  WITH CHECK (auth.uid() = id);
+  WITH CHECK ((SELECT auth.uid()) = id);
 
 CREATE POLICY "Users can update their own profile"
   ON public.profiles FOR UPDATE
-  USING (auth.uid() = id);
+  USING ((SELECT auth.uid()) = id);
 
 -- ============================================
 -- EVENTS POLICIES
@@ -142,19 +142,19 @@ CREATE POLICY "Users can update their own profile"
 
 CREATE POLICY "Published events are viewable by everyone"
   ON public.events FOR SELECT
-  USING (status = 'published' OR organizer_id = auth.uid());
+  USING (status = 'published' OR organizer_id = (SELECT auth.uid()));
 
 CREATE POLICY "Organizers can create events"
   ON public.events FOR INSERT
-  WITH CHECK (auth.uid() = organizer_id);
+  WITH CHECK ((SELECT auth.uid()) = organizer_id);
 
 CREATE POLICY "Organizers can update their own events"
   ON public.events FOR UPDATE
-  USING (auth.uid() = organizer_id);
+  USING ((SELECT auth.uid()) = organizer_id);
 
 CREATE POLICY "Organizers can delete their own events"
   ON public.events FOR DELETE
-  USING (auth.uid() = organizer_id);
+  USING ((SELECT auth.uid()) = organizer_id);
 
 -- ============================================
 -- SPEAKERS POLICIES
@@ -168,7 +168,7 @@ CREATE POLICY "Organizers can manage their event speakers"
   ON public.speakers FOR ALL
   USING (
     event_id IN (
-      SELECT id FROM public.events WHERE organizer_id = auth.uid()
+      SELECT id FROM public.events WHERE organizer_id = (SELECT auth.uid())
     )
   );
 
@@ -178,21 +178,21 @@ CREATE POLICY "Organizers can manage their event speakers"
 
 CREATE POLICY "Users can view their own registrations"
   ON public.registrations FOR SELECT
-  USING (auth.uid() = user_id OR auth.uid() IN (
+  USING ((SELECT auth.uid()) = user_id OR (SELECT auth.uid()) IN (
     SELECT organizer_id FROM public.events WHERE id = event_id
   ));
 
 CREATE POLICY "Users can register for events"
   ON public.registrations FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Users can update their own registrations"
   ON public.registrations FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Organizers can update registrations for their events"
   ON public.registrations FOR UPDATE
-  USING (auth.uid() IN (
+  USING ((SELECT auth.uid()) IN (
     SELECT organizer_id FROM public.events WHERE id = event_id
   ));
 
@@ -206,19 +206,19 @@ CREATE POLICY "Form fields are viewable by everyone"
 
 CREATE POLICY "Organizers can create form fields for their events"
   ON public.form_fields FOR INSERT
-  WITH CHECK (auth.uid() IN (
+  WITH CHECK ((SELECT auth.uid()) IN (
     SELECT organizer_id FROM public.events WHERE id = event_id
   ));
 
 CREATE POLICY "Organizers can update form fields for their events"
   ON public.form_fields FOR UPDATE
-  USING (auth.uid() IN (
+  USING ((SELECT auth.uid()) IN (
     SELECT organizer_id FROM public.events WHERE id = event_id
   ));
 
 CREATE POLICY "Organizers can delete form fields for their events"
   ON public.form_fields FOR DELETE
-  USING (auth.uid() IN (
+  USING ((SELECT auth.uid()) IN (
     SELECT organizer_id FROM public.events WHERE id = event_id
   ));
 

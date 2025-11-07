@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/lib/database.types';
+import { refreshAuthSession } from '@/lib/storage-cleanup';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -25,22 +26,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
+    const [retryCount, setRetryCount] = useState(0);
 
     useEffect(() => {
-        // Get initial session
-        supabase.auth.getSession().then(({ data: { session } }: any) => {
-            setUser(session?.user ?? null);
-            if (session?.user) {
-                loadProfile(session.user.id);
-            } else {
-                setLoading(false);
+        let mounted = true;
+
+        async function initAuth() {
+            try {
+                // Get initial session
+                const { data: { session }, error } = await supabase.auth.getSession();
+
+                if (!mounted) return;
+
+                // If error getting session, try to refresh
+                if (error) {
+                    console.warn('⚠️ Error getting session:', error.message);
+
+                    // Try refresh once
+                    if (retryCount === 0) {
+                        console.log('🔄 Attempting session refresh...');
+                        setRetryCount(1);
+                        await refreshAuthSession();
+                        return; // Will re-run via auth state change
+                    } else {
+                        // Give up after one retry
+                        console.error('❌ Session recovery failed');
+                        setLoading(false);
+                        return;
+                    }
+                }
+
+                setUser(session?.user ?? null);
+                if (session?.user) {
+                    loadProfile(session.user.id);
+                } else {
+                    setLoading(false);
+                }
+            } catch (err) {
+                console.error('❌ Auth initialization error:', err);
+                if (mounted) {
+                    setLoading(false);
+                }
             }
-        });
+        }
+
+        initAuth();
+
+        initAuth();
 
         // Listen for auth changes
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+            if (!mounted) return;
+
+            console.log('🔐 Auth state changed:', _event);
+
             setUser(session?.user ?? null);
             if (session?.user) {
                 loadProfile(session.user.id);
@@ -50,8 +91,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         });
 
-        return () => subscription.unsubscribe();
-    }, []);
+        return () => {
+            mounted = false;
+            subscription.unsubscribe();
+        };
+    }, [retryCount]);
 
     const loadProfile = async (userId: string) => {
         try {

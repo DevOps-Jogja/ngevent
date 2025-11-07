@@ -196,6 +196,114 @@ export interface Database {
                     updated_at?: string
                 }
             }
+            notifications: {
+                Row: {
+                    id: string
+                    user_id: string
+                    event_id: string | null
+                    type: 'registration' | 'event_update' | 'reminder' | 'general' | 'payment'
+                    title: string
+                    message: string
+                    read: boolean
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    event_id?: string | null
+                    type: 'registration' | 'event_update' | 'reminder' | 'general' | 'payment'
+                    title: string
+                    message: string
+                    read?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    user_id?: string
+                    event_id?: string | null
+                    type?: 'registration' | 'event_update' | 'reminder' | 'general' | 'payment'
+                    title?: string
+                    message?: string
+                    read?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+            }
+            email_templates: {
+                Row: {
+                    id: string
+                    template_type: 'welcome' | 'registration_confirmation' | 'event_reminder' | 'event_update'
+                    subject: string
+                    html_body: string
+                    text_body: string | null
+                    variables: Json | null
+                    active: boolean
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    template_type: 'welcome' | 'registration_confirmation' | 'event_reminder' | 'event_update'
+                    subject: string
+                    html_body: string
+                    text_body?: string | null
+                    variables?: Json | null
+                    active?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    template_type?: 'welcome' | 'registration_confirmation' | 'event_reminder' | 'event_update'
+                    subject?: string
+                    html_body?: string
+                    text_body?: string | null
+                    variables?: Json | null
+                    active?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+            }
+            email_logs: {
+                Row: {
+                    id: string
+                    user_id: string | null
+                    email_type: string
+                    recipient_email: string
+                    subject: string
+                    status: 'pending' | 'sent' | 'failed'
+                    error_message: string | null
+                    metadata: Json | null
+                    sent_at: string | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id?: string | null
+                    email_type: string
+                    recipient_email: string
+                    subject: string
+                    status?: 'pending' | 'sent' | 'failed'
+                    error_message?: string | null
+                    metadata?: Json | null
+                    sent_at?: string | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    user_id?: string | null
+                    email_type?: string
+                    recipient_email?: string
+                    subject?: string
+                    status?: 'pending' | 'sent' | 'failed'
+                    error_message?: string | null
+                    metadata?: Json | null
+                    sent_at?: string | null
+                    created_at?: string
+                }
+            }
         }
     }
 }

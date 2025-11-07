@@ -7,7 +7,12 @@ if (typeof window !== 'undefined') {
         if (
             errorString.includes('runtime.lastError') ||
             errorString.includes('Receiving end does not exist') ||
-            errorString.includes('Extension context invalidated')
+            errorString.includes('Extension context invalidated') ||
+            errorString.includes('Hydration failed') ||
+            errorString.includes('data-new-gr-c-s-check-loaded') ||
+            errorString.includes('data-gr-ext-installed') ||
+            errorString.includes('data-gramm') ||
+            errorString.toLowerCase().includes('grammarly')
         ) {
             return; // Suppress these errors
         }

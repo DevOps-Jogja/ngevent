@@ -271,6 +271,34 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
             if (error) throw error;
 
+            // Send registration confirmation email
+            if (insertedData && insertedData.length > 0 && event && user) {
+                try {
+                    console.log('📧 Attempting to send registration confirmation email...');
+                    const { sendRegistrationEmail, formatEventDateForEmail } = await import('@/lib/email');
+                    const emailResult = await sendRegistrationEmail({
+                        userId: user.id,
+                        email: user.email || '',
+                        userName: profile?.full_name || user.email?.split('@')[0] || 'User',
+                        eventId: event.id,
+                        eventTitle: event.title,
+                        eventDate: formatEventDateForEmail(event.start_date),
+                        eventLocation: event.location || 'TBA',
+                        organizerName: organizer?.full_name || 'Event Organizer',
+                        registrationId: insertedData[0].id,
+                    });
+
+                    if (emailResult.success) {
+                        console.log('✅ Registration email sent successfully');
+                    } else {
+                        console.warn('⚠️ Email not sent (system not configured):', emailResult.error);
+                    }
+                } catch (emailError: any) {
+                    console.warn('⚠️ Failed to send registration email (non-critical):', emailError.message || emailError);
+                    // Don't fail the registration if email fails
+                }
+            }
+
             toast.success(t('event.registrationSuccessToast') || 'Berhasil mendaftar event!');
             setIsRegistered(true);
         } catch (error: any) {

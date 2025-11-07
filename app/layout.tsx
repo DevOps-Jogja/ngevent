@@ -49,7 +49,10 @@ export default function RootLayout({
 }) {
     return (
         <html lang="id" suppressHydrationWarning>
-            <body className={`${inter.className} flex flex-col min-h-screen`}>
+            <body 
+                className={`${inter.className} flex flex-col min-h-screen`}
+                suppressHydrationWarning
+            >
                 <ReactQueryProvider>
                     <ThemeProvider>
                         <LanguageProvider>

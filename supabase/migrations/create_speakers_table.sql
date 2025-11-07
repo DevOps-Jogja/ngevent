@@ -29,6 +29,6 @@ CREATE POLICY "Public can view speakers" ON speakers
 CREATE POLICY "Organizers can manage their event speakers" ON speakers
     FOR ALL USING (
         event_id IN (
-            SELECT id FROM events WHERE organizer_id = auth.uid()
+            SELECT id FROM events WHERE organizer_id = (SELECT auth.uid())
         )
     );
