@@ -74,9 +74,9 @@ export async function POST(request: NextRequest) {
     try {
         // Check authentication using auth client
         const supabase = await createAuthClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    const sessionRes = await supabase.auth.getSession();
-    const accessToken = sessionRes.data.session?.access_token;
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const sessionRes = await supabase.auth.getSession();
+        const accessToken = sessionRes.data.session?.access_token;
 
         if (authError || !user) {
             return NextResponse.json(
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
         const filePath = `${folder}/${fileName}`;
 
         // Determine storage client: prefer admin when available; fallback to user client for non-sensitive image uploads
-    const adminClient = createAdminClient();
+        const adminClient = createAdminClient();
         const isImage = file.type.startsWith('image/');
 
         if (!adminClient && (!isImage || folder === 'payment-proofs')) {
@@ -144,8 +144,8 @@ export async function POST(request: NextRequest) {
             );
         }
 
-    // If no admin client, construct a user storage client with explicit bearer token to satisfy RLS owner assignment
-    const storageClient = adminClient ?? (accessToken ? createUserStorageClient(accessToken) : supabase);
+        // If no admin client, construct a user storage client with explicit bearer token to satisfy RLS owner assignment
+        const storageClient = adminClient ?? (accessToken ? createUserStorageClient(accessToken) : supabase);
 
         const { error: uploadError } = await storageClient.storage
             .from('events')
@@ -193,10 +193,10 @@ export async function DELETE(request: NextRequest) {
             );
         }
 
-    const { searchParams } = new URL(request.url);
-    const path = searchParams.get('path');
-    const sessionRes = await supabase.auth.getSession();
-    const accessToken = sessionRes.data.session?.access_token;
+        const { searchParams } = new URL(request.url);
+        const path = searchParams.get('path');
+        const sessionRes = await supabase.auth.getSession();
+        const accessToken = sessionRes.data.session?.access_token;
 
         if (!path) {
             return NextResponse.json(
