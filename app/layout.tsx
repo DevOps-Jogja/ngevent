@@ -14,6 +14,7 @@ import NavigationLoader from "@/components/NavigationLoader";
 import CacheInitializer from "@/components/CacheInitializer";
 import { Analytics } from "@vercel/analytics/next"
 import "@/lib/suppress-extension-errors";
+import { AuthProvider } from "@/lib/auth-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -57,28 +58,30 @@ export default function RootLayout({
                 <ReactQueryProvider>
                     <ThemeProvider>
                         <LanguageProvider>
-                            <CacheInitializer />
-                            <NavigationLoader />
-                            <MobileLogo />
-                            <div className="flex-1 pb-16 lg:pb-0">
-                                {children}
-                            </div>
-                            <Footer />
-                            <BottomNav />
-                            <FloatingThemeToggle />
-                            <Toaster
-                                position="top-right"
-                                toastOptions={{
-                                    className: 'dark:bg-dark-800 dark:text-white',
-                                    success: {
-                                        iconTheme: {
-                                            primary: '#22c55e',
-                                            secondary: '#fff',
+                            <AuthProvider>
+                                <CacheInitializer />
+                                <NavigationLoader />
+                                <MobileLogo />
+                                <div className="flex-1 pb-16 lg:pb-0">
+                                    {children}
+                                </div>
+                                <Footer />
+                                <BottomNav />
+                                <FloatingThemeToggle />
+                                <Toaster
+                                    position="top-right"
+                                    toastOptions={{
+                                        className: 'dark:bg-dark-800 dark:text-white',
+                                        success: {
+                                            iconTheme: {
+                                                primary: '#22c55e',
+                                                secondary: '#fff',
+                                            },
                                         },
-                                    },
-                                }}
-                            />
-                            <Analytics />
+                                    }}
+                                />
+                                <Analytics />
+                            </AuthProvider>
                         </LanguageProvider>
                     </ThemeProvider>
                 </ReactQueryProvider>

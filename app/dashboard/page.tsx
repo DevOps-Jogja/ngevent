@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import { useMyEvents, useMyRegistrations } from '@/hooks/useSupabaseQuery';
+import { useAuth } from '@/lib/auth-context';
 import { useQueryClient } from '@tanstack/react-query';
 import DashboardSkeleton from '@/components/DashboardSkeleton';
 
@@ -20,53 +21,20 @@ type Profile = Database['public']['Tables']['profiles']['Row'];
 export default function DashboardPage() {
     const router = useRouter();
     const queryClient = useQueryClient();
-    const [user, setUser] = useState<any>(null);
-    const [profile, setProfile] = useState<Profile | null>(null);
-    const [authChecked, setAuthChecked] = useState(false);
+    const { user, profile, loading: authLoading } = useAuth();
 
     // Menggunakan React Query hooks
-    const { data: myEvents = [], isLoading: loadingEvents, refetch: refetchEvents } = useMyEvents(user?.id);
-    const { data: myRegistrations = [], isLoading: loadingRegistrations } = useMyRegistrations(user?.id);
+    const { data: myEvents = [], isLoading: loadingEvents, refetch: refetchEvents } = useMyEvents(user?.id || null);
+    const { data: myRegistrations = [], isLoading: loadingRegistrations } = useMyRegistrations(user?.id || null);
 
     const loading = loadingEvents || loadingRegistrations;
 
-    const checkAuth = async () => {
-        try {
-            const { data: { user }, error } = await supabase.auth.getUser();
-
-            if (error || !user) {
-                toast.error('Silakan login terlebih dahulu untuk mengakses dashboard');
-                router.push('/auth/login');
-                return;
-            }
-
-            setUser(user);
-            await loadProfile(user.id);
-            setAuthChecked(true);
-        } catch (error) {
-            toast.error('Terjadi kesalahan saat verifikasi login');
+    useEffect(() => {
+        if (!authLoading && !user) {
+            toast.error('Silakan login terlebih dahulu untuk mengakses dashboard');
             router.push('/auth/login');
         }
-    };
-
-    useEffect(() => {
-        checkAuth();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const loadProfile = async (userId: string) => {
-        try {
-            const { data: profileData } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', userId)
-                .single();
-
-            setProfile(profileData);
-        } catch (error) {
-            console.error('Error loading profile:', error);
-        }
-    };
+    }, [authLoading, user, router]);
 
     // Functions no longer needed as we use React Query
     // const loadMyEvents = async (userId: string) => {...}
@@ -87,9 +55,7 @@ export default function DashboardPage() {
                 .eq('id', user.id);
 
             if (error) throw error;
-
             toast.success('Role berhasil diupdate!');
-            await loadProfile(user.id);
         } catch (error: any) {
             toast.error(error.message);
         }
@@ -114,7 +80,7 @@ export default function DashboardPage() {
                 .from('events')
                 .delete()
                 .eq('id', eventId)
-                .eq('organizer_id', user.id); // Ensure only organizer can delete their own event
+                .eq('organizer_id', user!.id); // user checked earlier
 
             if (eventError) throw eventError;
 
@@ -124,7 +90,9 @@ export default function DashboardPage() {
             toast.success('Event berhasil dihapus!');
 
             // Reload events menggunakan React Query
-            queryClient.invalidateQueries({ queryKey: ['my-events', user.id] });
+            if (user) {
+                queryClient.invalidateQueries({ queryKey: ['my-events', user.id] });
+            }
             refetchEvents();
         } catch (error: any) {
             console.error('Error deleting event:', error);
@@ -132,7 +100,7 @@ export default function DashboardPage() {
         }
     };
 
-    if (loading || !authChecked) {
+    if (authLoading || loading) {
         return (
             <>
                 <Navbar />
@@ -140,10 +108,7 @@ export default function DashboardPage() {
             </>
         );
     }
-
-    if (!user) {
-        return null;
-    }
+    if (!user) return null;
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-primary animate-fade-in">
@@ -202,9 +167,8 @@ export default function DashboardPage() {
                             </div>
                             <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                                 {profile?.role === 'organizer'
-                                    ? myEvents.filter(e => e.status === 'published').length
-                                    : myRegistrations.filter(r => r.status === 'registered').length
-                                }
+                                    ? myEvents.filter((e: any) => e.status === 'published').length
+                                    : myRegistrations.filter((r: any) => r.status === 'registered').length}
                             </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 {profile?.role === 'organizer' ? 'Published events' : 'Registered'}
@@ -304,7 +268,7 @@ export default function DashboardPage() {
                                 </div>
                             ) : (
                                 <div className="grid gap-4 sm:gap-6">
-                                    {myEvents.map((event, index) => (
+                                    {myEvents.map((event: any, index: number) => (
                                         <div
                                             key={event.id}
                                             className="bg-white dark:bg-dark-card rounded-xl shadow-md dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all border border-gray-200 dark:border-gray-700 overflow-hidden animate-fade-in"
@@ -505,7 +469,7 @@ export default function DashboardPage() {
                                 </div>
                             ) : (
                                 <div className="grid gap-4 sm:gap-6">
-                                    {myRegistrations.map((registration: any, index) => {
+                                    {myRegistrations.map((registration: any, index: number) => {
                                         const eventData = registration.events;
                                         if (!eventData) return null;
 

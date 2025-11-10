@@ -28,44 +28,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
     const [retryCount, setRetryCount] = useState(0);
+    const [connectionStatus, setConnectionStatus] = useState<'checking' | 'ok' | 'retrying' | 'error'>('checking');
 
     useEffect(() => {
         let mounted = true;
 
         async function initAuth() {
+            setConnectionStatus('checking');
             try {
-                // Get initial session
-                const { data: { session }, error } = await supabase.auth.getSession();
-
+                const session = await getSessionWithRetry();
                 if (!mounted) return;
-
-                // If error getting session, try to refresh
-                if (error) {
-                    console.warn('⚠️ Error getting session:', error.message);
-
-                    // Try refresh once
-                    if (retryCount === 0) {
-                        console.log('🔄 Attempting session refresh...');
-                        setRetryCount(1);
-                        await refreshAuthSession();
-                        return; // Will re-run via auth state change
-                    } else {
-                        // Give up after one retry
-                        console.error('❌ Session recovery failed');
-                        setLoading(false);
-                        return;
-                    }
-                }
-
                 setUser(session?.user ?? null);
                 if (session?.user) {
-                    loadProfile(session.user.id);
+                    await loadProfile(session.user.id);
+                    setConnectionStatus('ok');
                 } else {
+                    setConnectionStatus('ok');
                     setLoading(false);
                 }
-            } catch (err) {
-                console.error('❌ Auth initialization error:', err);
+            } catch (err: any) {
+                console.error('❌ Auth initialization error:', err?.message || err);
                 if (mounted) {
+                    setConnectionStatus('error');
                     setLoading(false);
                 }
             }
@@ -111,18 +95,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         }
 
-        initAuth();
-
+        // Jalankan hanya sekali (duplikasi sebelumnya dihapus)
         initAuth();
 
         // Listen for auth changes
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
             if (!mounted) return;
-
-            console.log('🔐 Auth state changed:', _event);
-
+            if (process.env.NODE_ENV === 'development') {
+                console.log('🔐 Auth state changed:', _event);
+            }
             setUser(session?.user ?? null);
             if (session?.user) {
                 loadProfile(session.user.id);
@@ -156,6 +137,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return (
         <AuthContext.Provider value={{ user, profile, loading, signOut }}>
             {children}
+            {/* Optional: bisa dipakai jika ingin expose status ke UI */}
+            {/* connectionStatus: {connectionStatus} */}
         </AuthContext.Provider>
     );
 }
@@ -167,3 +150,28 @@ export const useAuth = () => {
     }
     return context;
 };
+
+/**
+ * Mendapatkan session dengan retry & exponential backoff.
+ */
+async function getSessionWithRetry(maxAttempts: number = 2): Promise<{ user: User } | null> {
+    let attempt = 0;
+    let lastError: any = null;
+    while (attempt <= maxAttempts) {
+        try {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (error) throw error;
+            return session as any;
+        } catch (err: any) {
+            lastError = err;
+            attempt++;
+            if (attempt > maxAttempts) break;
+            const delay = 500 * attempt; // 500ms, 1000ms
+            if (process.env.NODE_ENV === 'development') {
+                console.warn(`⚠️ getSession retry ${attempt}/${maxAttempts} after error:`, err?.message || err);
+            }
+            await new Promise(res => setTimeout(res, delay));
+        }
+    }
+    throw lastError || new Error('Unknown session error');
+}

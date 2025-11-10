@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useSupabaseHealth } from '@/hooks/useSupabaseHealth';
 import { useLanguage } from "@/lib/language-context";
 
 export default function BottomNav() {
@@ -11,6 +12,7 @@ export default function BottomNav() {
     const pathname = usePathname();
     const [user, setUser] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const healthStatus = useSupabaseHealth();
 
     useEffect(() => {
         // Initialize auth state
@@ -106,6 +108,11 @@ export default function BottomNav() {
     return (
         <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 shadow-lg pb-safe">
             <div className="flex justify-around items-center h-16">
+                {healthStatus === 'error' && (
+                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-0.5 text-[10px] rounded bg-red-500 text-white shadow">
+                        Koneksi DB gagal
+                    </div>
+                )}
                 {navItems.map((item) => {
                     const active = isActive(item.href);
                     return (

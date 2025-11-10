@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageToggle from "@/components/LanguageToggle";
 import { supabase } from "@/lib/supabase";
+import { useSupabaseHealth } from '@/hooks/useSupabaseHealth';
 import toast from "react-hot-toast";
 import { useLanguage } from "@/lib/language-context";
 
@@ -18,6 +19,7 @@ export default function Navbar() {
     const [showDropdown, setShowDropdown] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const healthStatus = useSupabaseHealth();
 
     useEffect(() => {
         // Check initial theme
@@ -187,6 +189,11 @@ export default function Navbar() {
                             </nav>
                         </div>
                         <div className="flex justify-end pr-0 lg:pr-0 gap-3 items-center">
+                            {healthStatus === 'error' && (
+                                <div className="px-3 py-1 text-xs rounded bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" title="Koneksi ke database bermasalah">
+                                    DB Offline
+                                </div>
+                            )}
                             <LanguageToggle />
                             <ThemeToggle />
 

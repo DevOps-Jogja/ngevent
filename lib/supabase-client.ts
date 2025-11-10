@@ -1,10 +1,3 @@
-'use client';
-
-import { createBrowserClient } from '@supabase/ssr';
-
-export function createClient() {
-    return createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-}
+// Deprecated: use '@/lib/supabase' singleton instead.
+// This file is kept to avoid import errors if any stale references remain.
+export { supabase as default } from './supabase';
