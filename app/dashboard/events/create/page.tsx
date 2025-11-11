@@ -397,7 +397,7 @@ export default function CreateEventPage() {
                                                     <img
                                                         src={imagePreview}
                                                         alt="Preview"
-                                                        className="w-full h-64 object-cover rounded-lg"
+                                                        className="w-full  object-cover rounded-lg"
                                                     />
                                                     <button
                                                         type="button"
@@ -461,6 +461,7 @@ export default function CreateEventPage() {
                                             placeholder="Describe your event using markdown..."
                                             height="300px"
                                         />
+                                        <p className="mt-1 text-sm ">Markdown format support</p>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

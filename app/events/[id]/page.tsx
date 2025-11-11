@@ -433,6 +433,11 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             }
 
             toast.success(t('event.registrationSuccessToast') || 'Berhasil mendaftar event!');
+            // Friendly reminder to check spam/promotions if the email is not in inbox
+            const spamNotice = language === 'id'
+                ? 'Jika email tidak masuk, cek folder Spam/Promosi.'
+                : "If you don't see the email, check your Spam/Promotions folder.";
+            toast(spamNotice, { icon: '✉️' });
             setIsRegistered(true);
             // Optimistically increment count & update capacity status
             if (registrationCount !== null) {
@@ -633,7 +638,20 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1">{t('event.capacity')}</div>
-                                            <div className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">{event.capacity} {language === 'id' ? 'peserta' : 'participants'}</div>
+                                            <div className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 flex-wrap">
+                                                <span>{event.capacity} {language === 'id' ? 'peserta' : 'participants'}</span>
+                                                {typeof registrationCount === 'number' && event.capacity > 0 && (
+                                                    (() => {
+                                                        const remaining = Math.max(0, event.capacity - registrationCount);
+                                                        const isFull = remaining === 0;
+                                                        return (
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${isFull ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'}`}>
+                                                                {language === 'id' ? `Sisa ${remaining} kursi` : `${remaining} seats left`}
+                                                            </span>
+                                                        );
+                                                    })()
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -686,6 +704,24 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                                         <p className="text-green-700 dark:text-green-400 text-sm">
                                             {t('event.registrationSuccess')}
                                         </p>
+                                        {/* Email notice: check spam if not in inbox */}
+                                        <div className="mt-4 text-left">
+                                            <div className="flex items-start gap-2 text-yellow-800 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 text-sm">
+                                                <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 19a7 7 0 110-14 7 7 0 010 14z" />
+                                                </svg>
+                                                <div>
+                                                    <div className="font-medium">
+                                                        {language === 'id' ? 'Cek email konfirmasi' : 'Check confirmation email'}
+                                                    </div>
+                                                    <div className="opacity-90">
+                                                        {language === 'id'
+                                                            ? `Kami mengirim email ke ${user?.email || 'alamat email Anda'}. Jika tidak terlihat di Kotak Masuk, harap cek folder Spam atau Promosi.`
+                                                            : `We sent an email to ${user?.email || 'your email address'}. If it is not in your Inbox, please check your Spam or Promotions folder.`}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ) : (event?.capacity && event.capacity > 0 && isCapacityReached) ? (

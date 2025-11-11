@@ -11,13 +11,34 @@ import { Database } from '@/lib/database.types';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-import { useMyEvents, useMyRegistrations } from '@/hooks/useSupabaseQuery';
+import { useMyEvents, useMyRegistrations, useRegistrationsCount } from '@/hooks/useSupabaseQuery';
 import { useAuth } from '@/lib/auth-context';
 import { useQueryClient } from '@tanstack/react-query';
 import DashboardSkeleton from '@/components/DashboardSkeleton';
 import { invalidateRelatedCaches } from '@/lib/cache-helpers';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
+
+const idr = (n: number) => `Rp ${n.toLocaleString('id-ID')}`;
+
+function RegistrationsStat({ eventId, capacity }: { eventId: string, capacity?: number | null }) {
+    const { data: count = 0 } = useRegistrationsCount(eventId);
+    const hasCap = typeof capacity === 'number' && capacity > 0;
+    const pct = hasCap ? Math.min(100, Math.round((count / (capacity as number)) * 100)) : null;
+    return (
+        <div className="min-w-0">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Registrants{hasCap ? ` (${pct}%)` : ''}</div>
+            <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
+                {count}{hasCap ? ` / ${capacity}` : ''}
+            </div>
+            {hasCap && (
+                <div className="mt-1 h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded">
+                    <div className="h-1.5 rounded bg-primary-500" style={{ width: `${pct}%` }} />
+                </div>
+            )}
+        </div>
+    );
+}
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -384,20 +405,13 @@ export default function DashboardPage() {
                                                             </div>
                                                         )}
 
-                                                        {/* Capacity */}
-                                                        {event.capacity && (
-                                                            <div className="flex items-start gap-2">
-                                                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                                </svg>
-                                                                <div className="min-w-0">
-                                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Capacity</div>
-                                                                    <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
-                                                                        {event.capacity}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        )}
+                                                        {/* Registrants with progress */}
+                                                        <div className="flex items-start gap-2">
+                                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            </svg>
+                                                            <RegistrationsStat eventId={event.id} capacity={event.capacity} />
+                                                        </div>
 
                                                         {/* Registration Fee */}
                                                         <div className="flex items-start gap-2">
@@ -408,7 +422,7 @@ export default function DashboardPage() {
                                                                 <div className="text-xs text-gray-500 dark:text-gray-400">Fee</div>
                                                                 <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate">
                                                                     {event.registration_fee && event.registration_fee > 0
-                                                                        ? `Rp ${event.registration_fee.toLocaleString('id-ID')}`
+                                                                        ? idr(event.registration_fee)
                                                                         : 'FREE'}
                                                                 </div>
                                                             </div>
@@ -435,6 +449,16 @@ export default function DashboardPage() {
                                                         >
                                                             Data
                                                         </Link>
+                                                        <button
+                                                            onClick={() => {
+                                                                const url = `${window.location.origin}/events/${event.id}`;
+                                                                navigator.clipboard.writeText(url);
+                                                                toast.success('Link event disalin');
+                                                            }}
+                                                            className="px-3 py-2 bg-amber-500 text-white text-xs sm:text-sm rounded-lg hover:bg-amber-600 transition-colors text-center font-medium"
+                                                        >
+                                                            Copy Link
+                                                        </button>
                                                         <button
                                                             onClick={() => handleDeleteEvent(event.id, event.title)}
                                                             className="px-3 py-2 bg-red-600 text-white text-xs sm:text-sm rounded-lg hover:bg-red-700 transition-colors text-center font-medium"

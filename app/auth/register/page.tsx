@@ -70,8 +70,10 @@ export default function RegisterPage() {
 
         if (!formData.password) {
             newErrors.password = t('auth.passwordRequired');
-        } else if (formData.password.length < 6) {
-            newErrors.password = t('auth.passwordMinLength');
+        } else if (formData.password.length < 8) {
+            newErrors.password = 'Password minimal 8 karakter';
+        } else if (!/\d/.test(formData.password)) {
+            newErrors.password = 'Password harus mengandung angka';
         }
 
         if (!formData.confirmPassword) {
@@ -94,49 +96,31 @@ export default function RegisterPage() {
         try {
             setIsAuthenticating(true);
 
-            // Register user with Supabase Auth
-            const redirectUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email: formData.email,
-                password: formData.password,
-                options: {
-                    data: {
-                        full_name: formData.fullName,
-                    },
-                    emailRedirectTo: `${redirectUrl}/auth/callback`,
-                },
+            // Server-driven signup email: call our API to generate link and send branded email
+            const response = await fetch('/api/auth/send-confirmation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: formData.email,
+                    password: formData.password,
+                    full_name: formData.fullName,
+                })
             });
 
-            if (authError) {
-                if (authError.message.includes('already registered')) {
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                if (typeof err?.message === 'string' && err.message.includes('already registered')) {
                     throw new Error(t('auth.emailAlreadyExists'));
                 }
-                throw authError;
+                throw new Error(err?.message || t('auth.registerError'));
             }
 
-            if (authData.user) {
-                // Create profile in profiles table (email is stored in auth.users, not profiles)
-                const { error: profileError } = await supabase
-                    .from('profiles')
-                    .insert({
-                        id: authData.user.id,
-                        full_name: formData.fullName,
-                        role: 'participant', // Default role
-                    });
+            toast.success('Pendaftaran berhasil! Cek email Anda untuk verifikasi.');
 
-                if (profileError) {
-                    console.error('Profile creation error:', profileError);
-                    // Don't fail the registration if profile creation fails
-                    // The trigger might handle it automatically
-                }
-
-                toast.success(t('auth.registerSuccess'));
-
-                // Redirect to login page after successful registration
-                setTimeout(() => {
-                    router.push('/auth/login');
-                }, 2000);
-            }
+            // Redirect to login after short delay
+            setTimeout(() => {
+                router.push('/auth/login');
+            }, 1500);
         } catch (error: any) {
             console.error('Registration error:', error);
             toast.error(error.message || t('auth.registerError'));
@@ -263,11 +247,27 @@ export default function RegisterPage() {
                                     value={formData.password}
                                     onChange={(e) => handleInputChange('password', e.target.value)}
                                     className={`w-full px-4 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
-                                    placeholder="••••••••"
+                                    placeholder="Minimal 8 karakter & ada angka"
                                     disabled={isAuthenticating}
                                 />
                                 {errors.password && (
                                     <p className="mt-1 text-sm text-red-500">{errors.password}</p>
+                                )}
+                                {!errors.password && (
+                                    <div className="mt-2 space-y-1 text-xs">
+                                        <div className={`flex items-center gap-2 ${formData.password.length >= 8 ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Minimal 8 karakter
+                                        </div>
+                                        <div className={`flex items-center gap-2 ${/\d/.test(formData.password) ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Mengandung angka (0-9)
+                                        </div>
+                                    </div>
                                 )}
                             </div>
 

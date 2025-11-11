@@ -17,6 +17,10 @@ type Registration = Database['public']['Tables']['registrations']['Row'] & {
     profiles?: {
         full_name: string | null;
         avatar_url: string | null;
+        phone: string | null;
+        institution: string | null;
+        position: string | null;
+        city: string | null;
     };
 };
 
@@ -108,7 +112,11 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
                     *,
                     profiles (
                         full_name,
-                        avatar_url
+                        avatar_url,
+                        phone,
+                        institution,
+                        position,
+                        city
                     )
                 `)
                 .eq('event_id', eventId)
@@ -232,6 +240,10 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
             const row: Record<string, any> = {
                 'Registration ID': reg.id,
                 'Name': reg.profiles?.full_name || 'N/A',
+                'Phone': reg.profiles?.phone || '-',
+                'Institution': reg.profiles?.institution || '-',
+                'Position': reg.profiles?.position || '-',
+                'City': reg.profiles?.city || '-',
             };
 
             // Add all form field values
@@ -266,6 +278,8 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
         const matchesFilter = filter === 'all' || reg.status === filter;
         const matchesSearch = !searchQuery ||
             reg.profiles?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            reg.profiles?.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            reg.profiles?.institution?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             reg.id.toLowerCase().includes(searchQuery.toLowerCase());
 
         return matchesFilter && matchesSearch;
@@ -394,7 +408,7 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
                             <div className="flex-1">
                                 <input
                                     type="text"
-                                    placeholder="Search by name or ID..."
+                                    placeholder="Search by name, phone, institution, or ID..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white"
@@ -489,14 +503,28 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
                                             <tr key={registration.id} className="hover:bg-gray-50 dark:hover:bg-dark-secondary transition-colors">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold">
-                                                            {registration.profiles?.full_name?.charAt(0).toUpperCase() || '?'}
-                                                        </div>
+                                                        {registration.profiles?.avatar_url ? (
+                                                            <img
+                                                                src={registration.profiles.avatar_url}
+                                                                alt={registration.profiles.full_name || 'Avatar'}
+                                                                className="w-10 h-10 rounded-full object-cover ring-1 ring-gray-200 dark:ring-gray-700"
+                                                                referrerPolicy="no-referrer"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold">
+                                                                {registration.profiles?.full_name?.charAt(0).toUpperCase() || '?'}
+                                                            </div>
+                                                        )}
                                                         <div>
                                                             <div className="font-medium text-gray-900 dark:text-white">
                                                                 {registration.profiles?.full_name || 'Unknown'}
                                                             </div>
-                                                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                                {registration.profiles?.phone || '-'}
+                                                                {registration.profiles?.institution ? ` · ${registration.profiles.institution}` : ''}
+                                                                {registration.profiles?.city ? ` (${registration.profiles.city})` : ''}
+                                                            </div>
+                                                            <div className="text-xs text-gray-400 dark:text-gray-500">
                                                                 ID: {registration.id.slice(0, 8)}...
                                                             </div>
                                                         </div>

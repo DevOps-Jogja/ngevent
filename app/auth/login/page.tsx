@@ -13,6 +13,7 @@ import Link from 'next/link';
 export default function LoginPage() {
     const { t } = useLanguage();
     const router = useRouter();
+    const [showVerifiedBanner, setShowVerifiedBanner] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -21,6 +22,16 @@ export default function LoginPage() {
     const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
     useEffect(() => {
+        // Show verified banner/toast if coming from email verification
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const verified = params.get('verified');
+            if (verified === '1') {
+                setShowVerifiedBanner(true);
+                toast.success('Email berhasil diverifikasi. Silakan login.');
+            }
+        } catch {}
+
         // Check initial theme
         const checkTheme = () => {
             const isDark = document.documentElement.classList.contains('dark');
@@ -153,6 +164,12 @@ export default function LoginPage() {
 
                     {/* Login Card */}
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 space-y-6 animate-fade-in hover:shadow-md transition-shadow duration-300" style={{ animationDelay: '0.3s' }}>
+                        {/* Verified banner */}
+                        {showVerifiedBanner && (
+                            <div className="mb-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-700/40 dark:bg-green-900/30 dark:text-green-200">
+                                Email Anda sudah terverifikasi. Silakan login untuk melanjutkan.
+                            </div>
+                        )}
 
                         {/* Email Login Form */}
                         <form onSubmit={handleEmailLogin} className="space-y-4">
