@@ -9,16 +9,15 @@ import { supabase } from "@/lib/supabase";
 import { useSupabaseHealth } from '@/hooks/useSupabaseHealth';
 import toast from "react-hot-toast";
 import { useLanguage } from "@/lib/language-context";
+import { useAuth } from '@/lib/auth-context';
 
 export default function Navbar() {
     const { t } = useLanguage();
     const pathname = usePathname();
     const router = useRouter();
-    const [user, setUser] = useState<any>(null);
-    const [profile, setProfile] = useState<any>(null);
+    const { user, profile, loading, signOut } = useAuth();
     const [showDropdown, setShowDropdown] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
     const healthStatus = useSupabaseHealth();
 
     useEffect(() => {
@@ -37,59 +36,15 @@ export default function Navbar() {
             attributeFilter: ['class']
         });
 
-        // Initialize auth state
-        initializeAuth();
-
-        // Listen for auth changes
-        const { data: authListener } = supabase.auth.onAuthStateChange(async (_event: any, session: any) => {
-            if (session?.user) {
-                setUser(session.user);
-                await loadProfile(session.user.id);
-            } else {
-                setUser(null);
-                setProfile(null);
-            }
-            setIsLoading(false);
-        });
-
         return () => {
             observer.disconnect();
-            authListener.subscription.unsubscribe();
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const initializeAuth = async () => {
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                setUser(session.user);
-                await loadProfile(session.user.id);
-            }
-        } catch (error) {
-            console.error('Error initializing auth:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const loadProfile = async (userId: string) => {
-        const { data } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .single();
-
-        if (data) {
-            setProfile(data);
-        }
-    };
-
     const handleSignOut = async () => {
         try {
-            await supabase.auth.signOut();
-            setUser(null);
-            setProfile(null);
+            await signOut();
             setShowDropdown(false);
             toast.success('Berhasil logout');
             router.push('/');
@@ -197,7 +152,7 @@ export default function Navbar() {
                             <LanguageToggle />
                             <ThemeToggle />
 
-                            {isLoading ? (
+                            {loading ? (
                                 // Loading skeleton
                                 <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
                             ) : user ? (

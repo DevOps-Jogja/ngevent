@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { CATEGORIES } from '@/lib/constants';
 import { useLanguage } from '@/lib/language-context';
+import type { UpcomingEvent } from '@/lib/types';
 import { useCategoryCounts, useUpcomingEvents } from '@/hooks/useSupabaseQuery';
 import { EventCardSkeletonGrid } from '@/components/EventCardSkeleton';
 
@@ -108,7 +109,7 @@ export default function DiscoverPage() {
                             <EventCardSkeletonGrid count={6} />
                         ) : upcomingEvents.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-                                {upcomingEvents.map((event) => (
+                                {upcomingEvents.map((event: UpcomingEvent) => (
                                     <Link
                                         key={event.id}
                                         href={`/events/${event.id}`}

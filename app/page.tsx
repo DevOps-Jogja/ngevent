@@ -46,8 +46,8 @@ export default function HomePage() {
 
     // Filter events berdasarkan upcoming/past
     const now = new Date();
-    const upcomingEvents = events.filter(event => new Date(event.start_date) >= now).slice(0, 6);
-    const pastEvents = events.filter(event => new Date(event.start_date) < now).slice(0, 6);
+    const upcomingEvents = events.filter((event: EventWithSpeakers) => new Date(event.start_date) >= now).slice(0, 6);
+    const pastEvents = events.filter((event: EventWithSpeakers) => new Date(event.start_date) < now).slice(0, 6);
     const displayEvents = showUpcoming ? upcomingEvents : pastEvents;
 
     // Handle error state with user-friendly message
@@ -152,7 +152,7 @@ export default function HomePage() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {displayEvents.map((event) => (
+                                {displayEvents.map((event: EventWithSpeakers) => (
                                     <EventCard key={event.id} event={event} t={t} />
                                 ))}
                             </div>

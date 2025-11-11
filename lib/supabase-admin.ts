@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { supabaseFetch } from '@/lib/supabase';
 
 /**
  * Supabase Admin Client (Service Role)
@@ -39,6 +40,12 @@ export function getSupabaseAdminClient(): SupabaseAdminClientResult {
         auth: {
             autoRefreshToken: false,
             persistSession: false,
+        },
+        global: {
+            headers: {
+                'x-client-info': 'ngevent-admin',
+            },
+            fetch: supabaseFetch,
         },
     });
 

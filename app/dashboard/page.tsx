@@ -15,6 +15,7 @@ import { useMyEvents, useMyRegistrations } from '@/hooks/useSupabaseQuery';
 import { useAuth } from '@/lib/auth-context';
 import { useQueryClient } from '@tanstack/react-query';
 import DashboardSkeleton from '@/components/DashboardSkeleton';
+import { invalidateRelatedCaches } from '@/lib/cache-helpers';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -22,12 +23,20 @@ export default function DashboardPage() {
     const router = useRouter();
     const queryClient = useQueryClient();
     const { user, profile, loading: authLoading } = useAuth();
+    const [effectiveRole, setEffectiveRole] = useState<'participant' | 'organizer'>(profile?.role || 'participant');
 
     // Menggunakan React Query hooks
     const { data: myEvents = [], isLoading: loadingEvents, refetch: refetchEvents } = useMyEvents(user?.id || null);
     const { data: myRegistrations = [], isLoading: loadingRegistrations } = useMyRegistrations(user?.id || null);
 
     const loading = loadingEvents || loadingRegistrations;
+
+    // Keep effectiveRole in sync with profile changes
+    useEffect(() => {
+        if (profile?.role) {
+            setEffectiveRole(profile.role as 'participant' | 'organizer');
+        }
+    }, [profile?.role]);
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -55,6 +64,9 @@ export default function DashboardPage() {
                 .eq('id', user.id);
 
             if (error) throw error;
+            // Immediately reflect role in UI and clear related caches
+            setEffectiveRole(newRole);
+            invalidateRelatedCaches('profile', user.id);
             toast.success('Role berhasil diupdate!');
         } catch (error: any) {
             toast.error(error.message);
@@ -62,6 +74,10 @@ export default function DashboardPage() {
     };
 
     const handleDeleteEvent = async (eventId: string, eventTitle: string) => {
+        if (effectiveRole !== 'organizer') {
+            toast.error('Hanya organizer yang dapat menghapus event');
+            return;
+        }
         if (!confirm(`Apakah Anda yakin ingin menghapus event "${eventTitle}"? Tindakan ini tidak dapat dibatalkan.`)) {
             return;
         }
@@ -151,10 +167,10 @@ export default function DashboardPage() {
                                 </svg>
                             </div>
                             <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                                {profile?.role === 'organizer' ? myEvents.length : myRegistrations.length}
+                                {effectiveRole === 'organizer' ? myEvents.length : myRegistrations.length}
                             </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {profile?.role === 'organizer' ? 'Events created' : 'Events joined'}
+                                {effectiveRole === 'organizer' ? 'Events created' : 'Events joined'}
                             </p>
                         </div>
 
@@ -166,12 +182,12 @@ export default function DashboardPage() {
                                 </svg>
                             </div>
                             <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                                {profile?.role === 'organizer'
+                                {effectiveRole === 'organizer'
                                     ? myEvents.filter((e: any) => e.status === 'published').length
                                     : myRegistrations.filter((r: any) => r.status === 'registered').length}
                             </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {profile?.role === 'organizer' ? 'Published events' : 'Registered'}
+                                {effectiveRole === 'organizer' ? 'Published events' : 'Registered'}
                             </p>
                         </div>
 
@@ -183,7 +199,7 @@ export default function DashboardPage() {
                                 </svg>
                             </div>
                             <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                                {profile?.role === 'organizer' ? myEvents.length : myRegistrations.length}
+                                {effectiveRole === 'organizer' ? myEvents.length : myRegistrations.length}
                             </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 New this month
@@ -199,24 +215,32 @@ export default function DashboardPage() {
                                     Welcome, {profile?.full_name || user?.email}!
                                 </h1>
                                 <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                                    Role: <span className="font-semibold capitalize">{profile?.role}</span>
+                                    Role: <span className="font-semibold capitalize">{effectiveRole}</span>
                                 </p>
                             </div>
                             <div className="flex gap-2 w-full sm:w-auto">
                                 <button
-                                    onClick={() => updateRole('participant')}
-                                    className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg transition-colors ${profile?.role === 'participant'
-                                        ? 'bg-primary-600 text-white'
-                                        : 'bg-gray-200 dark:bg-dark-secondary text-gray-700 dark:text-gray-300'
+                                    aria-pressed={effectiveRole === 'participant'}
+                                    disabled={effectiveRole === 'participant'}
+                                    onClick={() => {
+                                        if (effectiveRole !== 'participant') updateRole('participant');
+                                    }}
+                                    className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed ${effectiveRole === 'participant'
+                                        ? 'bg-primary-600 text-white shadow'
+                                        : 'bg-gray-200 dark:bg-dark-secondary text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                                         }`}
                                 >
                                     Participant
                                 </button>
                                 <button
-                                    onClick={() => updateRole('organizer')}
-                                    className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg transition-colors ${profile?.role === 'organizer'
-                                        ? 'bg-primary-600 text-white'
-                                        : 'bg-gray-200 dark:bg-dark-secondary text-gray-700 dark:text-gray-300'
+                                    aria-pressed={effectiveRole === 'organizer'}
+                                    disabled={effectiveRole === 'organizer'}
+                                    onClick={() => {
+                                        if (effectiveRole !== 'organizer') updateRole('organizer');
+                                    }}
+                                    className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed ${effectiveRole === 'organizer'
+                                        ? 'bg-primary-600 text-white shadow'
+                                        : 'bg-gray-200 dark:bg-dark-secondary text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                                         }`}
                                 >
                                     Organizer
@@ -226,7 +250,7 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Organizer Dashboard */}
-                    {profile?.role === 'organizer' && (
+                    {effectiveRole === 'organizer' && (
                         <div>
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
                                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">My Events</h2>
@@ -428,7 +452,7 @@ export default function DashboardPage() {
                     )}
 
                     {/* Participant Dashboard */}
-                    {profile?.role === 'participant' && (
+                    {effectiveRole === 'participant' && (
                         <div>
                             {/* Upcoming Events Widget */}
                             <div className="mb-6 sm:mb-8">

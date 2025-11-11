@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseAdminClient } from '@/lib/supabase-admin';
+import { supabaseFetch } from '@/lib/supabase';
 import { cookies } from 'next/headers';
 
 // Helper to validate required env vars for admin storage operations
@@ -60,6 +61,7 @@ function createUserStorageClient(accessToken: string) {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
             },
+            fetch: supabaseFetch,
         },
     });
 }

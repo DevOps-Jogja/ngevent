@@ -3,48 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { useSupabaseHealth } from '@/hooks/useSupabaseHealth';
 import { useLanguage } from "@/lib/language-context";
+import { useAuth } from '@/lib/auth-context';
 
 export default function BottomNav() {
     const { t } = useLanguage();
     const pathname = usePathname();
-    const [user, setUser] = useState<any>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const { user, loading } = useAuth();
     const healthStatus = useSupabaseHealth();
 
-    useEffect(() => {
-        // Initialize auth state
-        initializeAuth();
-
-        // Listen for auth changes
-        const { data: authListener } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
-            if (session?.user) {
-                setUser(session.user);
-            } else {
-                setUser(null);
-            }
-            setIsLoading(false);
-        });
-
-        return () => {
-            authListener.subscription.unsubscribe();
-        };
-    }, []);
-
-    const initializeAuth = async () => {
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                setUser(session.user);
-            }
-        } catch (error) {
-            console.error('Error initializing auth:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    // Auth state now handled by AuthProvider; remove local listener
+    useEffect(() => { /* no-op retained for potential future side-effects */ }, []);
 
     const isActive = (path: string) => {
         if (path === '/dashboard') {

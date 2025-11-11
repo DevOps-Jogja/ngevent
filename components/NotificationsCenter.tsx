@@ -42,7 +42,7 @@ export default function NotificationsCenter({ userId }: { userId: string }) {
 
             if (error) throw error;
 
-            const formattedNotifications = data?.map((n: any) => ({
+            const formattedNotifications: Notification[] = (data || []).map((n: any): Notification => ({
                 id: n.id,
                 type: n.type,
                 title: n.title,
@@ -51,10 +51,10 @@ export default function NotificationsCenter({ userId }: { userId: string }) {
                 created_at: n.created_at,
                 event_id: n.event_id,
                 event_title: n.events?.title
-            })) || [];
+            }));
 
             setNotifications(formattedNotifications);
-            setUnreadCount(formattedNotifications.filter(n => !n.read).length);
+            setUnreadCount(formattedNotifications.filter((n: Notification) => !n.read).length);
         } catch (error) {
             console.error('Error loading notifications:', error);
         } finally {
@@ -103,7 +103,7 @@ export default function NotificationsCenter({ userId }: { userId: string }) {
             if (error) throw error;
 
             setNotifications(prev =>
-                prev.map(n =>
+                prev.map((n: Notification) =>
                     n.id === notificationId ? { ...n, read: true } : n
                 )
             );
@@ -116,8 +116,8 @@ export default function NotificationsCenter({ userId }: { userId: string }) {
     const markAllAsRead = async () => {
         try {
             const unreadIds = notifications
-                .filter(n => !n.read)
-                .map(n => n.id);
+                .filter((n: Notification) => !n.read)
+                .map((n: Notification) => n.id);
 
             if (unreadIds.length === 0) return;
 
@@ -128,7 +128,7 @@ export default function NotificationsCenter({ userId }: { userId: string }) {
 
             if (error) throw error;
 
-            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+            setNotifications(prev => prev.map((n: Notification) => ({ ...n, read: true })));
             setUnreadCount(0);
         } catch (error) {
             console.error('Error marking all as read:', error);

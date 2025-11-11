@@ -45,7 +45,7 @@ function EventsContent() {
     );
 
     // Client-side filtering untuk search (karena sudah di-optimize di server)
-    const filteredEvents = allEvents.filter((event) => {
+    const filteredEvents = allEvents.filter((event: EventWithSpeakers) => {
         if (searchQuery) {
             return event.title.toLowerCase().includes(searchQuery.toLowerCase());
         }
@@ -152,7 +152,7 @@ function EventsContent() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredEvents.map((event) => (
+                        {filteredEvents.map((event: EventWithSpeakers) => (
                             <EventCard key={event.id} event={event} />
                         ))}
                     </div>

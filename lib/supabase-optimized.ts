@@ -1,4 +1,6 @@
 import { supabase } from './supabase';
+import type { UpcomingEvent, CategoryCounts } from './types';
+import type { Database } from './database.types';
 
 // Test Supabase connection on module load
 console.log('🔍 Testing Supabase connection...');
@@ -390,7 +392,7 @@ export async function getEventWithRelations(eventId: string) {
 /**
  * Get category counts efficiently
  */
-export async function getCategoryCounts() {
+export async function getCategoryCounts(): Promise<CategoryCounts> {
     return getCached('category_counts', async () => {
         const { data, error } = await supabase
             .from('events')
@@ -403,9 +405,10 @@ export async function getCategoryCounts() {
         }
 
         // Count occurrences
-        const counts: Record<string, number> = {};
-        (data || []).forEach((event: any) => {
-            counts[event.category] = (counts[event.category] || 0) + 1;
+        const counts: CategoryCounts = {};
+        (data || []).forEach((event: { category: string | null }) => {
+            const key = event.category ?? 'uncategorized';
+            counts[key] = (counts[key] || 0) + 1;
         });
 
         return counts;
@@ -415,7 +418,7 @@ export async function getCategoryCounts() {
 /**
  * Get upcoming events with limit
  */
-export async function getUpcomingEvents(limit: number = 6) {
+export async function getUpcomingEvents(limit: number = 6): Promise<UpcomingEvent[]> {
     return getCached(`upcoming_events_${limit}`, async () => {
         const now = new Date().toISOString();
         const { data, error } = await supabase
@@ -445,7 +448,7 @@ export async function getUpcomingEvents(limit: number = 6) {
             console.error('Error fetching upcoming events:', error);
             throw error;
         }
-        return data || [];
+        return (data as UpcomingEvent[]) || [];
     }, 2 * 60 * 1000);
 }
 
@@ -475,10 +478,12 @@ export async function getUserRegistrations(userId: string) {
         }
 
         // Fetch events separately for better compatibility
-        const eventIds = registrations.map(r => r.event_id).filter(Boolean);
+        const eventIds = (registrations as Array<Pick<Database['public']['Tables']['registrations']['Row'], 'event_id'>>)
+            .map((r) => r.event_id)
+            .filter((id): id is string => Boolean(id));
         if (eventIds.length === 0) {
             console.warn('⚠️ No event_id found in registrations');
-            return registrations.map(reg => ({
+            return (registrations as Array<Pick<Database['public']['Tables']['registrations']['Row'], 'id' | 'status' | 'registered_at' | 'event_id'>>).map((reg) => ({
                 ...reg,
                 events: null
             }));
@@ -492,15 +497,15 @@ export async function getUserRegistrations(userId: string) {
         if (eventsError) {
             console.error('❌ Error fetching events for registrations:', eventsError);
             // Return registrations without event details instead of throwing
-            return registrations.map(reg => ({
-                ...reg,
-                events: null
-            }));
+            const regs = registrations as Array<Pick<Database['public']['Tables']['registrations']['Row'], 'id' | 'status' | 'registered_at' | 'event_id'>>;
+            return regs.map((reg) => ({ ...reg, events: null }));
         }
 
         // Combine data
-        const eventsMap = new Map(events?.map(e => [e.id, e]));
-        return registrations.map(reg => ({
+        const eventsArray = (events ?? []) as Array<Pick<Database['public']['Tables']['events']['Row'], 'id' | 'title' | 'description' | 'start_date' | 'end_date' | 'location' | 'category' | 'registration_fee' | 'image_url'>>;
+        const eventsMap = new Map(eventsArray.map((e) => [e.id, e]));
+        const regs = registrations as Array<Pick<Database['public']['Tables']['registrations']['Row'], 'id' | 'status' | 'registered_at' | 'event_id'>>;
+        return regs.map((reg) => ({
             ...reg,
             events: eventsMap.get(reg.event_id) || null
         }));

@@ -216,7 +216,7 @@ export async function sendEventReminder(eventId: string, eventTitle: string) {
             return { data: null, error: null };
         }
 
-        const userIds = registrations.map(r => r.user_id);
+        const userIds = registrations.map((r: { user_id: string }) => r.user_id);
 
         return createBulkNotifications({
             userIds,

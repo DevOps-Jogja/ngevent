@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import EventDetailSkeleton from '@/components/EventDetailSkeleton';
 import { supabase } from '@/lib/supabase';
+import { getEventWithRelations } from '@/lib/supabase-optimized';
 import { Database } from '@/lib/database.types';
 import { format } from 'date-fns';
 import { id, enUS } from 'date-fns/locale';
@@ -65,12 +66,20 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                     table: 'registrations',
                     filter: `event_id=eq.${eventId}`,
                 },
-                (payload) => {
+                (payload: {
+                    eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+                    schema: string;
+                    table: string;
+                    commit_timestamp: string;
+                    errors?: string[];
+                    new: Partial<Database['public']['Tables']['registrations']['Row']> | null;
+                    old: Partial<Database['public']['Tables']['registrations']['Row']> | null;
+                }) => {
                     console.log('Registration change detected:', payload);
 
                     // If current user's registration is affected
-                    const oldRecord = payload.old as any;
-                    const newRecord = payload.new as any;
+                    const oldRecord = payload.old;
+                    const newRecord = payload.new;
 
                     if (oldRecord?.user_id === user.id || newRecord?.user_id === user.id) {
                         // Re-check registration status
@@ -129,47 +138,33 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
         }
 
         try {
-            const { data: eventData, error: eventError } = await supabase
-                .from('events')
-                .select('*')
-                .eq('id', eventId)
-                .single();
+            // Optimized: single JOIN query for event + speakers + form_fields, plus organizer fetched once internally
+            const full = await getEventWithRelations(eventId);
 
-            if (eventError) {
-                console.error('Error loading event:', eventError);
-                throw eventError;
+            if (!full) {
+                throw new Error('Event not found');
             }
 
-            setEvent(eventData);
-
-            // Load organizer profile
-            if (eventData.organizer_id) {
-                const { data: organizerData } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', eventData.organizer_id)
-                    .single();
-
-                setOrganizer(organizerData);
+            // full already contains event base fields; paint lightweight pieces first
+            setEvent(full as unknown as Event);
+            setOrganizer(full.organizer || null);
+            // Defer heavy arrays to idle time to avoid blocking initial render
+            const applyHeavyData = () => {
+                setFormFields((full as any).formFields || []);
+                setSpeakers((full as any).speakers || []);
+            };
+            if (typeof window !== 'undefined') {
+                // Prefer requestIdleCallback if available
+                // @ts-ignore
+                if (window.requestIdleCallback) {
+                    // @ts-ignore
+                    window.requestIdleCallback(applyHeavyData, { timeout: 150 });
+                } else {
+                    setTimeout(applyHeavyData, 0);
+                }
+            } else {
+                applyHeavyData();
             }
-
-            // Load form fields
-            const { data: fieldsData } = await supabase
-                .from('form_fields')
-                .select('*')
-                .eq('event_id', eventId)
-                .order('order_index', { ascending: true });
-
-            setFormFields(fieldsData || []);
-
-            // Load speakers
-            const { data: speakersData } = await supabase
-                .from('speakers')
-                .select('*')
-                .eq('event_id', eventId)
-                .order('order_index', { ascending: true });
-
-            setSpeakers(speakersData || []);
 
             // Load custom images from localStorage (temporary storage)
             if (typeof window !== 'undefined') {
@@ -189,12 +184,6 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             setLoading(false);
         }
     };
-
-    useEffect(() => {
-        loadEvent();
-        checkAuth();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [eventId]);
 
     const handleFileUpload = async (fieldName: string, file: File): Promise<string | null> => {
         try {
