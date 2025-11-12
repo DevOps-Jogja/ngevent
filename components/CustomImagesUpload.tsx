@@ -212,7 +212,7 @@ export default function CustomImagesUpload({ images, onChange, eventId }: Custom
                                                     <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
                                                         <span className="font-semibold">Click to upload</span>
                                                     </p>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG or WEBP (MAX. 10MB, auto-compressed to 500KB)</p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG or WEBP (MAX. 10MB, auto-compressed to WebP 720p at 500KB)</p>
                                                 </div>
                                             )}
                                             <input

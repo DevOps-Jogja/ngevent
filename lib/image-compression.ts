@@ -5,13 +5,15 @@ export interface CompressionOptions {
     maxWidthOrHeight?: number;
     useWebWorker?: boolean;
     preserveExif?: boolean;
+    fileType?: string;
 }
 
 export const defaultCompressionOptions: CompressionOptions = {
     maxSizeMB: 0.5, // Maximum size 500KB after compression
-    maxWidthOrHeight: 1920, // Maximum width or height
+    maxWidthOrHeight: 1280, // Maximum width or height for 720p resolution
     useWebWorker: true, // Use web worker for better performance
     preserveExif: false, // Remove EXIF data to reduce size
+    fileType: 'image/webp', // Compress to WebP format
 };
 
 /**

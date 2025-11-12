@@ -215,7 +215,7 @@ function EventCard({ event }: { event: EventWithSpeakers }) {
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                         {event.title}
                     </h3>
 
