@@ -941,39 +941,96 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             {/* Floating Register Button for Mobile */}
             <div className="lg:hidden fixed bottom-20 left-4 right-4 z-40">
                 {user ? (
-                    <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4">
-                        {!isProfileComplete && (
-                            <button
-                                onClick={() => router.push('/profile')}
-                                className="w-full mb-3 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium"
-                            >
-                                {t('event.completeProfileNow')}
-                            </button>
-                        )}
-                        <button
-                            onClick={() => setShowRegistrationModal(true)}
-                            disabled={Boolean(!isProfileComplete || isRegistrationCancelled || (event?.capacity && event.capacity > 0 && (isCapacityReached ?? false)))}
-                            className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors ${(!isProfileComplete || isRegistrationCancelled || (event?.capacity && event.capacity > 0 && (isCapacityReached ?? false)))
-                                ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                                : 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 cursor-pointer shadow-lg'
-                                }`}
-                        >
-                            {isRegistrationCancelled
-                                ? (language === 'id' ? 'Pendaftaran Ditutup' : 'Registration Closed')
-                                : (event?.capacity && event.capacity > 0 && isCapacityReached)
-                                    ? (language === 'id' ? 'Event Penuh' : 'Event Full')
-                                    : (isProfileComplete ? t('event.requestToJoin') : t('event.completeProfileFirst'))
-                            }
-                        </button>
-                    </div>
+                    isRegistrationCancelled ? (
+                        <div className="bg-white dark:bg-dark-card rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-sm font-medium text-red-700 dark:text-red-400">
+                                        {language === 'id' ? 'Dibatalkan' : 'Cancelled'}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        if (organizer?.phone) {
+                                            let phoneNumber = organizer.phone.replace(/[\+\s-]/g, '');
+                                            if (phoneNumber.startsWith('0')) {
+                                                phoneNumber = '62' + phoneNumber.substring(1);
+                                            }
+                                            const message = encodeURIComponent(`Halo ${organizer.full_name},\n\nSaya ingin mendaftar ulang untuk event "${event?.title}".\n\nTerima kasih.`);
+                                            window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+                                        } else {
+                                            toast.error(language === 'id' ? 'Nomor WhatsApp penyelenggara tidak tersedia' : 'Organizer WhatsApp number not available');
+                                        }
+                                    }}
+                                    className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs font-medium"
+                                >
+                                    WhatsApp
+                                </button>
+                            </div>
+                        </div>
+                    ) : isRegistered ? (
+                        <div className="bg-white dark:bg-dark-card rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                                        {language === 'id' ? 'Terdaftar' : 'Registered'}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => setShowCancelConfirmation(true)}
+                                    className="px-3 py-1 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-xs font-medium"
+                                >
+                                    {language === 'id' ? 'Batalkan' : 'Cancel'}
+                                </button>
+                            </div>
+                        </div>
+                    ) : (event?.capacity && event.capacity > 0 && isCapacityReached) ? (
+                        <div className="bg-white dark:bg-dark-card rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3">
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                                    <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <span className="text-sm font-medium text-red-700 dark:text-red-400">
+                                    {language === 'id' ? 'Event Penuh' : 'Event Full'}
+                                </span>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="bg-white dark:bg-dark-card rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3">
+                            {!isProfileComplete ? (
+                                <button
+                                    onClick={() => router.push('/profile')}
+                                    className="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium"
+                                >
+                                    {t('event.completeProfileNow')}
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => setShowRegistrationModal(true)}
+                                    className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 active:bg-primary-800 transition-colors text-sm font-medium shadow-lg"
+                                >
+                                    {t('event.requestToJoin')}
+                                </button>
+                            )}
+                        </div>
+                    )
                 ) : (
-                    <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4">
-                        <p className="text-gray-600 dark:text-gray-400 text-center mb-3 text-sm">
-                            {t('event.loginToRegister')}
-                        </p>
+                    <div className="bg-white dark:bg-dark-card rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3">
                         <Link
                             href="/auth/login"
-                            className="block w-full bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 active:bg-primary-800 transition-colors text-center shadow-lg"
+                            className="block w-full bg-primary-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-700 active:bg-primary-800 transition-colors text-center text-sm shadow-lg"
                         >
                             {t('auth.login')}
                         </Link>

@@ -38,7 +38,7 @@ export default function FloatingThemeToggle() {
     return (
         <button
             onClick={toggleTheme}
-            className="lg:hidden fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group hover:scale-110"
+            className="lg:hidden fixed bottom-36 right-4 z-50 w-14 h-14 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group hover:scale-110"
             aria-label="Toggle theme"
         >
             {isDark ? (
