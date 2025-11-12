@@ -23,49 +23,42 @@ export default function AboutPage() {
                                         Tentang Aplikasi Ngevent
                                     </h2>
                                     <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                                        Ngevent adalah platform inovatif yang dirancang untuk memudahkan pengelolaan dan partisipasi dalam berbagai acara online.
-                                        Dengan antarmuka yang user-friendly dan fitur-fitur canggih, Ngevent membantu Anda mengorganisir acara,
-                                        mengelola peserta, dan menciptakan pengalaman acara yang memorable.
+                                        Ngevent membantu Anda membuat dan mengelola acara online dengan mudah. Buat acara, kelola peserta,
+                                        dan lihat informasi dasar acara melalui dashboard yang sederhana.
                                     </p>
                                 </section>
 
                                 <section>
                                     <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                                        Platform Management Event Online Gratis
+                                        Fitur Utama
                                     </h2>
                                     <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                                        Ngevent menyediakan platform lengkap untuk management event online secara gratis. Fitur-fitur utama meliputi:
+                                        Beberapa fitur utama Ngevent:
                                     </p>
                                     <ul className="list-disc list-inside text-gray-600 dark:text-gray-400 mt-4 space-y-2">
-                                        <li>Pembuatan dan pengelolaan acara online</li>
-                                        <li>Sistem registrasi peserta otomatis</li>
-                                        <li>Dashboard analitik dan pelaporan</li>
-                                        <li>Antarmuka mobile-friendly</li>
-                                        <li>Dukungan multi-bahasa</li>
+                                        <li>Buat dan kelola acara online</li>
+                                        <li>Registrasi peserta</li>
+                                        <li>Dashboard sederhana untuk melihat data acara</li>
+                                        <li>Antarmuka responsif untuk perangkat mobile</li>
+                                        <li>Dukungan beberapa bahasa</li>
                                     </ul>
                                 </section>
 
                                 <section>
                                     <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                                        Informasi Developer
+                                        Informasi Pengembang
                                     </h2>
                                     <div className="bg-gray-50 dark:bg-dark-secondary rounded-lg p-6">
                                         <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                                            Ngevent adalah platform yang dibangun oleh komunitas DevOps Jogja dengan semangat kolaborasi dan inovasi.
-                                            Sebagai proyek komunitas, kami berkomitmen untuk menjaga performa dan keamanan platform ini secara maksimal.
-                                            Dengan menggunakan teknologi web modern seperti Next.js, TypeScript, dan Supabase, kami memastikan
-                                            bahwa setiap aspek dari platform ini - mulai dari kecepatan loading hingga proteksi data pengguna -
-                                            selalu dioptimalkan dan dijaga keamanannya.
+                                            Ngevent dibuat dan dipelihara oleh komunitas DevOps Jogja. Proyek ini menggunakan teknologi
+                                            modern seperti Next.js, TypeScript, Tailwind CSS, dan Supabase.
                                         </p>
                                         <div className="mt-4">
                                             <p className="text-sm text-gray-500 dark:text-gray-500">
                                                 <strong>Komunitas:</strong> DevOps Jogja
                                             </p>
                                             <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                                                <strong>Komitmen:</strong> Performa dan keamanan maksimal
-                                            </p>
-                                            <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                                                <strong>Teknologi:</strong> Next.js 16, TypeScript, Tailwind CSS, Supabase
+                                                <strong>Teknologi:</strong> Next.js, TypeScript, Tailwind CSS, Supabase
                                             </p>
                                         </div>
                                     </div>
@@ -73,26 +66,20 @@ export default function AboutPage() {
 
                                 <section>
                                     <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                                        Dukungan untuk Perawatan Service dan Server
+                                        Dukungan dan Kontak
                                     </h2>
                                     <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
-                                        Sebagai platform yang dibangun oleh komunitas, kami berkomitmen secara maksimal untuk menjaga performa dan keamanan Ngevent.
-                                        Komunitas DevOps Jogja secara aktif memantau dan memelihara platform ini untuk memastikan pengalaman pengguna yang optimal.
-                                        Layanan dukungan kami meliputi:
+                                        Kami menjaga layanan dan keamanan platform. Jika Anda membutuhkan bantuan, silakan hubungi
+                                        komunitas DevOps Jogja.
                                     </p>
                                     <ul className="list-disc list-inside text-gray-600 dark:text-gray-400 space-y-2">
-                                        <li>Monitoring performa server 24/7 oleh komunitas</li>
-                                        <li>Backup data otomatis dengan standar keamanan tinggi</li>
-                                        <li>Update keamanan rutin dan patch keamanan</li>
-                                        <li>Optimasi performa berkelanjutan</li>
-                                        <li>Support teknis komunitas untuk troubleshooting</li>
-                                        <li>Audit keamanan berkala</li>
+                                        <li>Monitoring dan pemeliharaan rutin</li>
+                                        <li>Backup dan update keamanan berkala</li>
+                                        <li>Dukungan teknis dari komunitas</li>
                                     </ul>
                                     <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                                         <p className="text-blue-800 dark:text-blue-200">
-                                            <strong>Komitmen Komunitas:</strong> Kami akan semaksimal mungkin menjaga performa dan keamanan platform ini.
-                                            Jika Anda mengalami masalah atau membutuhkan bantuan, silakan hubungi komunitas DevOps Jogja melalui
-                                            email di support@ngevent.com atau forum komunitas kami.
+                                            <strong>Kontak:</strong> support@ngevent.com
                                         </p>
                                     </div>
                                 </section>
