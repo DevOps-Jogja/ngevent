@@ -18,6 +18,10 @@ const nextConfig = {
                 protocol: 'https',
                 hostname: 'supabase.noma.my.id',
             },
+            {
+                protocol: 'https',
+                hostname: 'storage.noma.my.id',
+            },
         ],
     },
     experimental: {

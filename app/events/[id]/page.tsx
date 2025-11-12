@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import EventDetailSkeleton from '@/components/EventDetailSkeleton';
 import { supabase } from '@/lib/supabase';
@@ -639,7 +640,6 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                             </div>
                         )}
 
-
                     </div>
 
                     {/* Center Column - Title, Info, Description */}
@@ -1051,6 +1051,41 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                                     </div>
                                 </div>
 
+                                {/* Custom Images Section */}
+                                {customImages.length > 0 && (
+                                    <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            {customImages.map((image: any, index: number) => (
+                                                <div key={index} className="relative group">
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                        {image.title}
+                                                    </label>
+                                                    <div className="bg-gray-100 dark:bg-dark-secondary rounded-lg overflow-hidden">
+                                                        <Image
+                                                            src={image.url}
+                                                            alt={image.title || `Custom image ${index + 1}`}
+                                                            width={400}
+                                                            height={225}
+                                                            className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-200"
+                                                            onClick={() => setImageModal({ src: image.url, alt: image.title || `Custom image ${index + 1}` })}
+                                                        />
+                                                    </div>
+                                                    {image.title && (
+                                                        <div className="mt-3">
+                                                            {image.description && (
+                                                                <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">
+                                                                    {image.description}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+
                                 {/* Custom Form Fields */}
                                 {formFields.map((field) => (
                                     <div key={field.id}>
@@ -1189,6 +1224,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                                         )}
                                     </div>
                                 ))}
+
 
                                 {/* Modal Actions */}
                                 <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">

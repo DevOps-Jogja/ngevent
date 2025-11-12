@@ -1,31 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
-import { getSupabaseAdminClient } from '@/lib/supabase-admin';
-import { supabaseFetch } from '@/lib/supabase';
 import { cookies } from 'next/headers';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-// Helper to validate required env vars for admin storage operations
-function getEnvOrReport() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Helper to validate required env vars for R2 storage operations
+function getR2EnvOrReport() {
+    const accountId = process.env.CLOUDFLARE_R2_ACCOUNT_ID;
+    const accessKey = process.env.CLOUDFLARE_R2_ACCESS_KEY;
+    const secretKey = process.env.CLOUDFLARE_R2_SECRET_KEY;
+    const bucketName = process.env.CLOUDFLARE_R2_BUCKET_NAME;
 
-    if (!url || !serviceKey) {
+    if (!accountId || !accessKey || !secretKey || !bucketName) {
         // Structured logs to make issues obvious in Vercel/Netlify logs
         console.log(JSON.stringify({
             timestamp: new Date().toISOString(),
             level: 'error',
-            message: 'Supabase environment variables missing for upload route',
+            message: 'Cloudflare R2 environment variables missing for upload route',
             env_check: {
-                NEXT_PUBLIC_SUPABASE_URL: url ? 'present' : 'missing',
-                SUPABASE_SERVICE_ROLE_KEY: serviceKey ? 'present' : 'missing',
+                CLOUDFLARE_R2_ACCOUNT_ID: accountId ? 'present' : 'missing',
+                CLOUDFLARE_R2_ACCESS_KEY: accessKey ? 'present' : 'missing',
+                CLOUDFLARE_R2_SECRET_KEY: secretKey ? 'present' : 'missing',
+                CLOUDFLARE_R2_BUCKET_NAME: bucketName ? 'present' : 'missing',
                 node_env: process.env.NODE_ENV || 'development'
             },
             action: 'Add missing env vars to .env.local and restart dev server'
         }));
     }
 
-    return { url, serviceKey };
+    return { accountId, accessKey, secretKey, bucketName };
 }
 
 async function createAuthClient() {
@@ -49,27 +53,22 @@ async function createAuthClient() {
     );
 }
 
-function createUserStorageClient(accessToken: string) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    return createClient(url, anon, {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false,
-        },
-        global: {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            fetch: supabaseFetch,
+// Create R2 client for storage operations
+function createR2Client() {
+    const { accountId, accessKey, secretKey } = getR2EnvOrReport();
+
+    if (!accountId || !accessKey || !secretKey) {
+        return null;
+    }
+
+    return new S3Client({
+        region: 'auto',
+        endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+        credentials: {
+            accessKeyId: accessKey,
+            secretAccessKey: secretKey,
         },
     });
-}
-
-// Create admin client with service role for storage operations (bypasses RLS)
-function createAdminClient() {
-    const { client } = getSupabaseAdminClient();
-    return client; // may be null when missing service role key
 }
 
 export async function POST(request: NextRequest) {
@@ -131,46 +130,47 @@ export async function POST(request: NextRequest) {
         const fileName = `${user.id}-${Date.now()}.${fileExt}`;
         const filePath = `${folder}/${fileName}`;
 
-        // Determine storage client: prefer admin when available; fallback to user client for non-sensitive image uploads
-        const adminClient = createAdminClient();
-        const isImage = file.type.startsWith('image/');
+        // Determine storage client: use R2 client for uploads
+        const r2Client = createR2Client();
+        const { accountId, bucketName } = getR2EnvOrReport();
 
-        if (!adminClient && (!isImage || folder === 'payment-proofs')) {
-            // For sensitive folders (payment proofs) or non-image types, require admin key
+        if (!r2Client || !bucketName || !accountId) {
             return NextResponse.json(
                 {
-                    error: 'Admin key required',
-                    details: 'Uploading to this folder requires SUPABASE_SERVICE_ROLE_KEY',
+                    error: 'R2 configuration missing',
+                    details: 'Cloudflare R2 credentials not configured',
                 },
-                { status: 403 }
+                { status: 500 }
             );
         }
 
-        // If no admin client, construct a user storage client with explicit bearer token to satisfy RLS owner assignment
-        const storageClient = adminClient ?? (accessToken ? createUserStorageClient(accessToken) : supabase);
+        // Convert File to Buffer for R2 upload
+        const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-        const { error: uploadError } = await storageClient.storage
-            .from('events')
-            .upload(filePath, file, {
-                contentType: file.type,
-                upsert: false,
-            });
+        // Upload to R2
+        const uploadCommand = new PutObjectCommand({
+            Bucket: bucketName,
+            Key: filePath,
+            Body: fileBuffer,
+            ContentType: file.type,
+        });
 
-        if (uploadError) {
-            console.error('Upload error:', uploadError);
+        const uploadResult = await r2Client.send(uploadCommand);
+
+        if (!uploadResult) {
+            console.error('Upload failed');
             return NextResponse.json(
                 { error: 'Failed to upload file' },
                 { status: 500 }
             );
         }
 
-        // Get public URL
-        const { data: urlData } = storageClient.storage
-            .from('events')
-            .getPublicUrl(filePath);
+        // Use custom domain for public access
+        const customDomain = process.env.CLOUDFLARE_R2_CUSTOM_DOMAIN || `https://${accountId}.r2.cloudflarestorage.com`;
+        const publicUrl = `${customDomain}/${filePath}`;
 
         return NextResponse.json({
-            url: urlData.publicUrl,
+            url: publicUrl,
             path: filePath,
         });
     } catch (error) {
@@ -207,47 +207,30 @@ export async function DELETE(request: NextRequest) {
             );
         }
 
-        // Use admin client for storage delete when available, otherwise fallback to user client for safe paths
-        const adminClient = createAdminClient();
+        // Use R2 client for storage delete
+        const r2Client = createR2Client();
+        const { bucketName } = getR2EnvOrReport();
 
-        if (!adminClient) {
-            // Only allow user to delete their own image files in non-sensitive folders when admin key is missing
-            const isOwnFile = path.includes(`/${user.id}-`);
-            const isSensitiveFolder = path.startsWith('payment-proofs/');
-            const isImagePath = /(\.png|\.jpg|\.jpeg|\.gif|\.webp|\.avif)$/i.test(path);
-
-            if (!isOwnFile || isSensitiveFolder || !isImagePath) {
-                return NextResponse.json(
-                    {
-                        error: 'Admin key required for this deletion',
-                        details: 'You can only delete your own image files when service role is not configured',
-                    },
-                    { status: 403 }
-                );
-            }
-
-            const userStorage = accessToken ? createUserStorageClient(accessToken) : supabase;
-            const { error: deleteError } = await userStorage.storage
-                .from('events')
-                .remove([path]);
-
-            if (deleteError) {
-                console.error('Delete error:', deleteError);
-                return NextResponse.json(
-                    { error: 'Failed to delete file' },
-                    { status: 500 }
-                );
-            }
-
-            return NextResponse.json({ success: true });
+        if (!r2Client || !bucketName) {
+            return NextResponse.json(
+                {
+                    error: 'R2 configuration missing',
+                    details: 'Cloudflare R2 credentials not configured',
+                },
+                { status: 500 }
+            );
         }
 
-        const { error: deleteError } = await adminClient.storage
-            .from('events')
-            .remove([path]);
+        // Delete from R2
+        const deleteCommand = new DeleteObjectCommand({
+            Bucket: bucketName,
+            Key: path,
+        });
 
-        if (deleteError) {
-            console.error('Delete error:', deleteError);
+        const deleteResult = await r2Client.send(deleteCommand);
+
+        if (!deleteResult) {
+            console.error('Delete failed');
             return NextResponse.json(
                 { error: 'Failed to delete file' },
                 { status: 500 }
