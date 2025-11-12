@@ -950,11 +950,10 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                         <button
                             onClick={() => setShowRegistrationModal(true)}
                             disabled={Boolean(!isProfileComplete || isRegistrationCancelled || (event?.capacity && event.capacity > 0 && (isCapacityReached ?? false)))}
-                            className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors ${
-                                (!isProfileComplete || isRegistrationCancelled || (event?.capacity && event.capacity > 0 && (isCapacityReached ?? false)))
+                            className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors ${(!isProfileComplete || isRegistrationCancelled || (event?.capacity && event.capacity > 0 && (isCapacityReached ?? false)))
                                     ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                                     : 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 cursor-pointer shadow-lg'
-                            }`}
+                                }`}
                         >
                             {isRegistrationCancelled
                                 ? (language === 'id' ? 'Pendaftaran Ditutup' : 'Registration Closed')
