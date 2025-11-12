@@ -151,7 +151,7 @@ export default function HomePage() {
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                                 {displayEvents.map((event: EventWithSpeakers) => (
                                     <EventCard key={event.id} event={event} t={t} />
                                 ))}
@@ -180,133 +180,113 @@ export default function HomePage() {
 }
 
 function EventCard({ event, t }: { event: EventWithSpeakers; t: (key: string) => string }) {
+    const eventDate = new Date(event.start_date);
+
     return (
         <Link href={`/events/${event.id}`}>
-            <div className="bg-white dark:bg-dark-card rounded-xl shadow-md dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all overflow-hidden border border-gray-200 dark:border-gray-700 h-full flex flex-col">
+            <div className="group bg-white dark:bg-dark-card rounded-xl shadow-md dark:shadow-xl hover:shadow-2xl dark:hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 h-full flex flex-col hover:-translate-y-1">
                 {/* Event Image */}
                 {event.image_url ? (
-                    <div className="aspect-[4/5] bg-gray-200 dark:bg-gray-700 overflow-hidden flex-shrink-0">
+                    <div className="aspect-[4/5] overflow-hidden bg-gray-200 dark:bg-gray-700 relative">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={event.image_url}
                             alt={event.title}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
+                        {/* Category Badge on Image */}
+                        {event.category && (
+                            <div className="absolute top-3 left-3">
+                                <span className="px-3 py-1 text-xs font-semibold bg-white/90 dark:bg-gray-900/90 text-gray-900 dark:text-white backdrop-blur-sm rounded-full shadow-lg">
+                                    {event.category}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 ) : (
-                    <div className="aspect-[4/5] bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 flex items-center justify-center flex-shrink-0">
+                    <div className="aspect-[4/5] bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 flex items-center justify-center relative">
                         <svg className="w-16 h-16 text-primary-400 dark:text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
+                        {/* Category Badge */}
+                        {event.category && (
+                            <div className="absolute top-3 left-3">
+                                <span className="px-3 py-1 text-xs font-semibold text-primary-600 dark:text-primary-400 bg-white dark:bg-gray-900 rounded-full shadow-lg">
+                                    {event.category}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 )}
 
                 {/* Event Content */}
-                <div className="p-6 flex flex-col flex-1">
-                    {/* Category Badge */}
-                    {event.category && (
-                        <span className="inline-block self-start px-3 py-1 text-xs font-semibold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 rounded-full mb-3">
-                            {event.category}
+                <div className="p-5 flex flex-col flex-1">
+                    {/* Date & Time */}
+                    <div className="flex items-center gap-2 mb-3 text-sm text-gray-600 dark:text-gray-400">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="font-medium">
+                            {format(eventDate, 'dd MMM yyyy', { locale: id })} • {format(eventDate, 'HH:mm', { locale: id })}
                         </span>
-                    )}
+                    </div>
 
                     {/* Title */}
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                         {event.title}
                     </h3>
 
-                    {/* Description */}
-                    <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2 text-sm flex-1">
-                        {event.description}
-                    </p>
-
-                    {/* Speakers */}
-                    {event.speakers && event.speakers.length > 0 && (
-                        <div className="mb-4 pb-4 border-b border-gray-100 dark:border-gray-700">
-                            <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mb-2">
-                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                                </svg>
-                                Speakers:
-                            </div>
-                            <div className="flex flex-wrap gap-1.5">
-                                {event.speakers.slice(0, 3).map((speaker, index) => (
-                                    <span
-                                        key={speaker.id}
-                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 dark:bg-dark-secondary rounded-full text-xs text-gray-700 dark:text-gray-300"
-                                    >
-                                        {speaker.photo_url ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img
-                                                src={speaker.photo_url}
-                                                alt={speaker.name}
-                                                className="w-4 h-4 rounded-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-4 h-4 bg-primary-500 rounded-full flex items-center justify-center text-white text-[8px] font-semibold">
-                                                {speaker.name.charAt(0).toUpperCase()}
-                                            </div>
-                                        )}
-                                        <span className="font-medium">{speaker.name}</span>
-                                    </span>
-                                ))}
-                                {event.speakers.length > 3 && (
-                                    <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 dark:bg-dark-secondary rounded-full text-xs text-gray-600 dark:text-gray-400">
-                                        +{event.speakers.length - 3} more
-                                    </span>
-                                )}
-                            </div>
+                    {/* Location */}
+                    {event.location && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span className="line-clamp-1">{event.location}</span>
                         </div>
                     )}
 
-                    {/* Event Info */}
-                    <div className="space-y-2">
-                        {/* Date & Time */}
-                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                            <svg className="w-5 h-5 mr-2 text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <span className="font-medium">
-                                {format(new Date(event.start_date), 'dd MMM yyyy', { locale: id })}
-                            </span>
-                            <span className="mx-2">•</span>
-                            <span>
-                                {format(new Date(event.start_date), 'HH:mm', { locale: id })}
-                            </span>
-                        </div>
-
-                        {/* Location */}
-                        {event.location && (
-                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                <svg className="w-5 h-5 mr-2 text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                <span className="line-clamp-1">
-                                    {event.location}
-                                </span>
-                            </div>
-                        )}
-
-                        {/* Registration Fee */}
-                        <div className="flex items-center justify-between pt-2">
-                            {event.registration_fee && event.registration_fee > 0 ? (
-                                <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 dark:text-primary-400">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Rp {event.registration_fee.toLocaleString('id-ID')}
-                                </span>
+                    {/* Footer */}
+                    <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        {/* Speakers */}
+                        <div className="flex items-center gap-2">
+                            {event.speakers && event.speakers.length > 0 ? (
+                                <>
+                                    <div className="flex -space-x-2">
+                                        {event.speakers.slice(0, 3).map((speaker, idx) => (
+                                            <div
+                                                key={idx}
+                                                className="w-7 h-7 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full border-2 border-white dark:border-dark-card flex items-center justify-center text-white text-xs font-semibold overflow-hidden"
+                                            >
+                                                {speaker.photo_url ? (
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img src={speaker.photo_url} alt={speaker.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    speaker.name.charAt(0).toUpperCase()
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                                        {event.speakers.length} {event.speakers.length === 1 ? 'speaker' : 'speakers'}
+                                    </span>
+                                </>
                             ) : (
-                                <span className="inline-flex items-center px-2 py-1 text-xs font-semibold text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30 rounded-full">
-                                    FREE
-                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">No speakers yet</span>
                             )}
-
-                            <span className="text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-                                {t('common.viewDetails')} →
-                            </span>
                         </div>
+
+                        {/* Price Badge */}
+                        {event.registration_fee && event.registration_fee > 0 ? (
+                            <span className="text-sm font-bold text-primary-600 dark:text-primary-400">
+                                Rp {(event.registration_fee / 1000).toFixed(0)}K
+                            </span>
+                        ) : (
+                            <span className="text-sm font-bold text-green-600 dark:text-green-400">
+                                FREE
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>
