@@ -326,7 +326,7 @@ export default function NotificationsCenter({ userId, preview = false }: { userI
                                         </svg>
                                     </div>
                                     <h4 className="text-gray-900 dark:text-white font-medium mb-1">No notifications</h4>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">You're all caught up!</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">You&apos;re all caught up!</p>
                                 </div>
                             ) : (
                                 <div className="divide-y divide-gray-100 dark:divide-gray-700/50">
