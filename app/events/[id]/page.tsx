@@ -556,15 +556,15 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                         {/* Event Image */}
                         {event.image_url && (
                             <div className="w-full rounded-xl overflow-hidden shadow-lg cursor-pointer group" onClick={() => setImageModal({ src: event.image_url!, alt: event.title })}>
-                                <div className="relative w-full max-h-[60vh] flex items-center justify-center">
+                                <div className="relative w-full lg:max-h-[60vh] flex items-center justify-center">
                                     <Image
                                         src={event.image_url}
                                         alt={event.title}
                                         width={800}
                                         height={600}
-                                        className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-200 rounded-lg"
-                                        style={{ width: 'auto', height: 'auto' }}
-                                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                        className="w-full h-auto lg:max-w-full lg:max-h-full object-cover lg:object-contain group-hover:scale-105 transition-transform duration-200 rounded-lg"
+                                        style={{ width: '100%', height: 'auto' }}
+                                        sizes="(max-width: 1024px) 100vw, 800px"
                                     />
                                 </div>
                             </div>
