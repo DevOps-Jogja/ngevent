@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import { useState } from "react";
 import { useLanguage } from "@/lib/language-context";
 import { useEventsWithSpeakers } from "@/hooks/useSupabaseQuery";
-import { EventCardSkeletonGrid } from "@/components/EventCardSkeleton";
+import { EventCardSkeletonGrid, TimelineEventSkeletonList } from "@/components/EventCardSkeleton";
 import TimelineEventList from "@/components/TimelineEventList";
 
 type EventWithSpeakers = {
@@ -126,7 +126,7 @@ export default function HomePage() {
 
                         {/* Events List */}
                         {loading ? (
-                            <EventCardSkeletonGrid count={6} />
+                            <TimelineEventSkeletonList count={6} />
                         ) : displayEvents.length === 0 ? (
                             <div className="text-center py-12">
                                 <svg

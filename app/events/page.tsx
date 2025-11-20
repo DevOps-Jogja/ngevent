@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useCallback, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -36,12 +37,22 @@ function EventsContent() {
     const { t } = useLanguage();
     const searchParams = useSearchParams();
     const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState(() => searchParams.get('category') || 'all');
+
+    // Debounce search query
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
     // Menggunakan React Query hook dengan optimized query
     const { data: filteredEvents = [], isLoading: loading, isError, error } = useEventsWithSpeakers(
         categoryFilter !== 'all' ? categoryFilter : undefined,
-        searchQuery || undefined
+        debouncedSearchQuery || undefined
     );
 
     return (
@@ -123,27 +134,48 @@ function EventsContent() {
                 {loading ? (
                     <EventCardSkeletonGrid count={9} />
                 ) : filteredEvents.length === 0 ? (
-                    <div className="text-center py-12">
-                        <svg
-                            className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                            />
-                        </svg>
-                        <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">{t('events.noEvents')}</h3>
-                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            {t('events.noEventsDesc')}
-                        </p>
+                    <div className="text-center py-16">
+                        <div className="max-w-md mx-auto">
+                            <svg
+                                className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-600 mb-6"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={1.5}
+                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                                />
+                            </svg>
+                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                                {searchQuery || categoryFilter !== 'all' ? t('events.noResults') : t('events.noEvents')}
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400 mb-6">
+                                {searchQuery || categoryFilter !== 'all'
+                                    ? t('events.noResultsDesc')
+                                    : t('events.noEventsDesc')
+                                }
+                            </p>
+                            {(searchQuery || categoryFilter !== 'all') && (
+                                <button
+                                    onClick={() => {
+                                        setSearchQuery('');
+                                        setCategoryFilter('all');
+                                    }}
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    Clear filters
+                                </button>
+                            )}
+                        </div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                         {filteredEvents.map((event: EventWithSpeakers) => (
                             <EventCard key={event.id} event={event} />
                         ))}
@@ -162,12 +194,13 @@ function EventCard({ event }: { event: EventWithSpeakers }) {
             <div className="group bg-white dark:bg-dark-card rounded-xl shadow-md dark:shadow-xl hover:shadow-2xl dark:hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 h-full flex flex-col hover:-translate-y-1">
                 {/* Event Image */}
                 {event.image_url ? (
-                    <div className="aspect-[4/5] overflow-hidden bg-gray-200 dark:bg-gray-700 relative">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                    <div className="aspect-[3/4] overflow-hidden bg-gray-200 dark:bg-gray-700 relative">
+                        <Image
                             src={event.image_url}
                             alt={event.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 20vw"
                         />
                         {/* Category Badge on Image */}
                         {event.category && (

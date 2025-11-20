@@ -66,14 +66,14 @@ export default function DiscoverPage() {
                                 href={`/events?category=${encodeURIComponent(category.category)}`}
                                 className="group relative overflow-hidden"
                             >
-                                <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm hover:shadow-xl dark:shadow-none dark:hover:shadow-2xl dark:hover:shadow-primary-900/20 border border-gray-100 dark:border-gray-800 hover:border-primary-100 dark:hover:border-gray-700 transition-all duration-300 hover:-translate-y-1 h-full flex flex-col items-center text-center sm:items-start sm:text-left">
-                                    <div className={`w-14 h-14 rounded-2xl ${category.iconBg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                                        <svg className={`w-7 h-7 ${category.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="bg-white dark:bg-dark-card rounded-2xl p-4 shadow-sm hover:shadow-xl dark:shadow-none dark:hover:shadow-2xl dark:hover:shadow-primary-900/20 border border-gray-100 dark:border-gray-800 hover:border-primary-100 dark:hover:border-gray-700 transition-all duration-300 hover:-translate-y-1 h-full flex flex-col items-center text-center sm:items-start sm:text-left">
+                                    <div className={`w-12 h-12 rounded-2xl ${category.iconBg} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300`}>
+                                        <svg className={`w-6 h-6 ${category.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={category.path} />
                                         </svg>
                                     </div>
 
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                    <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                                         {category.category}
                                     </h3>
 

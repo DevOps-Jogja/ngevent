@@ -3,6 +3,7 @@
 import { format, isToday, isTomorrow, isSameYear } from "date-fns";
 import { id } from "date-fns/locale";
 import Link from "next/link";
+import Image from "next/image";
 
 type EventWithSpeakers = {
     id: string;
@@ -18,6 +19,10 @@ type EventWithSpeakers = {
     status: string;
     organizer_id: string;
     created_at: string;
+    profiles?: {
+        full_name: string;
+        avatar_url: string;
+    };
     speakers: Array<{
         id: string;
         name: string;
@@ -128,12 +133,24 @@ function TimelineEventCard({ event }: { event: EventWithSpeakers }) {
                             {/* Organizer */}
                             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                                 <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
-                                    {/* Placeholder for organizer avatar since we don't have it in the type yet, using generic icon */}
-                                    <svg className="w-3 h-3 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                    </svg>
+                                    {event.profiles?.avatar_url ? (
+                                        <Image
+                                            src={event.profiles.avatar_url}
+                                            alt={event.profiles.full_name || 'Organizer'}
+                                            width={20}
+                                            height={20}
+                                            className="w-full h-full object-cover rounded-full"
+                                            sizes="20px"
+                                        />
+                                    ) : (
+                                        <svg className="w-3 h-3 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                    )}
                                 </div>
-                                <span className="truncate">By Organizer</span>
+                                <span className="truncate">
+                                    By {event.profiles?.full_name || 'Organizer'}
+                                </span>
                             </div>
 
                             {/* Location */}
@@ -161,9 +178,16 @@ function TimelineEventCard({ event }: { event: EventWithSpeakers }) {
                             {event.speakers && event.speakers.length > 0 && (
                                 <div className="flex -space-x-2">
                                     {event.speakers.slice(0, 3).map((speaker, idx) => (
-                                        <div key={idx} className="w-6 h-6 rounded-full border-2 border-white dark:border-dark-card overflow-hidden bg-gray-200">
+                                        <div key={idx} className="w-5 h-5 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full border-2 border-white dark:border-dark-card overflow-hidden bg-gray-200">
                                             {speaker.photo_url ? (
-                                                <img src={speaker.photo_url} alt={speaker.name} className="w-full h-full object-cover" />
+                                                <Image
+                                                    src={speaker.photo_url}
+                                                    alt={speaker.name}
+                                                    width={20}
+                                                    height={20}
+                                                    className="w-full h-full object-cover rounded-full"
+                                                    sizes="20px"
+                                                />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-gray-500">
                                                     {speaker.name[0]}
@@ -179,10 +203,12 @@ function TimelineEventCard({ event }: { event: EventWithSpeakers }) {
                     {/* Image Thumbnail */}
                     <div className="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 relative">
                         {event.image_url ? (
-                            <img
+                            <Image
                                 src={event.image_url}
                                 alt={event.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                fill
+                                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                sizes="(max-width: 768px) 96px, 128px"
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30">

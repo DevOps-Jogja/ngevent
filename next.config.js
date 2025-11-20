@@ -4,23 +4,59 @@ const nextConfig = {
         remotePatterns: [
             {
                 protocol: 'https',
-                hostname: 'lh3.googleusercontent.com',
+                hostname: '**.com',
             },
             {
                 protocol: 'https',
-                hostname: 'avatars.githubusercontent.com',
+                hostname: '**.id',
             },
             {
                 protocol: 'https',
-                hostname: '**.supabase.co',
+                hostname: '**.my.id',
             },
             {
                 protocol: 'https',
-                hostname: 'supabase.noma.my.id',
+                hostname: '**.org',
             },
             {
                 protocol: 'https',
-                hostname: 'storage.noma.my.id',
+                hostname: '**.net',
+            },
+            {
+                protocol: 'https',
+                hostname: '**.io',
+            },
+            {
+                protocol: 'https',
+                hostname: '**.dev',
+            },
+            {
+                protocol: 'https',
+                hostname: '**.app',
+            },
+            {
+                protocol: 'https',
+                hostname: '**.co',
+            },
+            {
+                protocol: 'https',
+                hostname: '**.me',
+            },
+            {
+                protocol: 'https',
+                hostname: '**.info',
+            },
+            {
+                protocol: 'https',
+                hostname: '**.biz',
+            },
+            {
+                protocol: 'https',
+                hostname: '**.edu',
+            },
+            {
+                protocol: 'https',
+                hostname: '**.gov',
             },
         ],
     },

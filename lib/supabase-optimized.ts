@@ -56,6 +56,10 @@ export async function getEventsWithSpeakers(
             *,
             speakers (
                 *
+            ),
+            profiles!events_organizer_id_fkey (
+                full_name,
+                avatar_url
             )
         `)
         .eq('status', 'published')

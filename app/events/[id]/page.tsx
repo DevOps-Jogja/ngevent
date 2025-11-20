@@ -555,13 +555,18 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                     <div className="lg:col-span-3 space-y-4 sm:space-y-6">
                         {/* Event Image */}
                         {event.image_url && (
-                            <div className="w-full rounded-xl overflow-hidden shadow-lg cursor-pointer" onClick={() => setImageModal({ src: event.image_url!, alt: event.title })}>
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                    src={event.image_url}
-                                    alt={event.title}
-                                    className="w-full h-auto object-cover hover:scale-105 transition-transform duration-200"
-                                />
+                            <div className="w-full rounded-xl overflow-hidden shadow-lg cursor-pointer group" onClick={() => setImageModal({ src: event.image_url!, alt: event.title })}>
+                                <div className="relative w-full max-h-[60vh] flex items-center justify-center">
+                                    <Image
+                                        src={event.image_url}
+                                        alt={event.title}
+                                        width={800}
+                                        height={600}
+                                        className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-200 rounded-lg"
+                                        style={{ width: 'auto', height: 'auto' }}
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                    />
+                                </div>
                             </div>
                         )}
 
@@ -573,13 +578,16 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                                 </h3>
                                 <div className="flex items-start gap-3">
                                     {organizer.avatar_url ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img
-                                            src={organizer.avatar_url}
-                                            alt={organizer.full_name || organizer.email}
-                                            className="w-12 h-12 rounded-full object-cover flex-shrink-0 ring-2 ring-primary-200 dark:ring-primary-800 cursor-pointer hover:ring-primary-300 dark:hover:ring-primary-700 transition-all duration-200"
-                                            onClick={() => setImageModal({ src: organizer.avatar_url!, alt: organizer.full_name || organizer.email })}
-                                        />
+                                        <div className="relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-primary-200 dark:ring-primary-800 cursor-pointer hover:ring-primary-300 dark:hover:ring-primary-700 transition-all duration-200">
+                                            <Image
+                                                src={organizer.avatar_url}
+                                                alt={organizer.full_name || organizer.email}
+                                                fill
+                                                className="object-cover"
+                                                sizes="48px"
+                                                onClick={() => setImageModal({ src: organizer.avatar_url!, alt: organizer.full_name || organizer.email })}
+                                            />
+                                        </div>
                                     ) : (
                                         <div className="w-12 h-12 bg-gradient-to-br from-primary-600 to-purple-600 dark:from-primary-500 dark:to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 ring-2 ring-primary-200 dark:ring-primary-800">
                                             {(organizer.full_name || organizer.email || 'O').charAt(0).toUpperCase()}
@@ -609,13 +617,16 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                                     {speakers.map((speaker) => (
                                         <div key={speaker.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-dark-secondary rounded-lg">
                                             {speaker.photo_url ? (
-                                                // eslint-disable-next-line @next/next/no-img-element
-                                                <img
-                                                    src={speaker.photo_url}
-                                                    alt={speaker.name}
-                                                    className="w-10 h-10 rounded-full object-cover flex-shrink-0 cursor-pointer hover:scale-110 transition-transform duration-200"
-                                                    onClick={() => setImageModal({ src: speaker.photo_url!, alt: speaker.name })}
-                                                />
+                                                <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0 cursor-pointer hover:scale-110 transition-transform duration-200">
+                                                    <Image
+                                                        src={speaker.photo_url}
+                                                        alt={speaker.name}
+                                                        fill
+                                                        className="object-cover"
+                                                        sizes="40px"
+                                                        onClick={() => setImageModal({ src: speaker.photo_url!, alt: speaker.name })}
+                                                    />
+                                                </div>
                                             ) : (
                                                 <div className="w-10 h-10 bg-primary-600 dark:bg-primary-500 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                                                     {speaker.name.charAt(0).toUpperCase()}
@@ -1109,12 +1120,15 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                                     <div className="bg-gray-50 dark:bg-dark-secondary rounded-lg p-4">
                                         <div className="flex items-center gap-3">
                                             {profile?.avatar_url ? (
-                                                // eslint-disable-next-line @next/next/no-img-element
-                                                <img
-                                                    src={profile.avatar_url}
-                                                    alt={profile.full_name || user.email}
-                                                    className="w-12 h-12 rounded-full object-cover"
-                                                />
+                                                <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                                                    <Image
+                                                        src={profile.avatar_url}
+                                                        alt={profile.full_name || user.email}
+                                                        fill
+                                                        className="object-cover"
+                                                        sizes="48px"
+                                                    />
+                                                </div>
                                             ) : (
                                                 <div className="w-12 h-12 bg-primary-600 dark:bg-primary-500 rounded-full flex items-center justify-center text-white font-semibold text-lg">
                                                     {(profile?.full_name || user.email)?.charAt(0).toUpperCase()}
@@ -1212,12 +1226,15 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                                                                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400">PDF File</p>
                                                                     </div>
                                                                 ) : (
-                                                                    // eslint-disable-next-line @next/next/no-img-element
-                                                                    <img
-                                                                        src={filePreview[field.field_name]}
-                                                                        alt="Preview"
-                                                                        className="w-full h-48 object-cover"
-                                                                    />
+                                                                    <div className="relative w-full h-48">
+                                                                        <Image
+                                                                            src={filePreview[field.field_name]}
+                                                                            alt="Preview"
+                                                                            fill
+                                                                            className="object-cover"
+                                                                            sizes="(max-width: 768px) 100vw, 400px"
+                                                                        />
+                                                                    </div>
                                                                 )}
                                                                 <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-2">
                                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1397,11 +1414,17 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                             </button>
 
                             {/* Image */}
-                            <img
-                                src={imageModal.src}
-                                alt={imageModal.alt}
-                                className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
-                            />
+                            <div className="w-full max-h-[80vh] flex items-center justify-center">
+                                <Image
+                                    src={imageModal.src}
+                                    alt={imageModal.alt}
+                                    width={800}
+                                    height={600}
+                                    className="max-w-full max-h-full object-contain rounded-lg"
+                                    style={{ width: 'auto', height: 'auto' }}
+                                    sizes="(max-width: 768px) 90vw, (max-width: 1200px) 70vw, 60vw"
+                                />
+                            </div>
 
                             {/* Image Caption */}
                             <div className="absolute bottom-4 left-4 right-4 bg-black bg-opacity-50 text-white p-3 rounded-lg">
