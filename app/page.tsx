@@ -46,7 +46,10 @@ export default function HomePage() {
     // Filter events berdasarkan upcoming/past
     const now = new Date();
     const upcomingEvents = events.filter((event: EventWithSpeakers) => new Date(event.start_date) >= now).slice(0, 6);
-    const pastEvents = events.filter((event: EventWithSpeakers) => new Date(event.start_date) < now).slice(0, 6);
+    const pastEvents = events
+        .filter((event: EventWithSpeakers) => new Date(event.start_date) < now)
+        .sort((a: EventWithSpeakers, b: EventWithSpeakers) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime())
+        .slice(0, 6);
     const displayEvents = showUpcoming ? upcomingEvents : pastEvents;
 
     // Handle error state with user-friendly message
