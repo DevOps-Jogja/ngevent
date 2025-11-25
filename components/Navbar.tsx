@@ -58,8 +58,13 @@ export default function Navbar() {
         return pathname === path;
     };
 
+    const isEventDetailPage = pathname?.startsWith('/events/') && pathname.split('/').length > 2;
+
     return (
-        <header className="hidden lg:block sticky top-0 left-0 z-40 w-full bg-white dark:bg-dark-card shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <header className={`hidden lg:block w-full transition-colors duration-300 z-40 ${isEventDetailPage
+                ? 'absolute top-0 left-0 bg-transparent border-transparent'
+                : 'sticky top-0 left-0 bg-white/80 dark:bg-dark-card/80 backdrop-blur-md shadow-sm border-b border-gray-200 dark:border-gray-700'
+            }`}>
             <div className="container mx-auto">
                 <div className="relative -mx-4 flex items-center justify-between">
                     <div className="w-60 max-w-full px-4">

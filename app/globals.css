@@ -28,12 +28,6 @@
   .dark .bg-dark-primary {
     background: #0f172a !important;
   }
-
-  /* Override untuk container dengan background di dark mode */
-  .dark [class*="bg-gray-50"],
-  .dark [class*="dark:bg-dark"] {
-    background: #0f172a !important;
-  }
 }
 
 @layer utilities {

@@ -38,9 +38,9 @@ const config: Config = {
                 },
             },
             backgroundColor: {
-                'dark-primary': '#0f1419',
-                'dark-secondary': '#1a1f2e',
-                'dark-card': '#1e2530',
+                'dark-primary': '#0f172a', // Slate 900
+                'dark-secondary': '#334155', // Slate 700
+                'dark-card': '#1e293b', // Slate 800
             },
             typography: {
                 DEFAULT: {
@@ -54,6 +54,9 @@ const config: Config = {
                         color: '#d1d5db',
                     },
                 },
+            },
+            animation: {
+                'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
             },
         },
     },
