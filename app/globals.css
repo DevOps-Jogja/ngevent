@@ -41,6 +41,17 @@
     text-wrap: balance;
   }
 
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
   /* Align body content with navbar menu items (after logo) */
   .content-align-navbar {
     padding-left: calc(240px + 2rem);

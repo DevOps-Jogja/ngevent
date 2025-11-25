@@ -61,38 +61,18 @@ function EventsContent() {
 
             <div className="container mx-auto px-4 py-12 content-align-navbar">
                 {/* Page Header */}
-                <div className="mb-8">
-                    <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{t('events.title')}</h1>
-                    <p className="text-lg text-gray-600 dark:text-gray-400">
+                <div className="text-center max-w-3xl mx-auto mb-12">
+                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6 tracking-tight">
+                        {t('events.title')}
+                    </h1>
+                    <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
                         {t('events.subtitle')}
                     </p>
 
-                    {/* Active Category Badge */}
-                    {categoryFilter !== 'all' && (
-                        <div className="mt-4 flex items-center gap-2">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">{t('events.filterBy')}</span>
-                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800 rounded-full">
-                                <span className="text-primary-700 dark:text-primary-300 font-medium">
-                                    {CATEGORIES.find(c => c.value === categoryFilter)?.icon} {categoryFilter}
-                                </span>
-                                <button
-                                    onClick={() => setCategoryFilter('all')}
-                                    className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-200"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Search and Filter */}
-                <div className="mb-8 flex flex-col md:flex-row gap-4">
-                    <div className="flex-1 relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {/* Search Bar */}
+                    <div className="relative max-w-2xl mx-auto">
+                        <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                            <svg className="h-6 w-6 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
@@ -101,32 +81,36 @@ function EventsContent() {
                             placeholder={t('events.search')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-12 pr-4 py-3 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 rounded-xl shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                            className="w-full pl-14 pr-6 py-4 bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                         />
                     </div>
-                    <div className="relative md:w-64">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                            </svg>
-                        </div>
-                        <select
-                            value={categoryFilter}
-                            onChange={(e) => setCategoryFilter(e.target.value)}
-                            className="w-full pl-12 pr-10 py-3 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 rounded-xl shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white appearance-none cursor-pointer transition-all duration-200"
+                </div>
+
+                {/* Category Filter - Horizontal Scroll */}
+                <div className="mb-12">
+                    <div className="flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:justify-center">
+                        <button
+                            onClick={() => setCategoryFilter('all')}
+                            className={`flex-shrink-0 px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-200 border ${categoryFilter === 'all'
+                                ? 'bg-primary-600 text-white border-primary-600 shadow-md transform scale-105'
+                                : 'bg-white dark:bg-dark-card text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                }`}
                         >
-                            <option value="all">{t('events.allCategories')}</option>
-                            {CATEGORIES.map((category) => (
-                                <option key={category.value} value={category.value}>
-                                    {category.icon} {category.label}
-                                </option>
-                            ))}
-                        </select>
-                        <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                            <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </div>
+                            {t('events.allCategories')}
+                        </button>
+                        {CATEGORIES.map((category) => (
+                            <button
+                                key={category.value}
+                                onClick={() => setCategoryFilter(category.value)}
+                                className={`flex-shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 border ${categoryFilter === category.value
+                                    ? 'bg-primary-600 text-white border-primary-600 shadow-md transform scale-105'
+                                    : 'bg-white dark:bg-dark-card text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                    }`}
+                            >
+                                <span>{category.icon}</span>
+                                {category.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
@@ -190,111 +174,89 @@ function EventCard({ event }: { event: EventWithSpeakers }) {
     const eventDate = new Date(event.start_date);
 
     return (
-        <Link href={`/events/${event.id}`}>
-            <div className="group bg-white dark:bg-dark-card rounded-xl shadow-md dark:shadow-xl hover:shadow-2xl dark:hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 h-full flex flex-col hover:-translate-y-1">
-                {/* Event Image */}
-                {event.image_url ? (
-                    <div className="aspect-[3/4] overflow-hidden bg-gray-200 dark:bg-gray-700 relative">
+        <Link href={`/events/${event.id}`} className="group h-full">
+            <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-800 h-full flex flex-col overflow-hidden hover:-translate-y-1">
+                {/* Image Container */}
+                <div className="relative aspect-[4/5] overflow-hidden bg-gray-100 dark:bg-gray-800">
+                    {event.image_url ? (
                         <Image
                             src={event.image_url}
                             alt={event.title}
                             fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 20vw"
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
-                        {/* Category Badge on Image */}
-                        {event.category && (
-                            <div className="absolute top-3 left-3">
-                                <span className="px-3 py-1 text-xs font-semibold bg-white/90 dark:bg-gray-900/90 text-gray-900 dark:text-white backdrop-blur-sm rounded-full shadow-lg">
-                                    {event.category}
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <div className="aspect-[4/5] bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 flex items-center justify-center relative">
-                        <svg className="w-16 h-16 text-primary-400 dark:text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        {/* Category Badge */}
-                        {event.category && (
-                            <div className="absolute top-3 left-3">
-                                <span className="px-3 py-1 text-xs font-semibold text-primary-600 dark:text-primary-400 bg-white dark:bg-gray-900 rounded-full shadow-lg">
-                                    {event.category}
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* Event Content */}
-                <div className="p-5 flex flex-col flex-1">
-                    {/* Date & Time */}
-                    <div className="flex items-center gap-2 mb-3 text-sm text-gray-600 dark:text-gray-400">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span className="font-medium">
-                            {format(eventDate, 'dd MMM yyyy', { locale: id })} • {format(eventDate, 'HH:mm', { locale: id })}
-                        </span>
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                        {event.title}
-                    </h3>
-
-                    {/* Location */}
-                    {event.location && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <span className="line-clamp-1">{event.location}</span>
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20">
+                            <span className="text-4xl">📅</span>
                         </div>
                     )}
 
-                    {/* Footer */}
-                    <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                    {/* Floating Category Badge */}
+                    <div className="absolute top-4 left-4">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/95 dark:bg-gray-900/95 text-gray-900 dark:text-white backdrop-blur-sm shadow-sm border border-gray-200/50 dark:border-gray-700/50">
+                            {event.category}
+                        </span>
+                    </div>
+
+                    {/* Date Badge */}
+                    <div className="absolute top-4 right-4 flex flex-col items-center justify-center w-12 h-12 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 dark:border-gray-700/50">
+                        <span className="text-xs font-bold text-red-500 uppercase">
+                            {format(eventDate, 'MMM', { locale: id })}
+                        </span>
+                        <span className="text-lg font-bold text-gray-900 dark:text-white leading-none">
+                            {format(eventDate, 'dd', { locale: id })}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 flex flex-col flex-1">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                        {event.title}
+                    </h3>
+
+                    <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm mb-6">
+                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span className="line-clamp-1">{event.location || 'Online Event'}</span>
+                    </div>
+
+                    <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800">
                         {/* Speakers */}
-                        <div className="flex items-center gap-2">
-                            {event.speakers && event.speakers.length > 0 ? (
-                                <>
-                                    <div className="flex -space-x-2">
-                                        {event.speakers.slice(0, 3).map((speaker, idx) => (
-                                            <div
-                                                key={idx}
-                                                className="w-7 h-7 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full border-2 border-white dark:border-dark-card flex items-center justify-center text-white text-xs font-semibold overflow-hidden"
-                                            >
-                                                {speaker.photo_url ? (
-                                                    // eslint-disable-next-line @next/next/no-img-element
-                                                    <img src={speaker.photo_url} alt={speaker.name} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    speaker.name.charAt(0).toUpperCase()
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
-                                        {event.speakers.length} {event.speakers.length === 1 ? 'speaker' : 'speakers'}
-                                    </span>
-                                </>
-                            ) : (
-                                <span className="text-xs text-gray-500 dark:text-gray-400">No speakers yet</span>
+                        <div className="flex items-center -space-x-2">
+                            {event.speakers?.slice(0, 3).map((speaker, idx) => (
+                                <div key={idx} className="w-8 h-8 rounded-full border-2 border-white dark:border-dark-card bg-gray-200 overflow-hidden relative" title={speaker.name}>
+                                    {speaker.photo_url ? (
+                                        <Image src={speaker.photo_url} alt={speaker.name} fill className="object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-primary-100 text-primary-600 text-xs font-bold">
+                                            {speaker.name[0]}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                            {event.speakers?.length > 3 && (
+                                <div className="w-8 h-8 rounded-full border-2 border-white dark:border-dark-card bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs font-medium text-gray-600 dark:text-gray-400">
+                                    +{event.speakers.length - 3}
+                                </div>
                             )}
                         </div>
 
-                        {/* Price Badge */}
-                        {event.registration_fee && event.registration_fee > 0 ? (
-                            <span className="text-sm font-bold text-primary-600 dark:text-primary-400">
-                                Rp {(event.registration_fee / 1000).toFixed(0)}K
-                            </span>
-                        ) : (
-                            <span className="text-sm font-bold text-green-600 dark:text-green-400">
-                                FREE
-                            </span>
-                        )}
+                        {/* Price */}
+                        <div className="text-right">
+                            {event.registration_fee === 0 ? (
+                                <span className="inline-block px-3 py-1 rounded-full bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-sm font-bold">
+                                    Free
+                                </span>
+                            ) : (
+                                <span className="text-lg font-bold text-primary-600 dark:text-primary-400">
+                                    Rp {(event.registration_fee / 1000).toFixed(0)}k
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
