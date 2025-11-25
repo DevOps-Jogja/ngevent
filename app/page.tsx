@@ -153,7 +153,11 @@ export default function HomePage() {
                                 </p>
                             </div>
                         ) : (
-                            <TimelineEventList events={displayEvents} t={t} />
+                            <TimelineEventList
+                                events={displayEvents}
+                                t={t}
+                                sortDirection={showUpcoming ? 'asc' : 'desc'}
+                            />
                         )}
 
                         {/* View All Button */}

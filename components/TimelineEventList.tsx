@@ -40,9 +40,10 @@ type EventWithSpeakers = {
 interface TimelineEventListProps {
     events: EventWithSpeakers[];
     t: (key: string) => string;
+    sortDirection?: 'asc' | 'desc';
 }
 
-export default function TimelineEventList({ events, t }: TimelineEventListProps) {
+export default function TimelineEventList({ events, t, sortDirection = 'asc' }: TimelineEventListProps) {
     // Group events by date
     const groupedEvents = events.reduce((groups, event) => {
         const date = new Date(event.start_date);
@@ -56,7 +57,11 @@ export default function TimelineEventList({ events, t }: TimelineEventListProps)
     }, {} as Record<string, EventWithSpeakers[]>);
 
     // Sort dates
-    const sortedDates = Object.keys(groupedEvents).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    const sortedDates = Object.keys(groupedEvents).sort((a, b) => {
+        const dateA = new Date(a).getTime();
+        const dateB = new Date(b).getTime();
+        return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+    });
 
     return (
         <div className="relative">
