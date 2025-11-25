@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '@/lib/language-context';
 
 interface DashboardStatsProps {
     role: 'participant' | 'organizer';
@@ -8,11 +9,12 @@ interface DashboardStatsProps {
 }
 
 export default function DashboardStats({ role, totalEvents, activeEvents, thisMonthEvents }: DashboardStatsProps) {
+    const { t } = useLanguage();
     const stats = [
         {
-            label: role === 'organizer' ? 'Total Events' : 'Events Joined',
+            label: role === 'organizer' ? t('dashboard.stats.totalEvents') : t('dashboard.stats.eventsJoined'),
             value: totalEvents,
-            subtext: role === 'organizer' ? 'Events created' : 'All time',
+            subtext: role === 'organizer' ? t('dashboard.stats.eventsCreated') : t('dashboard.stats.allTime'),
             icon: (
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -22,9 +24,9 @@ export default function DashboardStats({ role, totalEvents, activeEvents, thisMo
             gradient: 'from-blue-500 to-blue-600'
         },
         {
-            label: 'Active',
+            label: t('dashboard.stats.active'),
             value: activeEvents,
-            subtext: role === 'organizer' ? 'Published events' : 'Upcoming events',
+            subtext: role === 'organizer' ? t('dashboard.stats.publishedEvents') : t('dashboard.stats.upcomingEvents'),
             icon: (
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -34,9 +36,9 @@ export default function DashboardStats({ role, totalEvents, activeEvents, thisMo
             gradient: 'from-green-500 to-green-600'
         },
         {
-            label: 'This Month',
+            label: t('dashboard.stats.thisMonth'),
             value: thisMonthEvents,
-            subtext: 'New activity',
+            subtext: t('dashboard.stats.newActivity'),
             icon: (
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />

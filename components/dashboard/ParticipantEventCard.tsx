@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { useLanguage } from '@/lib/language-context';
 
 interface ParticipantEventCardProps {
     registration: any;
@@ -10,6 +11,7 @@ interface ParticipantEventCardProps {
 const idr = (n: number) => `Rp ${n.toLocaleString('id-ID')}`;
 
 export default function ParticipantEventCard({ registration }: ParticipantEventCardProps) {
+    const { t } = useLanguage();
     const event = registration.events;
     if (!event) return null;
 
@@ -24,9 +26,9 @@ export default function ParticipantEventCard({ registration }: ParticipantEventC
 
     const getStatusLabel = (status: string) => {
         switch (status) {
-            case 'registered': return 'Confirmed';
-            case 'attended': return 'Attended';
-            case 'cancelled': return 'Cancelled';
+            case 'registered': return t('dashboard.status.confirmed');
+            case 'attended': return t('dashboard.status.attended');
+            case 'cancelled': return t('dashboard.status.cancelled');
             default: return status;
         }
     };
@@ -82,19 +84,19 @@ export default function ParticipantEventCard({ registration }: ParticipantEventC
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            <span className="truncate">{event.location || 'Online'}</span>
+                            <span className="truncate">{event.location || t('common.online')}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                             <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                             </svg>
-                            <span>Registered: {format(new Date(registration.registered_at), 'dd MMM yyyy', { locale: id })}</span>
+                            <span>{t('dashboard.eventCard.registered')} {format(new Date(registration.registered_at), 'dd MMM yyyy', { locale: id })}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                             <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span>{event.registration_fee ? idr(event.registration_fee) : 'Free'}</span>
+                            <span>{event.registration_fee ? idr(event.registration_fee) : t('common.free')}</span>
                         </div>
                     </div>
 
@@ -103,7 +105,7 @@ export default function ParticipantEventCard({ registration }: ParticipantEventC
                             href={`/events/${event.id}`}
                             className="flex-1 px-4 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white rounded-xl transition-all text-center font-medium text-sm shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                         >
-                            View Event Details
+                            {t('common.viewDetails')}
                         </Link>
                     </div>
                 </div>

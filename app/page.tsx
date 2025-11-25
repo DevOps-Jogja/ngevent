@@ -65,18 +65,18 @@ export default function HomePage() {
                             </svg>
                             <div className="flex-1">
                                 <h3 className="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">
-                                    {(error as any)?.message?.includes('timeout') ? 'Request Timeout' : 'Gagal Memuat Data'}
+                                    {(error as any)?.message?.includes('timeout') ? t('common.requestTimeout') : t('common.loadFailed')}
                                 </h3>
                                 <p className="text-sm text-red-700 dark:text-red-300 mb-4">
                                     {(error as any)?.message?.includes('timeout')
-                                        ? 'Server membutuhkan waktu terlalu lama. Silakan coba refresh halaman.'
-                                        : 'Terjadi kesalahan saat memuat event. Silakan coba lagi.'}
+                                        ? t('common.serverTimeout')
+                                        : t('common.loadError')}
                                 </p>
                                 <button
                                     onClick={() => window.location.reload()}
                                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                                 >
-                                    Refresh Halaman
+                                    {t('common.refreshPage')}
                                 </button>
                             </div>
                         </div>

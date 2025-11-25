@@ -78,9 +78,9 @@ export default function TimelineEventList({ events, t, sortDirection = 'asc' }: 
                     let subLabel = format(dateObj, 'EEEE', { locale: id });
 
                     if (isToday(dateObj)) {
-                        dateLabel = "Today";
+                        dateLabel = t('calendar.today');
                     } else if (isTomorrow(dateObj)) {
-                        dateLabel = "Tomorrow";
+                        dateLabel = t('calendar.tomorrow');
                     }
 
                     return (
@@ -103,7 +103,7 @@ export default function TimelineEventList({ events, t, sortDirection = 'asc' }: 
                             {/* Events Column */}
                             <div className="flex-1 space-y-4">
                                 {dateEvents.map((event) => (
-                                    <TimelineEventCard key={event.id} event={event} />
+                                    <TimelineEventCard key={event.id} event={event} t={t} />
                                 ))}
                             </div>
                         </div>
@@ -114,7 +114,7 @@ export default function TimelineEventList({ events, t, sortDirection = 'asc' }: 
     );
 }
 
-function TimelineEventCard({ event }: { event: EventWithSpeakers }) {
+function TimelineEventCard({ event, t }: { event: EventWithSpeakers; t: (key: string) => string }) {
     const startDate = new Date(event.start_date);
 
     return (
@@ -141,7 +141,7 @@ function TimelineEventCard({ event }: { event: EventWithSpeakers }) {
                                     {event.profiles?.avatar_url ? (
                                         <Image
                                             src={event.profiles.avatar_url}
-                                            alt={event.profiles.full_name || 'Organizer'}
+                                            alt={event.profiles.full_name || t('common.organizer')}
                                             width={20}
                                             height={20}
                                             className="w-full h-full object-cover rounded-full"
@@ -154,7 +154,7 @@ function TimelineEventCard({ event }: { event: EventWithSpeakers }) {
                                     )}
                                 </div>
                                 <span className="truncate">
-                                    By {event.profiles?.full_name || 'Organizer'}
+                                    {t('common.by')} {event.profiles?.full_name || t('common.organizer')}
                                 </span>
                             </div>
 
@@ -176,7 +176,7 @@ function TimelineEventCard({ event }: { event: EventWithSpeakers }) {
                                 ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                                 : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                                 }`}>
-                                {event.registration_fee > 0 ? `Rp ${(event.registration_fee / 1000).toFixed(0)}K` : 'Free'}
+                                {event.registration_fee > 0 ? `Rp ${(event.registration_fee / 1000).toFixed(0)}K` : t('common.free')}
                             </span>
 
                             {/* Speakers Avatars */}

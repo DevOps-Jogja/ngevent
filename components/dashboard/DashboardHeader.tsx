@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { useLanguage } from '@/lib/language-context';
 
 interface DashboardHeaderProps {
     user: any;
@@ -7,11 +8,12 @@ interface DashboardHeaderProps {
 }
 
 export default function DashboardHeader({ user, profile }: DashboardHeaderProps) {
+    const { t } = useLanguage();
     const getGreeting = () => {
         const hour = new Date().getHours();
-        if (hour < 12) return 'Good Morning';
-        if (hour < 18) return 'Good Afternoon';
-        return 'Good Evening';
+        if (hour < 12) return t('dashboard.greeting.morning');
+        if (hour < 18) return t('dashboard.greeting.afternoon');
+        return t('dashboard.greeting.evening');
     };
 
     const displayName = profile?.full_name || user?.email?.split('@')[0] || 'User';
@@ -23,7 +25,7 @@ export default function DashboardHeader({ user, profile }: DashboardHeaderProps)
                     {getGreeting()}, <span className="text-primary-600 dark:text-primary-400">{displayName}</span>
                 </h1>
                 <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-                    Here&apos;s what&apos;s happening with your events today.
+                    {t('dashboard.header.subtitle')}
                 </p>
             </div>
             <div className="flex items-center gap-3">
@@ -36,7 +38,7 @@ export default function DashboardHeader({ user, profile }: DashboardHeaderProps)
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                     </div>
-                    <span>Edit Profile</span>
+                    <span>{t('nav.editProfile')}</span>
                 </Link>
             </div>
         </div>

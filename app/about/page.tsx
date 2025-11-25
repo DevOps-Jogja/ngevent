@@ -14,51 +14,49 @@ export default function AboutPage() {
                     <div className="max-w-4xl mx-auto">
                         <div className="bg-white dark:bg-dark-card rounded-lg shadow-sm p-8">
                             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
-                                Tentang Ngevent
+                                {t('about.title')}
                             </h1>
 
                             <div className="space-y-8">
                                 <section>
                                     <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                                        Tentang Aplikasi Ngevent
+                                        {t('about.appTitle')}
                                     </h2>
                                     <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                                        Ngevent membantu Anda membuat dan mengelola acara online dengan mudah. Buat acara, kelola peserta,
-                                        dan lihat informasi dasar acara melalui dashboard yang sederhana.
+                                        {t('about.appDesc')}
                                     </p>
                                 </section>
 
                                 <section>
                                     <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                                        Fitur Utama
+                                        {t('about.featuresTitle')}
                                     </h2>
                                     <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                                        Beberapa fitur utama Ngevent:
+                                        {t('about.featuresDesc')}
                                     </p>
                                     <ul className="list-disc list-inside text-gray-600 dark:text-gray-400 mt-4 space-y-2">
-                                        <li>Buat dan kelola acara online</li>
-                                        <li>Registrasi peserta</li>
-                                        <li>Dashboard sederhana untuk melihat data acara</li>
-                                        <li>Antarmuka responsif untuk perangkat mobile</li>
-                                        <li>Dukungan beberapa bahasa</li>
+                                        <li>{t('about.feature1')}</li>
+                                        <li>{t('about.feature2')}</li>
+                                        <li>{t('about.feature3')}</li>
+                                        <li>{t('about.feature4')}</li>
+                                        <li>{t('about.feature5')}</li>
                                     </ul>
                                 </section>
 
                                 <section>
                                     <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                                        Informasi Pengembang
+                                        {t('about.devTitle')}
                                     </h2>
                                     <div className="bg-gray-50 dark:bg-dark-secondary rounded-lg p-6">
                                         <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                                            Ngevent dibuat dan dipelihara oleh komunitas DevOps Jogja. Proyek ini menggunakan teknologi
-                                            modern seperti Next.js, TypeScript, Tailwind CSS, dan Supabase.
+                                            {t('about.devDesc')}
                                         </p>
                                         <div className="mt-4">
                                             <p className="text-sm text-gray-500 dark:text-gray-500">
-                                                <strong>Komunitas:</strong> DevOps Jogja
+                                                <strong>{t('about.community')}</strong> DevOps Jogja
                                             </p>
                                             <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                                                <strong>Teknologi:</strong> Next.js, TypeScript, Tailwind CSS, Supabase
+                                                <strong>{t('about.tech')}</strong> Next.js, TypeScript, Tailwind CSS, Supabase
                                             </p>
                                         </div>
                                     </div>
@@ -66,21 +64,20 @@ export default function AboutPage() {
 
                                 <section>
                                     <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                                        Dukungan dan Kontak
+                                        {t('about.supportTitle')}
                                     </h2>
                                     <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
-                                        Kami menjaga layanan dan keamanan platform. Jika Anda membutuhkan bantuan, silakan hubungi
-                                        komunitas DevOps Jogja.
+                                        {t('about.supportDesc')}
                                     </p>
                                     <ul className="list-disc list-inside text-gray-600 dark:text-gray-400 space-y-2">
-                                        <li>Monitoring dan pemeliharaan rutin</li>
-                                        <li>Backup dan update keamanan berkala</li>
-                                        <li>Dukungan teknis dari komunitas</li>
+                                        <li>{t('about.support1')}</li>
+                                        <li>{t('about.support2')}</li>
+                                        <li>{t('about.support3')}</li>
                                     </ul>
                                     <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                                         <p className="text-blue-800 dark:text-blue-200">
-                                            <strong>Kontak:</strong> devopsjogja@gmail.com
-                                            <strong>Telegram:</strong> t.me/devopsjogja
+                                            <strong>{t('about.contact')}</strong> devopsjogja@gmail.com
+                                            <strong>{t('about.telegram')}</strong> t.me/devopsjogja
                                         </p>
                                     </div>
                                 </section>

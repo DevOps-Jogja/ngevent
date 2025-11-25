@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import OrganizerEventCard from './OrganizerEventCard';
+import { useLanguage } from '@/lib/language-context';
 
 interface OrganizerViewProps {
     events: any[];
@@ -8,15 +9,16 @@ interface OrganizerViewProps {
 }
 
 export default function OrganizerView({ events, onDelete }: OrganizerViewProps) {
+    const { t } = useLanguage();
     return (
         <div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">My Events</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('dashboard.myEvents')}</h2>
                 <Link
                     href="/dashboard/events/create"
                     className="w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white px-6 py-2.5 rounded-xl text-center text-sm font-medium transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                 >
-                    + Create Event
+                    + {t('dashboard.createEvent')}
                 </Link>
             </div>
 
@@ -28,16 +30,16 @@ export default function OrganizerView({ events, onDelete }: OrganizerViewProps) 
                         </svg>
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                        No events yet
+                        {t('dashboard.organizer.noEvents')}
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
-                        Start your journey by creating your first event. It only takes a few minutes!
+                        {t('dashboard.organizer.noEventsDesc')}
                     </p>
                     <Link
                         href="/dashboard/events/create"
                         className="inline-flex items-center justify-center px-6 py-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors font-medium"
                     >
-                        Create Event
+                        {t('dashboard.createEvent')}
                     </Link>
                 </div>
             ) : (

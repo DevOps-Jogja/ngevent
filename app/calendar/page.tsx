@@ -105,7 +105,15 @@ export default function CalendarPage() {
                             {/* Calendar Grid */}
                             <div className="grid grid-cols-7 gap-2">
                                 {/* Day Headers */}
-                                {['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].map((day) => (
+                                {[
+                                    t('calendar.days.sun'),
+                                    t('calendar.days.mon'),
+                                    t('calendar.days.tue'),
+                                    t('calendar.days.wed'),
+                                    t('calendar.days.thu'),
+                                    t('calendar.days.fri'),
+                                    t('calendar.days.sat')
+                                ].map((day) => (
                                     <div key={day} className="text-center font-semibold text-gray-600 dark:text-gray-400 py-2">
                                         {day}
                                     </div>

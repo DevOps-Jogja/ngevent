@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useLanguage } from '@/lib/language-context';
 
 interface DeleteEventModalProps {
     isOpen: boolean;
@@ -17,6 +18,7 @@ export default function DeleteEventModal({
     eventTitle,
     isDeleting,
 }: DeleteEventModalProps) {
+    const { t } = useLanguage();
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
@@ -51,11 +53,11 @@ export default function DeleteEventModal({
                     </div>
 
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                        Delete Event?
+                        {t('dashboard.deleteModal.title')}
                     </h3>
 
                     <p className="text-gray-600 dark:text-gray-400 mb-6">
-                        Are you sure you want to delete <span className="font-semibold text-gray-900 dark:text-white">&quot;{eventTitle}&quot;</span>? This action cannot be undone.
+                        {t('dashboard.deleteModal.confirm')} <span className="font-semibold text-gray-900 dark:text-white">&quot;{eventTitle}&quot;</span>? {t('dashboard.deleteModal.warning')}
                     </p>
 
                     <div className="flex gap-3 w-full">
@@ -64,7 +66,7 @@ export default function DeleteEventModal({
                             disabled={isDeleting}
                             className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Cancel
+                            {t('common.cancel')}
                         </button>
                         <button
                             onClick={onConfirm}
@@ -77,10 +79,10 @@ export default function DeleteEventModal({
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    Deleting...
+                                    {t('dashboard.deleteModal.deleting')}
                                 </>
                             ) : (
-                                'Delete Event'
+                                t('dashboard.deleteModal.deleteButton')
                             )}
                         </button>
                     </div>

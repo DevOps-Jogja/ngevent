@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { format, addDays, isSameDay, isToday, isFuture, isPast } from 'date-fns';
 import { id } from 'date-fns/locale';
 import Link from 'next/link';
+import { useLanguage } from '@/lib/language-context';
 
 interface Event {
     id: string;
@@ -18,6 +19,7 @@ interface UpcomingEventsWidgetProps {
 }
 
 export default function UpcomingEventsWidget({ events }: UpcomingEventsWidgetProps) {
+    const { t } = useLanguage();
     const [selectedDate, setSelectedDate] = useState(new Date());
 
     // Get next 7 days
@@ -58,9 +60,9 @@ export default function UpcomingEventsWidget({ events }: UpcomingEventsWidgetPro
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Upcoming Events</h2>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('home.upcoming')} {t('nav.events')}</h2>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                            {upcomingEvents.length} events coming up
+                            {upcomingEvents.length} {t('widget.eventsComingUp')}
                         </p>
                     </div>
                     <svg className="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,7 +112,7 @@ export default function UpcomingEventsWidget({ events }: UpcomingEventsWidgetPro
                 {eventsOnSelectedDate.length > 0 && (
                     <div className="mt-4 p-3 bg-white dark:bg-dark-card rounded-lg">
                         <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                            Events on {format(selectedDate, 'dd MMMM yyyy', { locale: id })}
+                            {t('widget.eventsOn')} {format(selectedDate, 'dd MMMM yyyy', { locale: id })}
                         </p>
                         <div className="space-y-2">
                             {eventsOnSelectedDate.map(event => (
@@ -131,7 +133,7 @@ export default function UpcomingEventsWidget({ events }: UpcomingEventsWidgetPro
                         <svg className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm">No upcoming events</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">{t('home.noUpcoming')}</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
@@ -168,15 +170,15 @@ export default function UpcomingEventsWidget({ events }: UpcomingEventsWidgetPro
                                                 </span>
                                                 {daysUntil === 0 ? (
                                                     <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">
-                                                        Today
+                                                        {t('calendar.today')}
                                                     </span>
                                                 ) : daysUntil === 1 ? (
                                                     <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">
-                                                        Tomorrow
+                                                        {t('calendar.tomorrow')}
                                                     </span>
                                                 ) : (
                                                     <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                        in {daysUntil} days
+                                                        {t('widget.inDays').replace('{days}', daysUntil.toString())}
                                                     </span>
                                                 )}
                                             </div>
@@ -199,7 +201,7 @@ export default function UpcomingEventsWidget({ events }: UpcomingEventsWidgetPro
                         href="/events"
                         className="block text-center text-sm text-primary-600 dark:text-primary-400 hover:underline font-medium"
                     >
-                        View all events →
+                        {t('home.viewAll')} →
                     </Link>
                 </div>
             )}

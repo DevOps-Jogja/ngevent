@@ -153,7 +153,7 @@ function EventsContent() {
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
-                                    Clear filters
+                                    {t('common.clearFilters')}
                                 </button>
                             )}
                         </div>
@@ -171,6 +171,7 @@ function EventsContent() {
 }
 
 function EventCard({ event }: { event: EventWithSpeakers }) {
+    const { t } = useLanguage();
     const eventDate = new Date(event.start_date);
 
     return (
@@ -221,7 +222,7 @@ function EventCard({ event }: { event: EventWithSpeakers }) {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        <span className="line-clamp-1">{event.location || 'Online Event'}</span>
+                        <span className="line-clamp-1">{event.location || t('common.onlineEvent')}</span>
                     </div>
 
                     <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800">
@@ -249,7 +250,7 @@ function EventCard({ event }: { event: EventWithSpeakers }) {
                         <div className="text-right">
                             {event.registration_fee === 0 ? (
                                 <span className="inline-block px-3 py-1 rounded-full bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-sm font-bold">
-                                    Free
+                                    {t('common.free')}
                                 </span>
                             ) : (
                                 <span className="text-lg font-bold text-primary-600 dark:text-primary-400">
@@ -265,12 +266,13 @@ function EventCard({ event }: { event: EventWithSpeakers }) {
 }
 
 export default function EventsPage() {
+    const { t } = useLanguage();
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
                 <Navbar />
                 <div className="container mx-auto px-4 py-8 content-align-navbar">
-                    <div className="text-center">Loading...</div>
+                    <div className="text-center">{t('common.loading')}</div>
                 </div>
             </div>
         }>

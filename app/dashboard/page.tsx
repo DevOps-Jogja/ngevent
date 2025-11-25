@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useQueryClient } from '@tanstack/react-query';
 import DashboardSkeleton from '@/components/DashboardSkeleton';
 import { invalidateRelatedCaches } from '@/lib/cache-helpers';
+import { useLanguage } from '@/lib/language-context';
 
 // Components
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -24,6 +25,7 @@ type Profile = Database['public']['Tables']['profiles']['Row'];
 
 export default function DashboardPage() {
     const router = useRouter();
+    const { t } = useLanguage();
     const queryClient = useQueryClient();
     const { user, profile, loading: authLoading } = useAuth();
     const [effectiveRole, setEffectiveRole] = useState<'participant' | 'organizer'>(profile?.role || 'participant');
@@ -48,7 +50,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         if (!authLoading && !user) {
-            toast.error('Silakan login terlebih dahulu untuk mengakses dashboard');
+            toast.error(t('dashboard.loginRequired'));
             router.push('/auth/login');
         }
     }, [authLoading, user, router]);
@@ -66,7 +68,7 @@ export default function DashboardPage() {
             // Immediately reflect role in UI and clear related caches
             setEffectiveRole(newRole);
             invalidateRelatedCaches('profile', user.id);
-            toast.success('Role berhasil diupdate!');
+            toast.success(t('dashboard.roleUpdated'));
         } catch (error: any) {
             toast.error(error.message);
         }
@@ -91,7 +93,7 @@ export default function DashboardPage() {
             if (error) throw error;
 
             localStorage.removeItem(`event_custom_images_${eventToDelete.id}`);
-            toast.success('Event deleted successfully');
+            toast.success(t('dashboard.eventDeleted'));
 
             queryClient.invalidateQueries({ queryKey: ['my-events', user.id] });
             refetchEvents();
@@ -99,7 +101,7 @@ export default function DashboardPage() {
             setEventToDelete(null);
         } catch (error: any) {
             console.error('Error deleting event:', error);
-            toast.error(error.message || 'Failed to delete event');
+            toast.error(t('dashboard.deleteFailed'));
         } finally {
             setIsDeleting(false);
         }

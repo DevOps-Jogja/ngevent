@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import RegistrationsStat from './RegistrationsStat';
+import { useLanguage } from '@/lib/language-context';
 
 interface OrganizerEventCardProps {
     event: any;
@@ -13,10 +14,11 @@ interface OrganizerEventCardProps {
 const idr = (n: number) => `Rp ${n.toLocaleString('id-ID')}`;
 
 export default function OrganizerEventCard({ event, onDelete }: OrganizerEventCardProps) {
+    const { t } = useLanguage();
     const copyLink = () => {
         const url = `${window.location.origin}/events/${event.id}`;
         navigator.clipboard.writeText(url);
-        toast.success('Link event disalin');
+        toast.success(t('dashboard.eventCard.linkCopied'));
     };
 
     return (
@@ -88,13 +90,13 @@ export default function OrganizerEventCard({ event, onDelete }: OrganizerEventCa
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            <span className="truncate">{event.location || 'Online'}</span>
+                            <span className="truncate">{event.location || t('common.online')}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                             <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span>{event.registration_fee ? idr(event.registration_fee) : 'Free'}</span>
+                            <span>{event.registration_fee ? idr(event.registration_fee) : t('common.free')}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <RegistrationsStat eventId={event.id} capacity={event.capacity} />
@@ -106,25 +108,25 @@ export default function OrganizerEventCard({ event, onDelete }: OrganizerEventCa
                             href={`/events/${event.id}`}
                             className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all shadow-sm hover:shadow-md"
                         >
-                            View
+                            {t('common.viewDetails')}
                         </Link>
                         <Link
                             href={`/dashboard/events/${event.id}/edit`}
                             className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 rounded-lg transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                         >
-                            Edit
+                            {t('common.edit')}
                         </Link>
                         <Link
                             href={`/dashboard/events/${event.id}/registrations`}
                             className="px-4 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded-lg transition-all shadow-sm hover:shadow-md"
                         >
-                            Registrations
+                            {t('dashboard.registrations')}
                         </Link>
                         <button
                             onClick={() => onDelete(event.id, event.title)}
                             className="ml-auto px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-white dark:bg-dark-card border border-red-200 dark:border-red-900/30 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all shadow-sm hover:shadow-md"
                         >
-                            Delete
+                            {t('common.delete')}
                         </button>
                     </div>
                 </div>

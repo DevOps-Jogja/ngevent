@@ -2,7 +2,6 @@ export const CATEGORIES = [
     {
         value: 'DevOps',
         label: 'DevOps',
-        icon: '♾️',
         color: 'from-cyan-500 to-blue-500',
         iconColor: 'text-cyan-600 dark:text-cyan-400',
         iconBg: 'bg-cyan-100 dark:bg-cyan-900/30',
@@ -11,7 +10,6 @@ export const CATEGORIES = [
     {
         value: 'Cloud',
         label: 'Cloud',
-        icon: '☁️',
         color: 'from-sky-500 to-indigo-500',
         iconColor: 'text-sky-600 dark:text-sky-400',
         iconBg: 'bg-sky-100 dark:bg-sky-900/30',
@@ -20,7 +18,6 @@ export const CATEGORIES = [
     {
         value: 'Programming',
         label: 'Programming',
-        icon: '💻',
         color: 'from-blue-500 to-indigo-600',
         iconColor: 'text-blue-600 dark:text-blue-400',
         iconBg: 'bg-blue-100 dark:bg-blue-900/30',
@@ -29,7 +26,6 @@ export const CATEGORIES = [
     {
         value: 'AI',
         label: 'AI',
-        icon: '🤖',
         color: 'from-purple-500 to-indigo-500',
         iconColor: 'text-purple-600 dark:text-purple-400',
         iconBg: 'bg-purple-100 dark:bg-purple-900/30',
@@ -38,7 +34,6 @@ export const CATEGORIES = [
     {
         value: 'Security',
         label: 'Security',
-        icon: '🛡️',
         color: 'from-red-500 to-rose-600',
         iconColor: 'text-red-600 dark:text-red-400',
         iconBg: 'bg-red-100 dark:bg-red-900/30',
@@ -47,7 +42,6 @@ export const CATEGORIES = [
     {
         value: 'Open Source',
         label: 'Open Source',
-        icon: '🐙',
         color: 'from-slate-600 to-slate-800',
         iconColor: 'text-slate-600 dark:text-slate-400',
         iconBg: 'bg-slate-100 dark:bg-slate-800/50',
@@ -56,7 +50,6 @@ export const CATEGORIES = [
     {
         value: 'Data Science',
         label: 'Data Science',
-        icon: '📊',
         color: 'from-emerald-500 to-green-600',
         iconColor: 'text-emerald-600 dark:text-emerald-400',
         iconBg: 'bg-emerald-100 dark:bg-emerald-900/30',
@@ -65,7 +58,6 @@ export const CATEGORIES = [
     {
         value: 'Crypto',
         label: 'Crypto',
-        icon: '₿',
         color: 'from-yellow-400 to-orange-500',
         iconColor: 'text-yellow-600 dark:text-yellow-400',
         iconBg: 'bg-yellow-100 dark:bg-yellow-900/30',
@@ -74,7 +66,6 @@ export const CATEGORIES = [
     {
         value: 'Business',
         label: 'Business',
-        icon: '💼',
         color: 'from-slate-600 to-slate-800',
         iconColor: 'text-slate-600 dark:text-slate-400',
         iconBg: 'bg-slate-100 dark:bg-slate-800/50',
@@ -83,7 +74,6 @@ export const CATEGORIES = [
     {
         value: 'Education',
         label: 'Education',
-        icon: '📚',
         color: 'from-indigo-500 to-violet-500',
         iconColor: 'text-indigo-600 dark:text-indigo-400',
         iconBg: 'bg-indigo-100 dark:bg-indigo-900/30',
@@ -92,7 +82,6 @@ export const CATEGORIES = [
     {
         value: 'Gaming',
         label: 'Gaming',
-        icon: '🎮',
         color: 'from-violet-600 to-indigo-600',
         iconColor: 'text-violet-600 dark:text-violet-400',
         iconBg: 'bg-violet-100 dark:bg-violet-900/30',

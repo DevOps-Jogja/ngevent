@@ -31,7 +31,7 @@ export default function LoginPage() {
             const verified = params.get('verified');
             if (verified === '1') {
                 setShowVerifiedBanner(true);
-                toast.success('Email berhasil diverifikasi. Silakan login.');
+                toast.success(t('auth.emailVerified'));
             }
         } catch { }
 
@@ -84,7 +84,7 @@ export default function LoginPage() {
 
         // Human verification pre-check
         if (!turnstileToken) {
-            toast.error('Verifikasi manusia diperlukan');
+            toast.error(t('auth.humanVerificationRequired'));
             return;
         }
 
@@ -97,11 +97,11 @@ export default function LoginPage() {
             });
             if (!guard.ok) {
                 const j = await guard.json().catch(() => ({}));
-                throw new Error(j?.message || 'Verifikasi gagal');
+                throw new Error(j?.message || t('auth.verificationFailed'));
             }
         } catch (err: any) {
             setIsAuthenticating(false);
-            toast.error(err?.message || 'Verifikasi manusia gagal');
+            toast.error(err?.message || t('auth.humanVerificationFailed'));
             return;
         }
 
@@ -119,7 +119,7 @@ export default function LoginPage() {
             }
 
             if (data.user) {
-                toast.success('Login berhasil!');
+                toast.success(t('auth.loginSuccess'));
                 router.push('/dashboard');
             }
         } catch (error: any) {
@@ -192,7 +192,7 @@ export default function LoginPage() {
                         {/* Verified banner */}
                         {showVerifiedBanner && (
                             <div className="mb-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-700/40 dark:bg-green-900/30 dark:text-green-200">
-                                Email Anda sudah terverifikasi. Silakan login untuk melanjutkan.
+                                {t('auth.emailVerifiedLoginPrompt')}
                             </div>
                         )}
 
@@ -246,7 +246,7 @@ export default function LoginPage() {
                             <div className="pt-2">
                                 <TurnstileWidget onVerify={(t) => setTurnstileToken(t)} onExpire={() => setTurnstileToken(null)} onError={() => setTurnstileToken(null)} />
                                 {!turnstileToken && (
-                                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">Verifikasi diperlukan untuk melanjutkan.</p>
+                                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{t('auth.verificationRequiredToProceed')}</p>
                                 )}
                             </div>
 
@@ -288,7 +288,7 @@ export default function LoginPage() {
                             {isAuthenticating ? (
                                 <>
                                     <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary-600"></div>
-                                    <span>Mengarahkan ke Google...</span>
+                                    <span>{t('auth.redirectingGoogle')}</span>
                                 </>
                             ) : (
                                 <>
@@ -326,9 +326,9 @@ export default function LoginPage() {
 
                     {/* Terms */}
                     <p className="text-center text-sm text-gray-500 dark:text-gray-400 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                        Dengan masuk, Anda menyetujui{' '}
+                        {t('auth.agreeToTerms')}{' '}
                         <a href="/terms" className="text-primary-600 dark:text-primary-400 hover:underline transition-colors">
-                            Syarat & Ketentuan
+                            {t('auth.termsAndConditions')}
                         </a>
                     </p>
                 </div>

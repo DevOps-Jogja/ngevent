@@ -12,8 +12,10 @@ import { uploadImageWithCompression } from '@/lib/image-compression';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 import { CATEGORIES } from '@/lib/constants';
+import { useLanguage } from '@/lib/language-context';
 
 export default function CreateEventPage() {
+    const { t } = useLanguage();
     const router = useRouter();
     const queryClient = useQueryClient();
     const [loading, setLoading] = useState(false);
@@ -63,7 +65,7 @@ export default function CreateEventPage() {
                     options: null,
                 },
             ]);
-            toast.success('Form upload bukti pembayaran ditambahkan otomatis');
+            toast.success(t('eventForm.paymentProofAdded'));
         } else if (!hasFee && hasPaymentProofField) {
             // Remove payment proof field if fee is removed
             setFormFields(prev => prev.filter(field =>
@@ -79,14 +81,14 @@ export default function CreateEventPage() {
             const { data: { user }, error } = await supabase.auth.getUser();
 
             if (error || !user) {
-                toast.error('Silakan login terlebih dahulu');
+                toast.error(t('eventForm.pleaseLogin'));
                 router.push('/auth/login');
                 return;
             }
 
             setAuthChecked(true);
         } catch (error) {
-            toast.error('Terjadi kesalahan saat verifikasi login');
+            toast.error(t('eventForm.loginError'));
             router.push('/auth/login');
         }
     };
@@ -109,15 +111,15 @@ export default function CreateEventPage() {
 
         try {
             setUploading(true);
-            toast.loading('Compressing and uploading image...', { id: 'upload' });
+            toast.loading(t('eventForm.uploadingImage'), { id: 'upload' });
 
             const url = await uploadImageWithCompression(imageFile);
 
-            toast.success('Image uploaded successfully!', { id: 'upload' });
+            toast.success(t('eventForm.imageUploaded'), { id: 'upload' });
             return url;
         } catch (error: any) {
             console.error('Error uploading image:', error);
-            toast.error('Gagal upload gambar');
+            toast.error(t('eventForm.imageUploadFailed'));
             return null;
         } finally {
             setUploading(false);
@@ -137,7 +139,7 @@ export default function CreateEventPage() {
 
             // Validate required fields
             if (!formData.title || !formData.description || !formData.start_date || !formData.end_date) {
-                toast.error('Mohon lengkapi semua field yang wajib diisi');
+                toast.error(t('eventForm.fillRequired'));
                 setLoading(false);
                 return;
             }
@@ -227,7 +229,7 @@ export default function CreateEventPage() {
                 if (speakersError) throw speakersError;
             }
 
-            toast.success('Event berhasil dibuat!');
+            toast.success(t('eventForm.created'));
 
             // Invalidate queries to refresh data on dashboard
             await queryClient.invalidateQueries({ queryKey: ['my-events'] });
@@ -236,7 +238,7 @@ export default function CreateEventPage() {
             router.push('/dashboard');
         } catch (error: any) {
             console.error('Error creating event:', error);
-            toast.error(error.message || 'Gagal membuat event');
+            toast.error(error.message || t('eventForm.createError'));
         } finally {
             setLoading(false);
         }
@@ -305,9 +307,9 @@ export default function CreateEventPage() {
 
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div className="mb-10 text-center">
-                    <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-3 tracking-tight">Create New Event</h1>
+                    <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-3 tracking-tight">{t('eventForm.createTitle')}</h1>
                     <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                        Share your event with the world. Fill in the details below to get started.
+                        {t('eventForm.createSubtitle')}
                     </p>
                 </div>
 
@@ -316,28 +318,28 @@ export default function CreateEventPage() {
                     <div className="flex space-x-2 overflow-x-auto no-scrollbar p-1 bg-white/50 dark:bg-dark-card/50 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
                         {[
                             {
-                                id: 'basic', label: 'Basic Info', icon: (
+                                id: 'basic', label: t('eventForm.tabBasic'), icon: (
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 )
                             },
                             {
-                                id: 'speakers', label: 'Speakers', icon: (
+                                id: 'speakers', label: t('eventForm.tabSpeakers'), icon: (
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                     </svg>
                                 )
                             },
                             {
-                                id: 'registration', label: 'Registration Form', icon: (
+                                id: 'registration', label: t('eventForm.tabRegistration'), icon: (
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
                                 )
                             },
                             {
-                                id: 'images', label: 'Custom Image Form', icon: (
+                                id: 'images', label: t('eventForm.tabImages'), icon: (
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
@@ -366,15 +368,15 @@ export default function CreateEventPage() {
                         <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                             <div className="p-6 sm:p-8 space-y-8">
                                 <div className="border-b border-gray-100 dark:border-gray-700 pb-6">
-                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Event Details</h2>
-                                    <p className="text-gray-500 dark:text-gray-400 mt-1">Basic information about your event.</p>
+                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('eventForm.eventDetails')}</h2>
+                                    <p className="text-gray-500 dark:text-gray-400 mt-1">{t('eventForm.eventDetailsDesc')}</p>
                                 </div>
 
                                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
                                     {/* Left Column - Image Upload */}
                                     <div className="lg:col-span-4 space-y-2">
                                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                            Event Cover Image
+                                            {t('eventForm.coverImage')}
                                         </label>
                                         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 my-2">
                                             <p className="text-xs text-yellow-800 dark:text-yellow-200 flex items-start gap-2">
@@ -382,7 +384,7 @@ export default function CreateEventPage() {
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                                 </svg>
                                                 <span>
-                                                    Rekomendasi rasio gambar 4:5. Gambar akan terpotong jika rasio tidak sesuai.
+                                                    {t('eventForm.imageRatioWarning')}
                                                 </span>
                                             </p>
                                         </div>
@@ -419,9 +421,9 @@ export default function CreateEventPage() {
                                                             </svg>
                                                         </div>
                                                         <p className="mb-2 text-sm text-gray-700 dark:text-gray-300 font-medium">
-                                                            Click to upload or drag and drop
+                                                            {t('eventForm.clickUpload')}
                                                         </p>
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG or WEBP (MAX. 5MB)</p>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('eventForm.imageFormat')}</p>
                                                     </div>
                                                     <input
                                                         type="file"
@@ -438,7 +440,7 @@ export default function CreateEventPage() {
                                     <div className="lg:col-span-8 space-y-6">
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                                Event Title <span className="text-red-500">*</span>
+                                                {t('eventForm.eventTitle')} <span className="text-red-500">*</span>
                                             </label>
                                             <input
                                                 type="text"
@@ -446,19 +448,19 @@ export default function CreateEventPage() {
                                                 value={formData.title}
                                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white transition-all duration-200 placeholder-gray-400"
-                                                placeholder="e.g., Annual Tech Conference 2024"
+                                                placeholder={t('eventForm.titlePlaceholder')}
                                             />
                                         </div>
 
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                                Description <span className="text-red-500">*</span>
+                                                {t('eventForm.description')} <span className="text-red-500">*</span>
                                             </label>
                                             <div className="prose-editor-wrapper rounded-xl overflow-hidden border border-gray-300 dark:border-gray-600 focus-within:ring-2 focus-within:ring-primary-500/50 focus-within:border-primary-500 transition-all duration-200">
                                                 <MilkdownEditor
                                                     value={formData.description}
                                                     onChange={(value: string) => setFormData((prev) => ({ ...prev, description: value }))}
-                                                    placeholder="Describe your event using markdown..."
+                                                    placeholder={t('eventForm.descriptionPlaceholder')}
                                                     height="300px"
                                                 />
                                             </div>
@@ -466,14 +468,14 @@ export default function CreateEventPage() {
                                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                                Supports Markdown formatting
+                                                {t('eventForm.markdownSupport')}
                                             </p>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div>
                                                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                                    Start Date & Time <span className="text-red-500">*</span>
+                                                    {t('eventForm.startDateTime')} <span className="text-red-500">*</span>
                                                 </label>
                                                 <input
                                                     type="datetime-local"
@@ -486,7 +488,7 @@ export default function CreateEventPage() {
 
                                             <div>
                                                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                                    End Date & Time <span className="text-red-500">*</span>
+                                                    {t('eventForm.endDateTime')} <span className="text-red-500">*</span>
                                                 </label>
                                                 <input
                                                     type="datetime-local"
@@ -500,7 +502,7 @@ export default function CreateEventPage() {
 
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                                Location
+                                                {t('eventForm.location')}
                                             </label>
                                             <div className="relative">
                                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -514,7 +516,7 @@ export default function CreateEventPage() {
                                                     value={formData.location}
                                                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                                     className="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white transition-all duration-200"
-                                                    placeholder="e.g., Zoom Meeting or Physical Address"
+                                                    placeholder={t('eventForm.locationPlaceholder')}
                                                 />
                                             </div>
                                         </div>
@@ -522,7 +524,7 @@ export default function CreateEventPage() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div>
                                                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                                    Category
+                                                    {t('eventForm.category')}
                                                 </label>
                                                 <select
                                                     value={formData.category}
@@ -530,10 +532,10 @@ export default function CreateEventPage() {
                                                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white transition-all duration-200 appearance-none"
                                                     style={{ backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '0.75em 0.75em' }}
                                                 >
-                                                    <option value="">Select category...</option>
+                                                    <option value="">{t('eventForm.selectCategoryPlaceholder')}</option>
                                                     {CATEGORIES.map((cat) => (
                                                         <option key={cat.value} value={cat.value}>
-                                                            {cat.icon} {cat.label}
+                                                            {cat.label}
                                                         </option>
                                                     ))}
                                                 </select>
@@ -541,14 +543,14 @@ export default function CreateEventPage() {
 
                                             <div>
                                                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                                    Capacity
+                                                    {t('eventForm.capacity')}
                                                 </label>
                                                 <input
                                                     type="number"
                                                     value={formData.capacity}
                                                     onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
                                                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white transition-all duration-200"
-                                                    placeholder="Maximum participants"
+                                                    placeholder={t('eventForm.capacityPlaceholder')}
                                                     min="1"
                                                 />
                                             </div>
@@ -556,7 +558,7 @@ export default function CreateEventPage() {
 
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                                Registration Fee (IDR)
+                                                {t('eventForm.registrationFeeIDR')}
                                             </label>
                                             <div className="relative">
                                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">
@@ -567,19 +569,19 @@ export default function CreateEventPage() {
                                                     value={formData.registration_fee}
                                                     onChange={(e) => setFormData({ ...formData, registration_fee: e.target.value })}
                                                     className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white transition-all duration-200"
-                                                    placeholder="0 (Free event)"
+                                                    placeholder={t('eventForm.feePlaceholder')}
                                                     min="0"
                                                     step="1000"
                                                 />
                                             </div>
                                             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                                Leave as 0 for free events. If you set a fee, make sure to add a payment proof upload field below.
+                                                {t('eventForm.feeHelper')}
                                             </p>
                                         </div>
 
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                                Status <span className="text-red-500">*</span>
+                                                {t('eventForm.status')} <span className="text-red-500">*</span>
                                             </label>
                                             <div className="flex gap-4">
                                                 <label className={`flex-1 cursor-pointer border rounded-xl p-4 flex items-center gap-3 transition-all duration-200 ${formData.status === 'draft' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/10 ring-1 ring-primary-500' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-dark-secondary'}`}>
@@ -592,8 +594,8 @@ export default function CreateEventPage() {
                                                         className="w-4 h-4 text-primary-600 focus:ring-primary-500"
                                                     />
                                                     <div>
-                                                        <span className="block font-medium text-gray-900 dark:text-white">Draft</span>
-                                                        <span className="text-xs text-gray-500 dark:text-gray-400">Save for later, not visible to public</span>
+                                                        <span className="block font-medium text-gray-900 dark:text-white">{t('eventForm.draft')}</span>
+                                                        <span className="text-xs text-gray-500 dark:text-gray-400">{t('eventForm.draftDesc')}</span>
                                                     </div>
                                                 </label>
                                                 <label className={`flex-1 cursor-pointer border rounded-xl p-4 flex items-center gap-3 transition-all duration-200 ${formData.status === 'published' ? 'border-green-500 bg-green-50 dark:bg-green-900/10 ring-1 ring-green-500' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-dark-secondary'}`}>
@@ -606,8 +608,8 @@ export default function CreateEventPage() {
                                                         className="w-4 h-4 text-green-600 focus:ring-green-500"
                                                     />
                                                     <div>
-                                                        <span className="block font-medium text-gray-900 dark:text-white">Published</span>
-                                                        <span className="text-xs text-gray-500 dark:text-gray-400">Visible to everyone immediately</span>
+                                                        <span className="block font-medium text-gray-900 dark:text-white">{t('eventForm.published')}</span>
+                                                        <span className="text-xs text-gray-500 dark:text-gray-400">{t('eventForm.publishedDesc')}</span>
                                                     </div>
                                                 </label>
                                             </div>
@@ -624,8 +626,8 @@ export default function CreateEventPage() {
                             <div className="p-6 sm:p-8">
                                 <div className="flex items-center justify-between mb-8">
                                     <div>
-                                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Registration Form</h2>
-                                        <p className="text-gray-500 dark:text-gray-400 mt-1">Customize what information you need from attendees.</p>
+                                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('eventForm.registrationFormTitle')}</h2>
+                                        <p className="text-gray-500 dark:text-gray-400 mt-1">{t('eventForm.registrationFormDesc')}</p>
                                     </div>
                                     <button
                                         type="button"
@@ -635,7 +637,7 @@ export default function CreateEventPage() {
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                         </svg>
-                                        Add Field
+                                        {t('common.addField')}
                                     </button>
                                 </div>
 
@@ -646,16 +648,16 @@ export default function CreateEventPage() {
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                             </svg>
                                         </div>
-                                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No Custom Fields</h3>
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">{t('eventForm.noCustomFields')}</h3>
                                         <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6">
-                                            Start by adding fields to collect specific information from your attendees.
+                                            {t('eventForm.noCustomFieldsDesc')}
                                         </p>
                                         <button
                                             type="button"
                                             onClick={addFormField}
                                             className="text-primary-600 dark:text-primary-400 font-medium hover:underline"
                                         >
-                                            Add your first field
+                                            {t('eventForm.addFirstField')}
                                         </button>
                                     </div>
                                 ) : (
@@ -671,7 +673,7 @@ export default function CreateEventPage() {
 
                                                     <div className="md:col-span-4">
                                                         <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-                                                            Field Name
+                                                            {t('eventForm.fieldName')}
                                                         </label>
                                                         <input
                                                             type="text"
@@ -680,13 +682,13 @@ export default function CreateEventPage() {
                                                                 updateFormField(index, 'field_name', e.target.value)
                                                             }
                                                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-primary text-gray-900 dark:text-white"
-                                                            placeholder="e.g., Phone Number"
+                                                            placeholder={t('eventForm.fieldNamePlaceholder')}
                                                         />
                                                     </div>
 
                                                     <div className="md:col-span-3">
                                                         <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-                                                            Type
+                                                            {t('eventForm.type')}
                                                         </label>
                                                         <select
                                                             value={field.field_type}
@@ -695,12 +697,12 @@ export default function CreateEventPage() {
                                                             }
                                                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-primary text-gray-900 dark:text-white"
                                                         >
-                                                            <option value="text">Text</option>
-                                                            <option value="email">Email</option>
-                                                            <option value="number">Number</option>
-                                                            <option value="textarea">Textarea</option>
-                                                            <option value="select">Select</option>
-                                                            <option value="file">File Upload</option>
+                                                            <option value="text">{t('eventForm.typeText')}</option>
+                                                            <option value="email">{t('eventForm.typeEmail')}</option>
+                                                            <option value="number">{t('eventForm.typeNumber')}</option>
+                                                            <option value="textarea">{t('eventForm.typeTextarea')}</option>
+                                                            <option value="select">{t('eventForm.typeSelect')}</option>
+                                                            <option value="file">{t('eventForm.typeFile')}</option>
                                                         </select>
                                                     </div>
 
@@ -717,7 +719,7 @@ export default function CreateEventPage() {
                                                                 />
                                                                 <div className="w-10 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
                                                             </div>
-                                                            <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Required</span>
+                                                            <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">{t('eventForm.required')}</span>
                                                         </label>
 
                                                         <button
@@ -746,8 +748,8 @@ export default function CreateEventPage() {
                             <div className="p-6 sm:p-8">
                                 <div className="flex items-center justify-between mb-8">
                                     <div>
-                                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Speakers</h2>
-                                        <p className="text-gray-500 dark:text-gray-400 mt-1">Who will be presenting at your event?</p>
+                                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('eventForm.speakersTitle')}</h2>
+                                        <p className="text-gray-500 dark:text-gray-400 mt-1">{t('eventForm.speakersDesc')}</p>
                                     </div>
                                     <button
                                         type="button"
@@ -757,7 +759,7 @@ export default function CreateEventPage() {
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                         </svg>
-                                        Add Speaker
+                                        {t('eventForm.addSpeaker')}
                                     </button>
                                 </div>
 
@@ -768,16 +770,16 @@ export default function CreateEventPage() {
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                             </svg>
                                         </div>
-                                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No Speakers Added</h3>
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">{t('eventForm.noSpeakers')}</h3>
                                         <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6">
-                                            Highlight the experts and guests who will be attending.
+                                            {t('eventForm.noSpeakersDesc')}
                                         </p>
                                         <button
                                             type="button"
                                             onClick={addSpeaker}
                                             className="text-primary-600 dark:text-primary-400 font-medium hover:underline"
                                         >
-                                            Add your first speaker
+                                            {t('eventForm.addFirstSpeaker')}
                                         </button>
                                     </div>
                                 ) : (

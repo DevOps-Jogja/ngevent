@@ -68,15 +68,15 @@ export default function RegisterPage() {
         if (!formData.email) {
             newErrors.email = t('auth.emailRequired');
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = 'Email tidak valid';
+            newErrors.email = t('auth.invalidEmail');
         }
 
         if (!formData.password) {
             newErrors.password = t('auth.passwordRequired');
         } else if (formData.password.length < 8) {
-            newErrors.password = 'Password minimal 8 karakter';
+            newErrors.password = t('auth.passwordMinLength8');
         } else if (!/\d/.test(formData.password)) {
-            newErrors.password = 'Password harus mengandung angka';
+            newErrors.password = t('auth.passwordMustContainNumber');
         }
 
         if (!formData.confirmPassword) {
@@ -97,7 +97,7 @@ export default function RegisterPage() {
         }
 
         if (!turnstileToken) {
-            toast.error('Verifikasi manusia diperlukan');
+            toast.error(t('auth.humanVerificationRequired'));
             return;
         }
 
@@ -125,7 +125,7 @@ export default function RegisterPage() {
                 throw new Error(err?.message || t('auth.registerError'));
             }
 
-            toast.success('Pendaftaran berhasil! Cek email Anda untuk verifikasi.');
+            toast.success(t('auth.registerSuccess'));
 
             // Redirect to login after short delay
             setTimeout(() => {
@@ -269,13 +269,13 @@ export default function RegisterPage() {
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                             </svg>
-                                            Minimal 8 karakter
+                                            {t('auth.passwordMinLength8')}
                                         </div>
                                         <div className={`flex items-center gap-2 ${/\d/.test(formData.password) ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                             </svg>
-                                            Mengandung angka (0-9)
+                                            {t('auth.passwordMustContainNumberHint')}
                                         </div>
                                     </div>
                                 )}
@@ -310,7 +310,7 @@ export default function RegisterPage() {
                             <div className="pt-2">
                                 <TurnstileWidget onVerify={(t) => setTurnstileToken(t)} onExpire={() => setTurnstileToken(null)} onError={() => setTurnstileToken(null)} action="register" />
                                 {!turnstileToken && (
-                                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">Verifikasi diperlukan untuk melanjutkan.</p>
+                                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{t('auth.verificationRequired')}</p>
                                 )}
                             </div>
 
@@ -323,7 +323,7 @@ export default function RegisterPage() {
                                 {isAuthenticating ? (
                                     <div className="flex items-center justify-center gap-2">
                                         <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
-                                        <span>Mendaftar...</span>
+                                        <span>{t('auth.registering')}</span>
                                     </div>
                                 ) : (
                                     t('auth.createAccount')
@@ -352,7 +352,7 @@ export default function RegisterPage() {
                             {isAuthenticating ? (
                                 <>
                                     <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary-600"></div>
-                                    <span>Mengarahkan ke Google...</span>
+                                    <span>{t('auth.redirectingGoogle')}</span>
                                 </>
                             ) : (
                                 <>
@@ -390,10 +390,10 @@ export default function RegisterPage() {
 
                     {/* Terms */}
                     <p className="text-center text-sm text-gray-500 dark:text-gray-400 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                        Dengan mendaftar, Anda menyetujui{' '}
-                        <a href="/terms" className="text-primary-600 dark:text-primary-400 hover:underline transition-colors">
-                            Syarat & Ketentuan
-                        </a>
+                        {t('auth.agreeToTermsRegister')}{' '}
+                        <Link href="/terms" className="text-primary-600 dark:text-primary-400 hover:underline transition-colors">
+                            {t('auth.termsAndConditions')}
+                        </Link>
                     </p>
                 </div>
             </div>
