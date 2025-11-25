@@ -29,7 +29,6 @@ export default function DiscoverPage() {
     const categoryList = CATEGORIES.map(cat => ({
         category: cat.value,
         count: categoryCounts[cat.value] || 0,
-        icon: cat.icon,
         path: cat.path,
         color: cat.color,
         iconColor: cat.iconColor,

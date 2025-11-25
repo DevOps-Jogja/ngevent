@@ -53,7 +53,7 @@ export default function DashboardPage() {
             toast.error(t('dashboard.loginRequired'));
             router.push('/auth/login');
         }
-    }, [authLoading, user, router]);
+    }, [authLoading, user, router, t]);
 
     const updateRole = async (newRole: 'participant' | 'organizer') => {
         if (!user) return;

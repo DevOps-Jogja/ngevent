@@ -54,7 +54,7 @@ export default function LoginPage() {
         });
 
         return () => observer.disconnect();
-    }, []);
+    }, [t]);
 
     const validateForm = () => {
         const newErrors: { email?: string; password?: string } = {};
