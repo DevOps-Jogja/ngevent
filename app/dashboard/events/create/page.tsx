@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import MilkdownEditor from '@/components/MilkdownEditor';
@@ -13,6 +14,7 @@ import toast from 'react-hot-toast';
 
 export default function CreateEventPage() {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const [loading, setLoading] = useState(false);
     const [authChecked, setAuthChecked] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -27,7 +29,7 @@ export default function CreateEventPage() {
         category: '',
         capacity: '',
         registration_fee: '',
-        status: 'draft' as const,
+        status: 'draft' as 'draft' | 'published' | 'cancelled' | 'completed',
         image_url: '',
     });
 
@@ -225,6 +227,11 @@ export default function CreateEventPage() {
             }
 
             toast.success('Event berhasil dibuat!');
+
+            // Invalidate queries to refresh data on dashboard
+            await queryClient.invalidateQueries({ queryKey: ['my-events'] });
+            await queryClient.invalidateQueries({ queryKey: ['upcoming-events'] });
+
             router.push('/dashboard');
         } catch (error: any) {
             console.error('Error creating event:', error);
@@ -292,124 +299,116 @@ export default function CreateEventPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-dark-primary animate-fade-in">
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-primary animate-fade-in pb-20">
             <Navbar />
 
-            <div className="container mx-auto px-4 py-12 content-align-navbar">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Create New Event</h1>
-                    <p className="text-gray-600 dark:text-gray-400">Fill in the details to create your event</p>
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div className="mb-10 text-center">
+                    <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-3 tracking-tight">Create New Event</h1>
+                    <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                        Share your event with the world. Fill in the details below to get started.
+                    </p>
                 </div>
 
-                {/* Tab Navigation - sticky on scroll for easy switching */}
-                <div className="mb-8 border-b border-gray-200 dark:border-gray-700 sticky top-0 lg:top-[90px] z-30 bg-gray-50/80 dark:bg-dark-primary/80 backdrop-blur supports-[backdrop-filter]:bg-gray-50/60 dark:supports-[backdrop-filter]:bg-dark-primary/60">
-                    <div className="flex space-x-8 overflow-x-auto px-1">
-                        <button
-                            type="button"
-                            onClick={() => setActiveTab('basic')}
-                            className={`pb-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${activeTab === 'basic'
-                                ? 'border-primary-600 text-primary-600 dark:text-primary-400'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                                }`}
-                        >
-                            <div className="flex items-center gap-2">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Basic Information
-                            </div>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setActiveTab('speakers')}
-                            className={`pb-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${activeTab === 'speakers'
-                                ? 'border-primary-600 text-primary-600 dark:text-primary-400'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                                }`}
-                        >
-                            <div className="flex items-center gap-2">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                                Speakers
-                            </div>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setActiveTab('registration')}
-                            className={`pb-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${activeTab === 'registration'
-                                ? 'border-primary-600 text-primary-600 dark:text-primary-400'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                                }`}
-                        >
-                            <div className="flex items-center gap-2">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                Registration Form
-                            </div>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setActiveTab('images')}
-                            className={`pb-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${activeTab === 'images'
-                                ? 'border-primary-600 text-primary-600 dark:text-primary-400'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                                }`}
-                        >
-                            <div className="flex items-center gap-2">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                Custom Images
-                            </div>
-                        </button>
+                {/* Tab Navigation - sticky on scroll */}
+                <div className="mb-8 sticky top-[80px] z-30 bg-gray-50/95 dark:bg-dark-primary/95 backdrop-blur-sm py-2 -mx-4 px-4 sm:mx-0 sm:px-0 transition-all duration-200">
+                    <div className="flex space-x-2 overflow-x-auto no-scrollbar p-1 bg-white/50 dark:bg-dark-card/50 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                        {[
+                            {
+                                id: 'basic', label: 'Basic Info', icon: (
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                )
+                            },
+                            {
+                                id: 'speakers', label: 'Speakers', icon: (
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                )
+                            },
+                            {
+                                id: 'registration', label: 'Registration Form', icon: (
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                )
+                            },
+                            {
+                                id: 'images', label: 'Custom Image Form', icon: (
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                )
+                            }
+                        ].map((tab) => (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => setActiveTab(tab.id as any)}
+                                className={`flex-1 py-3 px-4 rounded-xl font-medium text-sm whitespace-nowrap transition-all duration-200 flex items-center justify-center gap-2 ${activeTab === tab.id
+                                    ? 'bg-white dark:bg-dark-secondary text-primary-600 dark:text-primary-400 shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+                                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100/50 dark:hover:bg-dark-secondary/50'
+                                    }`}
+                            >
+                                {tab.icon}
+                                {tab.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8">
                     {/* Basic Information Tab */}
                     {activeTab === 'basic' && (
-                        <div className="bg-white dark:bg-dark-card rounded-lg shadow-md dark:shadow-xl p-6 border border-transparent dark:border-gray-700">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Event Details</h2>
+                        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                            <div className="p-6 sm:p-8 space-y-8">
+                                <div className="border-b border-gray-100 dark:border-gray-700 pb-6">
+                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Event Details</h2>
+                                    <p className="text-gray-500 dark:text-gray-400 mt-1">Basic information about your event.</p>
+                                </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-8 gap-8">
-                                {/* Left Column - Image Upload */}
-                                <div className="lg:col-span-2 space-y-1">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Event Image
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+                                    {/* Left Column - Image Upload */}
+                                    <div className="lg:col-span-4 space-y-2">
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                            Event Cover Image
                                         </label>
                                         <div className="mt-2">
                                             {imagePreview ? (
-                                                <div className="relative">
+                                                <div className="relative group rounded-xl overflow-hidden shadow-md ring-1 ring-black/5">
                                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                                     <img
                                                         src={imagePreview}
                                                         alt="Preview"
-                                                        className="w-full  object-cover rounded-lg"
+                                                        className="w-full aspect-[4/3] object-cover transition-transform duration-300 group-hover:scale-105"
                                                     />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setImageFile(null);
-                                                            setImagePreview('');
-                                                        }}
-                                                        className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
-                                                    >
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                    </button>
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setImageFile(null);
+                                                                setImagePreview('');
+                                                            }}
+                                                            className="bg-red-500 text-white p-2.5 rounded-full hover:bg-red-600 transform hover:scale-110 transition-all shadow-lg"
+                                                        >
+                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ) : (
-                                                <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-dark-secondary hover:bg-gray-100 dark:hover:bg-dark-primary transition-colors">
-                                                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                                        <svg className="w-12 h-12 mb-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                                        </svg>
-                                                        <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                                                            <span className="font-semibold">Click to upload</span> or drag and drop
+                                                <label className="flex flex-col items-center justify-center w-full aspect-[4/3] border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-50 dark:bg-dark-secondary/50 hover:bg-gray-100 dark:hover:bg-dark-secondary hover:border-primary-500 dark:hover:border-primary-500 transition-all duration-200 group">
+                                                    <div className="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">
+                                                        <div className="w-12 h-12 mb-4 rounded-full bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                                                            <svg className="w-6 h-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            </svg>
+                                                        </div>
+                                                        <p className="mb-2 text-sm text-gray-700 dark:text-gray-300 font-medium">
+                                                            Click to upload or drag and drop
                                                         </p>
                                                         <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG or WEBP (MAX. 5MB)</p>
                                                     </div>
@@ -423,158 +422,192 @@ export default function CreateEventPage() {
                                             )}
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Right Column - Form Fields */}
-                                <div className="lg:col-span-6 space-y-6">
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Event Title <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={formData.title}
-                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white"
-                                            placeholder="e.g., Workshop Web Development"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Description <span className="text-red-500">*</span>
-                                        </label>
-                                        <MilkdownEditor
-                                            value={formData.description}
-                                            onChange={(value: string) => {
-                                                console.log('MilkdownEditor onChange called with:', value);
-                                                setFormData((prev) => ({ ...prev, description: value }));
-                                            }}
-                                            placeholder="Describe your event using markdown..."
-                                            height="300px"
-                                        />
-                                        <p className="mt-1 text-sm ">Markdown format support</p>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Right Column - Form Fields */}
+                                    <div className="lg:col-span-8 space-y-6">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Start Date & Time <span className="text-red-500">*</span>
+                                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                Event Title <span className="text-red-500">*</span>
                                             </label>
                                             <input
-                                                type="datetime-local"
+                                                type="text"
                                                 required
-                                                value={formData.start_date}
-                                                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white"
+                                                value={formData.title}
+                                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white transition-all duration-200 placeholder-gray-400"
+                                                placeholder="e.g., Annual Tech Conference 2024"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                End Date & Time <span className="text-red-500">*</span>
+                                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                Description <span className="text-red-500">*</span>
                                             </label>
-                                            <input
-                                                type="datetime-local"
-                                                required
-                                                value={formData.end_date}
-                                                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white"
-                                            />
+                                            <div className="prose-editor-wrapper rounded-xl overflow-hidden border border-gray-300 dark:border-gray-600 focus-within:ring-2 focus-within:ring-primary-500/50 focus-within:border-primary-500 transition-all duration-200">
+                                                <MilkdownEditor
+                                                    value={formData.description}
+                                                    onChange={(value: string) => setFormData((prev) => ({ ...prev, description: value }))}
+                                                    placeholder="Describe your event using markdown..."
+                                                    height="300px"
+                                                />
+                                            </div>
+                                            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Supports Markdown formatting
+                                            </p>
                                         </div>
-                                    </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Location
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={formData.location}
-                                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white"
-                                            placeholder="e.g., Zoom Meeting or Physical Address"
-                                        />
-                                    </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                    Start Date & Time <span className="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    type="datetime-local"
+                                                    required
+                                                    value={formData.start_date}
+                                                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white transition-all duration-200"
+                                                />
+                                            </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Category
-                                            </label>
-                                            <select
-                                                value={formData.category}
-                                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white"
-                                            >
-                                                <option value="">Select category...</option>
-                                                <option value="Tech">💻 Tech</option>
-                                                <option value="Food & Drink">🍔 Food & Drink</option>
-                                                <option value="AI">🤖 AI</option>
-                                                <option value="Arts & Culture">🎨 Arts & Culture</option>
-                                                <option value="Climate">🌱 Climate</option>
-                                                <option value="Fitness">💪 Fitness</option>
-                                                <option value="Wellness">🧘 Wellness</option>
-                                                <option value="Crypto">₿ Crypto</option>
-                                                <option value="Business">💼 Business</option>
-                                                <option value="Education">📚 Education</option>
-                                                <option value="Music">🎵 Music</option>
-                                                <option value="Gaming">🎮 Gaming</option>
-                                            </select>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                    End Date & Time <span className="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    type="datetime-local"
+                                                    required
+                                                    value={formData.end_date}
+                                                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white transition-all duration-200"
+                                                />
+                                            </div>
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Capacity
+                                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                Location
                                             </label>
-                                            <input
-                                                type="number"
-                                                value={formData.capacity}
-                                                onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-                                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white"
-                                                placeholder="Maximum participants"
-                                                min="1"
-                                            />
+                                            <div className="relative">
+                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={formData.location}
+                                                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                                    className="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white transition-all duration-200"
+                                                    placeholder="e.g., Zoom Meeting or Physical Address"
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Registration Fee (IDR)
-                                        </label>
-                                        <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
-                                                Rp
-                                            </span>
-                                            <input
-                                                type="number"
-                                                value={formData.registration_fee}
-                                                onChange={(e) => setFormData({ ...formData, registration_fee: e.target.value })}
-                                                className="w-full pl-12 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white"
-                                                placeholder="0 (Free event)"
-                                                min="0"
-                                                step="1000"
-                                            />
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                    Category
+                                                </label>
+                                                <select
+                                                    value={formData.category}
+                                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white transition-all duration-200 appearance-none"
+                                                    style={{ backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '0.75em 0.75em' }}
+                                                >
+                                                    <option value="">Select category...</option>
+                                                    <option value="Tech">💻 Tech</option>
+                                                    <option value="Food & Drink">🍔 Food & Drink</option>
+                                                    <option value="AI">🤖 AI</option>
+                                                    <option value="Arts & Culture">🎨 Arts & Culture</option>
+                                                    <option value="Climate">🌱 Climate</option>
+                                                    <option value="Fitness">💪 Fitness</option>
+                                                    <option value="Wellness">🧘 Wellness</option>
+                                                    <option value="Crypto">₿ Crypto</option>
+                                                    <option value="Business">💼 Business</option>
+                                                    <option value="Education">📚 Education</option>
+                                                    <option value="Music">🎵 Music</option>
+                                                    <option value="Gaming">🎮 Gaming</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                    Capacity
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    value={formData.capacity}
+                                                    onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white transition-all duration-200"
+                                                    placeholder="Maximum participants"
+                                                    min="1"
+                                                />
+                                            </div>
                                         </div>
-                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                            Leave as 0 for free events. If you set a fee, make sure to add a payment proof upload field below.
-                                        </p>
-                                    </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Status <span className="text-red-500">*</span>
-                                        </label>
-                                        <select
-                                            value={formData.status}
-                                            onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white"
-                                        >
-                                            <option value="draft">Draft</option>
-                                            <option value="published">Published</option>
-                                        </select>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                Registration Fee (IDR)
+                                            </label>
+                                            <div className="relative">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">
+                                                    Rp
+                                                </span>
+                                                <input
+                                                    type="number"
+                                                    value={formData.registration_fee}
+                                                    onChange={(e) => setFormData({ ...formData, registration_fee: e.target.value })}
+                                                    className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-secondary text-gray-900 dark:text-white transition-all duration-200"
+                                                    placeholder="0 (Free event)"
+                                                    min="0"
+                                                    step="1000"
+                                                />
+                                            </div>
+                                            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                                Leave as 0 for free events. If you set a fee, make sure to add a payment proof upload field below.
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                Status <span className="text-red-500">*</span>
+                                            </label>
+                                            <div className="flex gap-4">
+                                                <label className={`flex-1 cursor-pointer border rounded-xl p-4 flex items-center gap-3 transition-all duration-200 ${formData.status === 'draft' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/10 ring-1 ring-primary-500' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-dark-secondary'}`}>
+                                                    <input
+                                                        type="radio"
+                                                        name="status"
+                                                        value="draft"
+                                                        checked={formData.status === 'draft'}
+                                                        onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                                                        className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                                                    />
+                                                    <div>
+                                                        <span className="block font-medium text-gray-900 dark:text-white">Draft</span>
+                                                        <span className="text-xs text-gray-500 dark:text-gray-400">Save for later, not visible to public</span>
+                                                    </div>
+                                                </label>
+                                                <label className={`flex-1 cursor-pointer border rounded-xl p-4 flex items-center gap-3 transition-all duration-200 ${formData.status === 'published' ? 'border-green-500 bg-green-50 dark:bg-green-900/10 ring-1 ring-green-500' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-dark-secondary'}`}>
+                                                    <input
+                                                        type="radio"
+                                                        name="status"
+                                                        value="published"
+                                                        checked={formData.status === 'published'}
+                                                        onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                                                        className="w-4 h-4 text-green-600 focus:ring-green-500"
+                                                    />
+                                                    <div>
+                                                        <span className="block font-medium text-gray-900 dark:text-white">Published</span>
+                                                        <span className="text-xs text-gray-500 dark:text-gray-400">Visible to everyone immediately</span>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -583,243 +616,306 @@ export default function CreateEventPage() {
 
                     {/* Registration Form Tab */}
                     {activeTab === 'registration' && (
-                        <div className="bg-white dark:bg-dark-card rounded-lg shadow-md dark:shadow-xl p-6 border border-transparent dark:border-gray-700">
-                            <div className="flex items-center justify-between mb-6">
-                                <div>
-                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Registration Form Builder</h2>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Create custom fields for participant registration</p>
+                        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                            <div className="p-6 sm:p-8">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Registration Form</h2>
+                                        <p className="text-gray-500 dark:text-gray-400 mt-1">Customize what information you need from attendees.</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={addFormField}
+                                        className="px-5 py-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors flex items-center gap-2 font-medium shadow-sm shadow-primary-600/20"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Add Field
+                                    </button>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={addFormField}
-                                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center gap-2"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    Add Field
-                                </button>
-                            </div>
 
-                            {formFields.length === 0 ? (
-                                <p className="text-gray-500 dark:text-gray-400 text-center py-8">
-                                    No custom fields yet. Click &quot;Add Field&quot; to create registration form fields.
-                                </p>
-                            ) : (
-                                <div className="space-y-4">
-                                    {formFields.map((field, index) => (
-                                        <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-dark-secondary">
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                        Field Name
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={field.field_name}
-                                                        onChange={(e) =>
-                                                            updateFormField(index, 'field_name', e.target.value)
-                                                        }
-                                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white dark:bg-dark-primary text-gray-900 dark:text-white"
-                                                        placeholder="e.g., Phone Number"
-                                                    />
-                                                </div>
+                                {formFields.length === 0 ? (
+                                    <div className="text-center py-16 bg-gray-50 dark:bg-dark-secondary/30 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                                        <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-dark-secondary rounded-full flex items-center justify-center text-gray-400">
+                                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No Custom Fields</h3>
+                                        <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6">
+                                            Start by adding fields to collect specific information from your attendees.
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={addFormField}
+                                            className="text-primary-600 dark:text-primary-400 font-medium hover:underline"
+                                        >
+                                            Add your first field
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {formFields.map((field, index) => (
+                                            <div key={index} className="group border border-gray-200 dark:border-gray-700 rounded-xl p-5 bg-gray-50/50 dark:bg-dark-secondary/30 hover:bg-white dark:hover:bg-dark-secondary hover:shadow-md transition-all duration-200">
+                                                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                                                    <div className="md:col-span-1 flex items-center justify-center h-full pt-2">
+                                                        <span className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
+                                                            {index + 1}
+                                                        </span>
+                                                    </div>
 
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                        Field Type
-                                                    </label>
-                                                    <select
-                                                        value={field.field_type}
-                                                        onChange={(e) =>
-                                                            updateFormField(index, 'field_type', e.target.value)
-                                                        }
-                                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white dark:bg-dark-primary text-gray-900 dark:text-white"
-                                                    >
-                                                        <option value="text">Text</option>
-                                                        <option value="email">Email</option>
-                                                        <option value="number">Number</option>
-                                                        <option value="textarea">Textarea</option>
-                                                        <option value="select">Select</option>
-                                                        <option value="file">File Upload</option>
-                                                    </select>
-                                                </div>
-
-                                                <div className="flex items-end gap-2">
-                                                    <label className="flex items-center">
+                                                    <div className="md:col-span-4">
+                                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                                                            Field Name
+                                                        </label>
                                                         <input
-                                                            type="checkbox"
-                                                            checked={field.is_required}
+                                                            type="text"
+                                                            value={field.field_name}
                                                             onChange={(e) =>
-                                                                updateFormField(index, 'is_required', e.target.checked)
+                                                                updateFormField(index, 'field_name', e.target.value)
                                                             }
-                                                            className="mr-2"
+                                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-primary text-gray-900 dark:text-white"
+                                                            placeholder="e.g., Phone Number"
                                                         />
-                                                        <span className="text-sm text-gray-700 dark:text-gray-300">Required</span>
-                                                    </label>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeFormField(index)}
-                                                        className="ml-auto px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                                                    >
-                                                        Remove
-                                                    </button>
+                                                    </div>
+
+                                                    <div className="md:col-span-3">
+                                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                                                            Type
+                                                        </label>
+                                                        <select
+                                                            value={field.field_type}
+                                                            onChange={(e) =>
+                                                                updateFormField(index, 'field_type', e.target.value)
+                                                            }
+                                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-primary text-gray-900 dark:text-white"
+                                                        >
+                                                            <option value="text">Text</option>
+                                                            <option value="email">Email</option>
+                                                            <option value="number">Number</option>
+                                                            <option value="textarea">Textarea</option>
+                                                            <option value="select">Select</option>
+                                                            <option value="file">File Upload</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div className="md:col-span-4 flex items-center justify-between gap-4 pt-6">
+                                                        <label className="flex items-center cursor-pointer">
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={field.is_required}
+                                                                    onChange={(e) =>
+                                                                        updateFormField(index, 'is_required', e.target.checked)
+                                                                    }
+                                                                    className="sr-only peer"
+                                                                />
+                                                                <div className="w-10 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+                                                            </div>
+                                                            <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Required</span>
+                                                        </label>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeFormField(index)}
+                                                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                            title="Remove field"
+                                                        >
+                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 
                     {/* Speakers Tab */}
                     {activeTab === 'speakers' && (
-                        <div className="bg-white dark:bg-dark-card rounded-lg shadow-md dark:shadow-xl p-6 border border-transparent dark:border-gray-700">
-                            <div className="flex items-center justify-between mb-6">
-                                <div>
-                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Speakers</h2>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Add speakers for your event (optional)</p>
+                        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                            <div className="p-6 sm:p-8">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Speakers</h2>
+                                        <p className="text-gray-500 dark:text-gray-400 mt-1">Who will be presenting at your event?</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={addSpeaker}
+                                        className="px-5 py-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors flex items-center gap-2 font-medium shadow-sm shadow-primary-600/20"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Add Speaker
+                                    </button>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={addSpeaker}
-                                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center gap-2"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    Add Speaker
-                                </button>
-                            </div>
 
-                            {speakers.length === 0 ? (
-                                <p className="text-gray-500 dark:text-gray-400 text-center py-8">
-                                    No speakers added yet. Click &quot;Add Speaker&quot; to add event speakers.
-                                </p>
-                            ) : (
-                                <div className="space-y-6">
-                                    {speakers.map((speaker, index) => (
-                                        <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 bg-gray-50 dark:bg-dark-secondary">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                                    Speaker #{index + 1}
-                                                </h3>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeSpeaker(index)}
-                                                    className="px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm flex items-center gap-1"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                    Remove
-                                                </button>
-                                            </div>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                        Name <span className="text-red-500">*</span>
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={speaker.name}
-                                                        onChange={(e) => updateSpeaker(index, 'name', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white dark:bg-dark-primary text-gray-900 dark:text-white"
-                                                        placeholder="Speaker name"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                        Title/Position
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={speaker.title}
-                                                        onChange={(e) => updateSpeaker(index, 'title', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white dark:bg-dark-primary text-gray-900 dark:text-white"
-                                                        placeholder="e.g., CEO, Software Engineer"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                        Company/Organization
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={speaker.company}
-                                                        onChange={(e) => updateSpeaker(index, 'company', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white dark:bg-dark-primary text-gray-900 dark:text-white"
-                                                        placeholder="Company name"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                        Photo URL
-                                                    </label>
-                                                    <input
-                                                        type="url"
-                                                        value={speaker.photo_url}
-                                                        onChange={(e) => updateSpeaker(index, 'photo_url', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white dark:bg-dark-primary text-gray-900 dark:text-white"
-                                                        placeholder="https://..."
-                                                    />
-                                                </div>
-
-
-                                            </div>
+                                {speakers.length === 0 ? (
+                                    <div className="text-center py-16 bg-gray-50 dark:bg-dark-secondary/30 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                                        <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-dark-secondary rounded-full flex items-center justify-center text-gray-400">
+                                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            </svg>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No Speakers Added</h3>
+                                        <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6">
+                                            Highlight the experts and guests who will be attending.
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={addSpeaker}
+                                            className="text-primary-600 dark:text-primary-400 font-medium hover:underline"
+                                        >
+                                            Add your first speaker
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 gap-6">
+                                        {speakers.map((speaker, index) => (
+                                            <div key={index} className="relative group border border-gray-200 dark:border-gray-700 rounded-2xl p-6 bg-white dark:bg-dark-secondary/30 hover:shadow-lg transition-all duration-300">
+                                                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeSpeaker(index)}
+                                                        className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 transition-colors"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+
+                                                <div className="flex items-center gap-3 mb-6">
+                                                    <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold">
+                                                        {index + 1}
+                                                    </div>
+                                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                                        Speaker Details
+                                                    </h3>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                            Name <span className="text-red-500">*</span>
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={speaker.name}
+                                                            onChange={(e) => updateSpeaker(index, 'name', e.target.value)}
+                                                            className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-primary text-gray-900 dark:text-white"
+                                                            placeholder="Speaker name"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                            Title/Position
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={speaker.title}
+                                                            onChange={(e) => updateSpeaker(index, 'title', e.target.value)}
+                                                            className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-primary text-gray-900 dark:text-white"
+                                                            placeholder="e.g., CEO, Software Engineer"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                            Company/Organization
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={speaker.company}
+                                                            onChange={(e) => updateSpeaker(index, 'company', e.target.value)}
+                                                            className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-primary text-gray-900 dark:text-white"
+                                                            placeholder="Company name"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                            Photo URL
+                                                        </label>
+                                                        <input
+                                                            type="url"
+                                                            value={speaker.photo_url}
+                                                            onChange={(e) => updateSpeaker(index, 'photo_url', e.target.value)}
+                                                            className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white dark:bg-dark-primary text-gray-900 dark:text-white"
+                                                            placeholder="https://..."
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 
                     {/* Custom Images Tab */}
                     {activeTab === 'images' && (
-                        <div className="bg-white dark:bg-dark-card rounded-lg shadow-md dark:shadow-xl p-6 border border-transparent dark:border-gray-700">
-                            <CustomImagesUpload
-                                images={customImages}
-                                onChange={setCustomImages}
-                                eventId={undefined}
-                            />
+                        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                            <div className="p-6 sm:p-8">
+                                <div className="mb-6">
+                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Custom Image Form</h2>
+                                    <p className="text-gray-500 dark:text-gray-400 mt-1">Add custom images for registration usage.</p>
+                                </div>
+                                <CustomImagesUpload
+                                    images={customImages}
+                                    onChange={setCustomImages}
+                                    eventId={undefined}
+                                />
+                            </div>
                         </div>
                     )}
 
-                    {/* Submit Buttons - Always visible */}
-                    <div className="bg-white dark:bg-dark-card rounded-lg shadow-md dark:shadow-xl p-6 border border-transparent dark:border-gray-700">
-                        <div className="flex gap-4">
+                    {/* Submit Buttons - Floating at bottom on mobile, static on desktop */}
+                    <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-dark-card border-t border-gray-200 dark:border-gray-700 z-40 lg:static lg:bg-transparent lg:border-0 lg:p-0 lg:z-auto">
+                        <div className="max-w-5xl mx-auto flex gap-4">
+                            <Link
+                                href="/dashboard"
+                                className="flex-1 lg:flex-none px-8 py-3.5 border border-gray-300 dark:border-gray-600 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-dark-secondary text-center text-gray-700 dark:text-gray-300 transition-colors"
+                            >
+                                Cancel
+                            </Link>
                             <button
                                 type="submit"
                                 disabled={loading || uploading}
-                                className="flex-1 bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="flex-[2] lg:flex-1 bg-gradient-to-r from-primary-600 to-primary-500 text-white px-8 py-3.5 rounded-xl font-semibold hover:from-primary-700 hover:to-primary-600 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary-600/20 transition-all duration-200 transform active:scale-[0.99]"
                             >
                                 {uploading ? (
                                     <>
                                         <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
-                                        Uploading Image...
+                                        Uploading...
                                     </>
                                 ) : loading ? (
                                     <>
                                         <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
-                                        Creating...
+                                        Creating Event...
                                     </>
                                 ) : (
-                                    'Create Event'
+                                    <>
+                                        Create Event
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                        </svg>
+                                    </>
                                 )}
                             </button>
-                            <Link
-                                href="/dashboard"
-                                className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-dark-secondary text-center text-gray-900 dark:text-white"
-                            >
-                                Cancel
-                            </Link>
                         </div>
                     </div>
+                    {/* Spacer for fixed bottom bar on mobile */}
+                    <div className="h-20 lg:hidden"></div>
                 </form>
             </div>
         </div>

@@ -13,7 +13,7 @@ export default function ReactQueryProvider({ children }: { children: ReactNode }
                         gcTime: 30 * 60 * 1000, // 30 minutes - cache cleanup (increased from 10min)
                         refetchOnWindowFocus: false, // Don't refetch on window focus
                         refetchOnReconnect: true, // Refetch on reconnect
-                        refetchOnMount: false, // Don't refetch on mount if data exists (OPTIMIZATION)
+                        refetchOnMount: true, // Refetch on mount if data is stale
                         retry: (failureCount, error: any) => {
                             console.log('🔄 React Query retry check:', { failureCount, error: error?.message });
                             // Don't retry on timeout errors
