@@ -28,7 +28,9 @@ export default function DashboardPage() {
     const { t } = useLanguage();
     const queryClient = useQueryClient();
     const { user, profile, loading: authLoading } = useAuth();
-    const [effectiveRole, setEffectiveRole] = useState<'participant' | 'organizer'>(profile?.role || 'participant');
+    const [effectiveRole, setEffectiveRole] = useState<'participant' | 'organizer'>(
+        profile?.role === 'admin' ? 'organizer' : (profile?.role as 'participant' | 'organizer') || 'participant'
+    );
 
     // Delete Modal State
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -44,7 +46,9 @@ export default function DashboardPage() {
     // Keep effectiveRole in sync with profile changes
     useEffect(() => {
         if (profile?.role) {
-            setEffectiveRole(profile.role as 'participant' | 'organizer');
+            setEffectiveRole(
+                profile.role === 'admin' ? 'organizer' : (profile.role as 'participant' | 'organizer')
+            );
         }
     }, [profile?.role]);
 
@@ -57,6 +61,13 @@ export default function DashboardPage() {
 
     const updateRole = async (newRole: 'participant' | 'organizer') => {
         if (!user) return;
+
+        // If user is admin, only update local state (view), don't update DB
+        if (profile?.role === 'admin') {
+            setEffectiveRole(newRole);
+            toast.success(t('dashboard.roleUpdated'));
+            return;
+        }
 
         try {
             const { error } = await supabase

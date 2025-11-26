@@ -13,7 +13,7 @@ export interface Database {
                 Row: {
                     id: string
                     full_name: string | null
-                    role: 'participant' | 'organizer'
+                    role: 'participant' | 'organizer' | 'admin'
                     avatar_url: string | null
                     phone: string | null
                     institution: string | null
