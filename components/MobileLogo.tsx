@@ -9,6 +9,8 @@ import { useSupabaseHealth } from '@/hooks/useSupabaseHealth';
 import { useLanguage } from "@/lib/language-context";
 import { useAuth } from '@/lib/auth-context';
 import toast from "react-hot-toast";
+import { useOnClickOutside } from '@/hooks/useOnClickOutside';
+import { useRef } from 'react';
 
 export default function MobileLogo() {
     const { t } = useLanguage();
@@ -17,6 +19,9 @@ export default function MobileLogo() {
     const [showDropdown, setShowDropdown] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
     const healthStatus = useSupabaseHealth();
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useOnClickOutside(dropdownRef, () => setShowDropdown(false));
 
     useEffect(() => {
         // Check initial theme
@@ -87,7 +92,7 @@ export default function MobileLogo() {
                             // Loading skeleton
                             <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
                         ) : user ? (
-                            <div className="relative">
+                            <div className="relative" ref={dropdownRef}>
                                 <button
                                     onClick={() => setShowDropdown(!showDropdown)}
                                     className="flex items-center gap-2 focus:outline-none"
@@ -110,10 +115,6 @@ export default function MobileLogo() {
 
                                 {showDropdown && (
                                     <>
-                                        <div
-                                            className="fixed inset-0 z-10"
-                                            onClick={() => setShowDropdown(false)}
-                                        />
                                         <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-dark-card rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-20">
                                             <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                                                 <p className="text-sm font-semibold text-gray-900 dark:text-white">

@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import Link from 'next/link';
+import { useOnClickOutside } from '@/hooks/useOnClickOutside';
+import { useRef } from 'react';
 
 interface Notification {
     id: string;
@@ -22,6 +24,9 @@ export default function NotificationsCenter({ userId, preview = false }: { userI
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useOnClickOutside(containerRef, () => setIsOpen(false));
 
     const loadNotifications = async () => {
         try {
@@ -264,7 +269,7 @@ export default function NotificationsCenter({ userId, preview = false }: { userI
     }
 
     return (
-        <div className="relative">
+        <div className="relative" ref={containerRef}>
             {/* Notification Bell Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
@@ -283,12 +288,6 @@ export default function NotificationsCenter({ userId, preview = false }: { userI
             {/* Notifications Dropdown */}
             {isOpen && (
                 <>
-                    {/* Backdrop */}
-                    <div
-                        className="fixed inset-0 z-40 bg-black/5 dark:bg-black/20 backdrop-blur-[1px]"
-                        onClick={() => setIsOpen(false)}
-                    ></div>
-
                     {/* Dropdown Panel */}
                     <div className="fixed left-4 right-4 top-[70px] md:absolute md:left-auto md:right-0 md:top-full md:mt-2 md:w-96 bg-white dark:bg-dark-card rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 animate-fade-in overflow-hidden ring-1 ring-black/5">
                         {/* Header */}

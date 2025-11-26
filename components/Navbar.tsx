@@ -11,6 +11,8 @@ import { useSupabaseHealth } from '@/hooks/useSupabaseHealth';
 import toast from "react-hot-toast";
 import { useLanguage } from "@/lib/language-context";
 import { useAuth } from '@/lib/auth-context';
+import { useOnClickOutside } from '@/hooks/useOnClickOutside';
+import { useRef } from 'react';
 
 export default function Navbar() {
     const { t } = useLanguage();
@@ -20,6 +22,9 @@ export default function Navbar() {
     const [showDropdown, setShowDropdown] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
     const healthStatus = useSupabaseHealth();
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useOnClickOutside(dropdownRef, () => setShowDropdown(false));
 
     useEffect(() => {
         // Check initial theme
@@ -62,8 +67,8 @@ export default function Navbar() {
 
     return (
         <header className={`hidden lg:block w-full transition-colors duration-300 z-40 ${isEventDetailPage
-                ? 'absolute top-0 left-0 bg-transparent border-transparent'
-                : 'sticky top-0 left-0 bg-white/80 dark:bg-dark-card/80 backdrop-blur-md shadow-sm border-b border-gray-200 dark:border-gray-700'
+            ? 'absolute top-0 left-0 bg-transparent border-transparent'
+            : 'sticky top-0 left-0 bg-white/80 dark:bg-dark-card/80 backdrop-blur-md shadow-sm border-b border-gray-200 dark:border-gray-700'
             }`}>
             <div className="container mx-auto">
                 <div className="relative -mx-4 flex items-center justify-between">
@@ -164,7 +169,7 @@ export default function Navbar() {
                                 // Loading skeleton
                                 <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
                             ) : user ? (
-                                <div className="relative">
+                                <div className="relative" ref={dropdownRef}>
                                     <button
                                         onClick={() => setShowDropdown(!showDropdown)}
                                         className="flex items-center gap-2 focus:outline-none"
@@ -186,100 +191,92 @@ export default function Navbar() {
                                     </button>
 
                                     {showDropdown && (
-                                        <>
-                                            <div
-                                                className="fixed inset-0 z-10"
-                                                onClick={() => setShowDropdown(false)}
-                                            />
-                                            <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-dark-card rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-20">
-                                                <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                                                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                                        {profile?.full_name || user.user_metadata?.full_name || 'User'}
-                                                    </p>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                                        {user.email}
-                                                    </p>
-                                                    {profile?.role && (
-                                                        <span className="inline-block mt-1 px-2 py-1 text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded">
-                                                            {profile.role}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="py-2">
-                                                    <Link
-                                                        href="/profile/edit"
-                                                        onClick={() => setShowDropdown(false)}
-                                                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-secondary"
-                                                    >
-                                                        <div className="flex items-center gap-2">
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                            </svg>
-                                                            {t('nav.editProfile')}
-                                                        </div>
-                                                    </Link>
-
-                                                    <Link
-                                                        href="/dashboard/events/create"
-                                                        onClick={() => setShowDropdown(false)}
-                                                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-secondary"
-                                                    >
-                                                        <div className="flex items-center gap-2">
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                                            </svg>
-                                                            {t('nav.createEvent')}
-                                                        </div>
-                                                    </Link>
-                                                    <Link
-                                                        href="/dashboard"
-                                                        onClick={() => setShowDropdown(false)}
-                                                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-secondary"
-                                                    >
-                                                        <div className="flex items-center gap-2">
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                                            </svg>
-                                                            {t('nav.dashboard')}
-                                                        </div>
-                                                    </Link>
-                                                    <Link
-                                                        href="/about"
-                                                        onClick={() => setShowDropdown(false)}
-                                                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-secondary"
-                                                    >
-                                                        <div className="flex items-center gap-2">
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                            </svg>
-                                                            About
-                                                        </div>
-                                                    </Link>
-                                                    <button
-                                                        onClick={handleSignOut}
-                                                        className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-dark-secondary"
-                                                    >
-                                                        <div className="flex items-center gap-2">
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                                            </svg>
-                                                            {t('nav.signOut')}
-                                                        </div>
-                                                    </button>
-                                                </div>
+                                        <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-dark-card rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-20">
+                                            <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                                                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                    {profile?.full_name || user.user_metadata?.full_name || 'User'}
+                                                </p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                    {user.email}
+                                                </p>
+                                                {profile?.role && (
+                                                    <span className="inline-block mt-1 px-2 py-1 text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded">
+                                                        {profile.role}
+                                                    </span>
+                                                )}
                                             </div>
-                                        </>
+                                            <div className="py-2">
+                                                <Link
+                                                    href="/profile/edit"
+                                                    onClick={() => setShowDropdown(false)}
+                                                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-secondary"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                        </svg>
+                                                        {t('nav.editProfile')}
+                                                    </div>
+                                                </Link>
+
+                                                <Link
+                                                    href="/dashboard/events/create"
+                                                    onClick={() => setShowDropdown(false)}
+                                                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-secondary"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                        </svg>
+                                                        {t('nav.createEvent')}
+                                                    </div>
+                                                </Link>
+                                                <Link
+                                                    href="/dashboard"
+                                                    onClick={() => setShowDropdown(false)}
+                                                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-secondary"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                                        </svg>
+                                                        {t('nav.dashboard')}
+                                                    </div>
+                                                </Link>
+                                                <Link
+                                                    href="/about"
+                                                    onClick={() => setShowDropdown(false)}
+                                                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-secondary"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        About
+                                                    </div>
+                                                </Link>
+                                                <button
+                                                    onClick={handleSignOut}
+                                                    className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-dark-secondary"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                                        </svg>
+                                                        {t('nav.signOut')}
+                                                    </div>
+                                                </button>
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
                             ) : (
-                                <>
-                                    <Link
-                                        href="/auth/login"
-                                        className="hidden lg:inline-block rounded-lg bg-primary-600 dark:bg-primary-500 px-5 py-2 text-sm font-bold text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors"
-                                    >
-                                        {t('nav.login')}
-                                    </Link>
-                                </>
+                                <Link
+                                    href="/auth/login"
+                                    className="hidden lg:inline-block rounded-lg bg-primary-600 dark:bg-primary-500 px-5 py-2 text-sm font-bold text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors"
+                                >
+                                    {t('nav.login')}
+                                </Link>
                             )}
                         </div>
                     </div>
