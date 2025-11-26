@@ -143,8 +143,16 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
             setFormData({
                 title: eventData.title,
                 description: eventData.description || '',
-                start_date: startDate.toISOString().slice(0, 16),
-                end_date: endDate.toISOString().slice(0, 16),
+                start_date: startDate.getFullYear() + '-' +
+                    String(startDate.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(startDate.getDate()).padStart(2, '0') + 'T' +
+                    String(startDate.getHours()).padStart(2, '0') + ':' +
+                    String(startDate.getMinutes()).padStart(2, '0'),
+                end_date: endDate.getFullYear() + '-' +
+                    String(endDate.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(endDate.getDate()).padStart(2, '0') + 'T' +
+                    String(endDate.getHours()).padStart(2, '0') + ':' +
+                    String(endDate.getMinutes()).padStart(2, '0'),
                 location: eventData.location || '',
                 category: eventData.category || '',
                 capacity: eventData.capacity?.toString() || '',
@@ -248,8 +256,8 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
             const updateData = {
                 title: formData.title,
                 description: formData.description,
-                start_date: formData.start_date,
-                end_date: formData.end_date,
+                start_date: new Date(formData.start_date).toISOString(),
+                end_date: new Date(formData.end_date).toISOString(),
                 location: formData.location,
                 category: formData.category,
                 capacity: formData.capacity ? parseInt(formData.capacity) : null,
@@ -1041,18 +1049,18 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
                     )}
 
                     {/* Submit Buttons - Floating at bottom on mobile, static on desktop */}
-                    <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-dark-card border-t border-gray-200 dark:border-gray-700 z-40 lg:static lg:bg-transparent lg:border-0 lg:p-0 lg:z-auto">
+                    <div className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-0 right-0 p-4 bg-white dark:bg-dark-card border-t border-gray-200 dark:border-gray-700 z-40 lg:static lg:bg-transparent lg:border-0 lg:p-0 lg:z-auto">
                         <div className="max-w-5xl mx-auto flex gap-4">
                             <Link
                                 href="/dashboard"
-                                className="flex-1 lg:flex-none px-8 py-3.5 border border-gray-300 dark:border-gray-600 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-dark-secondary text-center text-gray-700 dark:text-gray-300 transition-colors"
+                                className="flex-1 lg:flex-none px-4 py-2.5 text-sm font-medium lg:px-8 lg:py-3.5 lg:text-base lg:font-semibold border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-secondary text-center text-gray-700 dark:text-gray-300 transition-colors"
                             >
                                 Cancel
                             </Link>
                             <button
                                 type="submit"
                                 disabled={loading || uploading}
-                                className="flex-[2] lg:flex-1 bg-gradient-to-r from-primary-600 to-primary-500 text-white px-8 py-3.5 rounded-xl font-semibold hover:from-primary-700 hover:to-primary-600 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary-600/20 transition-all duration-200 transform active:scale-[0.99]"
+                                className="flex-[2] lg:flex-1 bg-gradient-to-r from-primary-600 to-primary-500 text-white px-4 py-2.5 text-sm font-medium lg:px-8 lg:py-3.5 lg:text-base lg:font-semibold rounded-xl hover:from-primary-700 hover:to-primary-600 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary-600/20 transition-all duration-200 transform active:scale-[0.99]"
                             >
                                 {uploading ? (
                                     <>
