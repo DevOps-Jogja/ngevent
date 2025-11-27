@@ -127,8 +127,8 @@ function EventsContent() {
                 </div>
 
                 {/* View Toggle & Results Count */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                    <div className="text-gray-600 dark:text-gray-400 font-medium">
+                <div className="flex flex-row items-center justify-between gap-4 mb-8">
+                    <div className="text-gray-600 dark:text-gray-400 font-medium text-sm sm:text-base">
                         {!loading && (
                             <>
                                 {filteredEvents.length} {filteredEvents.length === 1 ? t('events.eventFound') : t('events.eventsFound')}
@@ -136,7 +136,7 @@ function EventsContent() {
                         )}
                     </div>
 
-                    <div className="flex self-end sm:self-auto bg-white dark:bg-dark-card p-1 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <div className="flex bg-white dark:bg-dark-card p-1 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
                         <button
                             onClick={() => setViewMode('grid')}
                             className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all ${viewMode === 'grid'

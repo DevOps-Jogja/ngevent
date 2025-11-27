@@ -86,6 +86,25 @@ export default function CreateEventPage() {
                 return;
             }
 
+            // Check user role
+            const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single();
+
+            if (profileError || !profile) {
+                toast.error('Gagal memverifikasi profil pengguna');
+                router.push('/dashboard');
+                return;
+            }
+
+            if (profile.role !== 'organizer' && profile.role !== 'admin') {
+                toast.error('Hanya organizer yang dapat membuat event');
+                router.push('/dashboard');
+                return;
+            }
+
             setAuthChecked(true);
         } catch (error) {
             toast.error(t('eventForm.loginError'));
