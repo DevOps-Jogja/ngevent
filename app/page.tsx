@@ -96,10 +96,10 @@ export default function HomePage() {
                     <div className="mb-8 lg:mb-12">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 lg:mb-12">
                             <div>
-                                <h2 className="text-2xl lg:text-3xl xl:text-[40px] font-bold text-gray-900 dark:text-white leading-tight">
+                                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
                                     {t('home.title')}
-                                </h2>
-                                <p className="text-sm lg:text-base text-gray-600 dark:text-gray-400 mt-2">
+                                </h1>
+                                <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 leading-relaxed max-w-3xl">
                                     {t('home.subtitle')}
                                 </p>
                             </div>

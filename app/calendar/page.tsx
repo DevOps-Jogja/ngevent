@@ -71,7 +71,14 @@ export default function CalendarPage() {
             <Navbar />
 
             <div className="container mx-auto px-4 py-12 content-align-navbar">
-                <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-8">{t('calendar.title')}</h1>
+                <div className="mb-12 text-center sm:text-left">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
+                        {t('calendar.title')}
+                    </h1>
+                    <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl leading-relaxed">
+                        {t('calendar.subtitle')}
+                    </p>
+                </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Calendar */}

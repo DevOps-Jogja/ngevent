@@ -45,7 +45,7 @@ export default function DiscoverPage() {
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
                         {t('discover.title')}
                     </h1>
-                    <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl">
+                    <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl leading-relaxed">
                         {t('discover.subtitle')}
                     </p>
                 </div>

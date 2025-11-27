@@ -75,10 +75,10 @@ function EventsContent() {
             <div className="container mx-auto px-4 py-12 content-align-navbar">
                 {/* Page Header */}
                 <div className="text-center max-w-3xl mx-auto mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6 tracking-tight">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
                         {t('events.title')}
                     </h1>
-                    <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+                    <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 leading-relaxed max-w-3xl mx-auto">
                         {t('events.subtitle')}
                     </p>
 
