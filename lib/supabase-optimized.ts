@@ -215,6 +215,13 @@ export async function getEventWithRelations(eventId: string) {
                 is_required,
                 options,
                 order_index
+            ),
+            organizer:profiles!events_organizer_id_fkey (
+                id,
+                full_name,
+                avatar_url,
+                city,
+                phone
             )
         `)
         .eq('id', eventId)
@@ -225,20 +232,9 @@ export async function getEventWithRelations(eventId: string) {
         throw eventError;
     }
 
-    // Fetch organizer separately (karena tidak bisa JOIN ke profiles dari events)
-    const { data: organizer, error: organizerError } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url, city, phone')
-        .eq('id', event.organizer_id)
-        .single();
-
-    if (organizerError) {
-        console.warn('Error fetching organizer:', organizerError);
-    }
-
     return {
         ...event,
-        organizer: organizer || null,
+        organizer: event.organizer || null,
         speakers: event.speakers || [],
         formFields: event.form_fields || []
     };
