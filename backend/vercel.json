@@ -1,23 +1,9 @@
 {
     "version": 2,
-    "buildCommand": "npm run build",
-    "installCommand": "npm install",
-    "builds": [
+    "rewrites": [
         {
-            "src": "dist/index.js",
-            "use": "@vercel/node"
+            "source": "/(.*)",
+            "destination": "/src"
         }
-    ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "dist/index.js"
-        }
-    ],
-    "env": {
-        "NODE_ENV": "production"
-    },
-    "regions": [
-        "sin1"
     ]
 }
