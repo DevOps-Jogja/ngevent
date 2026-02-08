@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import apiClient from '../lib/axios'
+import { uploadToCloudinary } from '../lib/cloudinary'
 import { useAuth } from '../contexts/AuthContext'
 import CachedAvatar from '../components/CachedAvatar'
 
@@ -130,20 +131,12 @@ export default function EditProfilePage() {
   const uploadAvatarIfNeeded = async () => {
     if (!avatarFile) return currentAvatarUrl
 
-    const fd = new FormData()
-    fd.append('file', avatarFile)
-
-    const res = await apiClient.post(
-      '/api/upload/image?folder=avatar-images',
-      fd,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    )
-
-    return res.data?.url as string
+    try {
+      const result = await uploadToCloudinary(avatarFile, 'avatar-images')
+      return result.secure_url
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to upload avatar')
+    }
   }
 
   const handleSubmitProfile = async (e: React.FormEvent) => {

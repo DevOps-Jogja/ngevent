@@ -7,6 +7,7 @@ import { id as idLocale } from 'date-fns/locale'
 import apiClient from '../lib/axios'
 import { useAuth } from '../contexts/AuthContext'
 import CachedAvatar from '../components/CachedAvatar'
+import { uploadToCloudinary } from '../lib/cloudinary'
 
 interface Event {
     id: string
@@ -271,14 +272,9 @@ export default function EventRegistrationPage() {
 
         setUploadingFiles(prev => ({ ...prev, [fieldName]: true }))
         try {
-            const fd = new FormData()
-            fd.append('file', file)
+            const result = await uploadToCloudinary(file, 'payment-proofs')
+            const uploadedUrl = result.secure_url
 
-            const uploadRes = await apiClient.post('/api/upload/image?folder=payment-proofs', fd, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            })
-
-            const uploadedUrl = uploadRes.data?.url as string | undefined
             if (!uploadedUrl) {
                 throw new Error('Upload gagal: URL tidak ditemukan')
             }
@@ -292,7 +288,7 @@ export default function EventRegistrationPage() {
             }
         } catch (err: any) {
             console.error('Upload registration file error:', err)
-            window.alert(err?.response?.data?.message || err?.message || 'Gagal upload file')
+            window.alert(err?.message || 'Gagal upload file')
         } finally {
             setUploadingFiles(prev => ({ ...prev, [fieldName]: false }))
         }

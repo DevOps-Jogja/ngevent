@@ -28,6 +28,10 @@ const upload = multer({
   },
 });
 
+// Get signature for client-side upload (NEW - preferred method)
+router.get('/signature', authenticate, uploadController.getUploadSignature);
+
+// Legacy server-side upload (kept for backward compatibility)
 // Participant can upload avatar-images and payment-proofs
 // Organizer/Admin can upload all folders including event-images
 router.post('/image', authenticate, upload.single('file'), uploadController.uploadImage);

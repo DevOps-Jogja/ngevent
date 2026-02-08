@@ -1,5 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { v2 as cloudinary } from 'cloudinary';
+import crypto from 'crypto';
 import { eq } from 'drizzle-orm';
 import db from '../db/connection';
 import { profiles } from '../db/schema';
@@ -23,6 +24,104 @@ function validateCloudinaryConfig() {
 
 // Folders that require organizer/admin role
 const ORGANIZER_ONLY_FOLDERS = ['event-images', 'custom-images', 'speaker-images'];
+
+/**
+ * Generate Cloudinary signature for client-side upload
+ */
+export const getUploadSignature = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    validateCloudinaryConfig();
+
+    // Get folder from query params
+    const folderParam = (req.query.folder as string) || 'event-images';
+
+    // Validate folder
+    if (!uploadConfig.isValidFolder(folderParam)) {
+      throw new AppError(
+        `Invalid folder: ${folderParam}. Allowed folders: ${uploadConfig.getAllowedFolders().join(', ')}`,
+        400
+      );
+    }
+
+    // Check role permission for certain folders
+    if (ORGANIZER_ONLY_FOLDERS.includes(folderParam)) {
+      const [profile] = await db
+        .select()
+        .from(profiles)
+        .where(eq(profiles.id, req.user!.id))
+        .limit(1);
+
+      if (!profile) {
+        throw new AppError('User profile not found', 404);
+      }
+
+      if (!['organizer', 'admin'].includes(profile.role)) {
+        throw new AppError(
+          `Forbidden: Only organizers and admins can upload to ${folderParam}`,
+          403
+        );
+      }
+    }
+
+    // Get folder configuration
+    const folderConfig = uploadConfig.getFolderConfig(folderParam);
+
+    // Generate timestamp
+    const timestamp = Math.round(Date.now() / 1000);
+
+    // Prepare upload parameters
+    const uploadParams: Record<string, any> = {
+      timestamp,
+      folder: `ngevent/${folderConfig.name}`,
+      public_id: `${req.user!.id}-${Date.now()}`,
+    };
+
+    // Add transformation if configured
+    if (folderConfig.transformation) {
+      const { width, height, crop, quality } = folderConfig.transformation;
+      const transformations: string[] = [];
+
+      if (width || height) {
+        transformations.push(`w_${width || 'auto'},h_${height || 'auto'},c_${crop || 'limit'}`);
+      }
+      if (quality) {
+        transformations.push(`q_${quality}`);
+      }
+      transformations.push('f_auto');
+
+      if (transformations.length > 0) {
+        uploadParams.transformation = transformations.join(',');
+      }
+    }
+
+    // Generate signature
+    const paramsToSign = Object.keys(uploadParams)
+      .sort()
+      .map(key => `${key}=${uploadParams[key]}`)
+      .join('&');
+
+    const signature = crypto
+      .createHash('sha256')
+      .update(paramsToSign + process.env.CLOUDINARY_API_SECRET)
+      .digest('hex');
+
+    // Return signature and upload parameters
+    res.json({
+      signature,
+      timestamp,
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+      folder: uploadParams.folder,
+      publicId: uploadParams.public_id,
+      transformation: uploadParams.transformation,
+      uploadUrl: `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload`,
+      maxSize: folderConfig.maxSize,
+      allowedTypes: folderConfig.allowedTypes,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const uploadImage = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
@@ -150,7 +249,7 @@ export const deleteImage = async (req: AuthRequest, res: Response, next: NextFun
 export const getFolderInfo = async (_req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const allowedFolders = Object.keys(uploadConfig.UPLOAD_FOLDERS);
-    
+
     const folders = allowedFolders.map(folder => {
       const config = uploadConfig.UPLOAD_FOLDERS[folder];
       return {

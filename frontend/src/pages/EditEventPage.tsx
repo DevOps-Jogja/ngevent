@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import EventForm, { EventFormData, FormField, Speaker, CustomImage } from '../components/EventForm';
 import apiClient from '../lib/axios';
+import { uploadToCloudinary } from '../lib/cloudinary';
 
 export default function EditEventPage() {
   const { id } = useParams<{ id: string }>();
@@ -132,16 +133,8 @@ export default function EditEventPage() {
 
       // Upload new image if provided
       if (imageFile) {
-        const imageFormData = new FormData();
-        imageFormData.append('file', imageFile);
-
-        const uploadResponse = await apiClient.post('/api/upload/image?folder=event-images', imageFormData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-
-        imageUrl = uploadResponse.data.url;
+        const result = await uploadToCloudinary(imageFile, 'event-images');
+        imageUrl = result.secure_url;
       }
 
       // Update event
