@@ -11,11 +11,14 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
+// Adjust pool size for serverless environments
+const isProduction = process.env.NODE_ENV === 'production';
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 20,
+  max: isProduction ? 5 : 20, // Smaller pool for serverless
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
+  ssl: isProduction ? { rejectUnauthorized: false } : undefined,
 });
 
 pool.on('connect', () => {

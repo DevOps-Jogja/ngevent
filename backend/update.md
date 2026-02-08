@@ -1,5 +1,58 @@
 # Updates
 
+## 2026-02-09 (Vercel Deployment Configuration)
+- **Added Vercel deployment configuration for production deployment**
+- Modified backend to support Vercel serverless functions
+- Optimized database connection pooling for serverless environment
+
+**New Files:**
+- [vercel.json](vercel.json) - Vercel deployment configuration
+  - Routes all requests to Express handler
+  - Uses @vercel/node runtime
+  - Configured for Singapore region (sin1)
+  
+- [.vercelignore](.vercelignore) - Files to exclude from deployment
+  - Excludes source files, only deploys compiled dist/
+  
+- [deploy.sh](deploy.sh) - Quick deployment script
+  - Automated build and deploy process
+  
+- [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md) - Deployment guide
+  - Step-by-step instructions
+  - Environment variables checklist
+  - Troubleshooting guide
+
+**Backend Changes:**
+- [index.ts](src/index.ts)
+  - Export Express app as default export for Vercel
+  - Conditional `app.listen()` only in development
+  - Dynamic CORS configuration supporting multiple origins
+  - CORS_ORIGIN now accepts comma-separated values
+  
+- [connection.ts](src/db/connection.ts)
+  - Reduced connection pool size for serverless (max: 5 in production vs 20 in dev)
+  - Added SSL configuration for production database
+  - Optimized for Vercel's serverless environment
+
+- [package.json](package.json)
+  - Added `vercel-build` script
+
+**Deployment Features:**
+- ✅ Serverless-optimized Express.js
+- ✅ Automatic SSL for database connections
+- ✅ Multiple CORS origins support
+- ✅ Reduced connection pooling for serverless
+- ✅ Environment-aware configuration
+- ✅ One-command deployment script
+
+**Environment Variables Required:**
+```
+DATABASE_URL, JWT_SECRET, CLOUDINARY_*, RESEND_*, 
+CORS_ORIGIN, GOOGLE_CLIENT_ID, NODE_ENV=production
+```
+
+See [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md) for complete deployment guide.
+
 ## 2026-02-09 (Event Registration Confirmation Email)
 - **Added automatic email confirmation for event registrations**
 - Participants receive detailed confirmation email immediately after successful registration

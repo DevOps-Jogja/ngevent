@@ -1,5 +1,57 @@
 # Updates
 
+## 2026-02-09 (Vercel Deployment Configuration)
+- **Added Vercel deployment configuration for production deployment**
+- Configured static site deployment with SPA routing support
+- Added security headers and cache optimization
+
+**New Files:**
+- [vercel.json](vercel.json) - Vercel deployment configuration
+  - SPA rewrites: All routes to index.html
+  - Security headers (CSP, X-Frame-Options, X-XSS-Protection)
+  - Cache headers for static assets
+  - Service worker cache control
+  
+- [.vercelignore](.vercelignore) - Files to exclude from deployment
+  - Excludes source files and config files
+  - Only deploys build output (dist/)
+  
+- [deploy.sh](deploy.sh) - Quick deployment script
+  - Validates .env.production exists
+  - Automated build and deploy process
+  
+- [.env.production.example](.env.production.example) - Production environment template
+  - VITE_API_URL for backend endpoint
+  - VITE_GOOGLE_CLIENT_ID for OAuth
+  
+- [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md) - Deployment guide
+  - Step-by-step deployment instructions
+  - Environment variables setup
+  - Google OAuth configuration
+  - Post-deployment checklist
+  - Troubleshooting guide
+
+**Configuration Features:**
+- ✅ SPA routing (no 404 on refresh)
+- ✅ Security headers configured
+- ✅ Static asset caching (1 year)
+- ✅ Service worker cache control
+- ✅ Vite build optimization
+- ✅ One-command deployment
+
+**Environment Variables Required:**
+```
+VITE_API_URL=https://your-backend.vercel.app
+VITE_GOOGLE_CLIENT_ID=your-client-id
+```
+
+**Post-Deployment Tasks:**
+1. Update Google OAuth authorized origins
+2. Update backend CORS_ORIGIN
+3. Test login and API calls
+
+See [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md) for complete guide.
+
 ## 2026-02-09 (Dynamic Document Title per Page)
 - **Implemented dynamic document title for all pages to improve SEO and user experience**
 - Each page now has a descriptive title that appears in the browser tab
