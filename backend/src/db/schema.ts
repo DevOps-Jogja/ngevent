@@ -39,6 +39,7 @@ export const profiles = pgTable('profiles', {
 // Events Table
 export const events = pgTable('events', {
   id: varchar('id', { length: 6 }).primaryKey(),
+  uuid: uuid('uuid').defaultRandom().notNull().unique(),
   organizerId: uuid('organizer_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   description: text('description'),

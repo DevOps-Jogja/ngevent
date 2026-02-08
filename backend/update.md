@@ -1,5 +1,35 @@
 # Updates
 
+## 2026-02-09 (Add UUID Field to Events Table)
+- **Added UUID field to events table for unique identification**
+- Events now have both readable short ID (6 chars) and UUID for robust identification
+- UUID is automatically generated and guaranteed unique
+
+**Schema Changes:**
+- [schema.ts](src/db/schema.ts)
+  - Added `uuid` column to events table
+  - UUID is auto-generated with `defaultRandom()`
+  - UUID is NOT NULL and UNIQUE
+  - Existing `id` field remains as primary key for human-readable references
+
+**Migration:**
+- [0005_violet_hardball.sql](drizzle/0005_violet_hardball.sql)
+  - Adds `uuid` column with `gen_random_uuid()` default
+  - Adds unique constraint on `uuid`
+  - Existing events get UUID automatically
+
+**Benefits:**
+- ✅ Globally unique identifier for events
+- ✅ Maintains existing short ID for user-friendly URLs
+- ✅ Better for external integrations and APIs
+- ✅ Prevents ID conflicts across different systems
+- ✅ Standard UUID format for better compatibility
+
+**Use Cases:**
+- API integrations can use UUID for reliable references
+- Short ID still used for user-facing URLs (e.g., `/events/ABC123`)
+- UUID can be used for webhooks, external systems, analytics
+
 ## 2026-02-09 (Vercel Deployment Configuration)
 - **Added Vercel deployment configuration for production deployment**
 - Modified backend to support Vercel serverless functions
