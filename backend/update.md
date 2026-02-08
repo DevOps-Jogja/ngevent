@@ -1,5 +1,49 @@
 # Updates
 
+## 2026-02-09 (Complete Reset Password Feature)
+- **Fixed and completed reset password functionality**
+- Added proper validation schemas for forgot-password and reset-password endpoints
+- Added FRONTEND_URL environment variable for email links
+
+**Backend Changes:**
+- [validation.ts](src/middlewares/validation.ts)
+  - Added `forgotPasswordSchema` - validates email format
+  - Added `resetPasswordSchema` - validates token and newPassword (min 8 chars)
+  - Exported schemas for use in routes
+
+- [auth.routes.ts](src/routes/auth.routes.ts)
+  - Applied `validateSchema(schemas.forgotPassword)` middleware to /forgot-password
+  - Applied `validateSchema(schemas.resetPassword)` middleware to /reset-password
+  - Both endpoints now have proper input validation
+
+- [.env.example](.env.example)
+  - Added `FRONTEND_URL` variable for email link generation
+  - Defaults to http://localhost:5173 if not set
+  - Used by sendPasswordResetEmail to generate reset links
+
+**Existing Functionality (Already Working):**
+- ✅ Schema has resetPasswordToken and resetPasswordExpires fields
+- ✅ forgotPassword controller generates token and sends email
+- ✅ resetPassword controller validates token and updates password
+- ✅ Email template for password reset exists
+- ✅ Token expires after 1 hour
+- ✅ Security: doesn't reveal if email exists
+
+**Reset Password Flow:**
+1. User requests reset at /api/auth/forgot-password with email
+2. Backend generates token, saves to DB with 1-hour expiry
+3. Email sent with reset link: {FRONTEND_URL}/reset-password?token=xxx
+4. User clicks link, enters new password
+5. Frontend POSTs to /api/auth/reset-password with token + newPassword
+6. Backend validates token, updates password, clears token
+
+**Benefits:**
+- ✅ Proper input validation on both endpoints
+- ✅ Clear error messages for validation failures
+- ✅ Secure token-based password reset
+- ✅ Configurable frontend URL for deployment
+- ✅ Email doesn't reveal if account exists (security)
+
 ## 2026-02-09 (Add UUID Field to Events Table)
 - **Added UUID field to events table for unique identification**
 - Events now have both readable short ID (6 chars) and UUID for robust identification

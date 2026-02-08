@@ -46,6 +46,15 @@ const broadcastSchema = z.object({
   message: z.string().min(1, 'Message is required'),
 });
 
+const forgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1, 'Reset token is required'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
 export const validateSchema = (schema: z.ZodSchema) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -89,4 +98,6 @@ export const schemas = {
   event: eventSchema,
   registration: registrationSchema,
   broadcast: broadcastSchema,
+  forgotPassword: forgotPasswordSchema,
+  resetPassword: resetPasswordSchema,
 };

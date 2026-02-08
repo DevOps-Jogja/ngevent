@@ -237,7 +237,7 @@ router.post('/verify-email', authController.verifyEmail);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/forgot-password', authLimiter, authController.forgotPassword);
+router.post('/forgot-password', authLimiter, validateSchema(schemas.forgotPassword), authController.forgotPassword);
 
 /**
  * @swagger
@@ -270,7 +270,7 @@ router.post('/forgot-password', authLimiter, authController.forgotPassword);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/reset-password', authController.resetPassword);
+router.post('/reset-password', validateSchema(schemas.resetPassword), authController.resetPassword);
 
 // Change password for logged-in users (requires current password)
 router.post('/change-password', authenticate, authController.changePassword);

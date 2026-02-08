@@ -1,5 +1,66 @@
 # Updates
 
+## 2026-02-09 (Add Reset Password Pages)
+- **Implemented complete reset password flow in frontend**
+- Added ForgotPasswordPage for requesting password reset
+- Added ResetPasswordPage for setting new password
+- Integrated with backend reset password API
+
+**New Pages:**
+- [ForgotPasswordPage.tsx](src/pages/ForgotPasswordPage.tsx)
+  - Clean, modern UI with email input form
+  - Success/error message display
+  - Rate limiting handled via backend
+  - Security notes and instructions
+  - Link back to login and register
+  - Loading state during submission
+
+- [ResetPasswordPage.tsx](src/pages/ResetPasswordPage.tsx)
+  - Reads token from URL query parameter
+  - New password and confirm password fields
+  - Show/hide password toggle
+  - Real-time password matching validation
+  - Client-side validation (min 8 characters)
+  - Auto-redirect to login on success
+  - Password requirements display
+  - Handles expired/invalid tokens
+
+**Router Changes:**
+- [App.tsx](src/App.tsx)
+  - Added route: `/forgot-password`
+  - Added route: `/reset-password`
+  - Imported ForgotPasswordPage and ResetPasswordPage
+
+- [LoginPage.tsx](src/pages/LoginPage.tsx)
+  - Changed "Lupa password?" from `<a>` to `<Link to="/forgot-password">`
+  - Proper navigation instead of anchor tag
+
+**User Flow:**
+1. User clicks "Lupa password?" on login page
+2. Enters email on forgot-password page
+3. Receives email with reset link
+4. Clicks link → opens reset-password page with token
+5. Enters new password (min 8 chars)
+6. Confirms password matches
+7. Submits → password updated
+8. Auto-redirected to login with success message
+
+**Features:**
+- ✅ Modern, responsive UI matching site design
+- ✅ Comprehensive error handling
+- ✅ Loading states and animations
+- ✅ Security warnings and instructions
+- ✅ Client-side and server-side validation
+- ✅ Password visibility toggle
+- ✅ Real-time validation feedback
+- ✅ Success messages with auto-redirect
+
+**API Integration:**
+- POST `/api/auth/forgot-password` - request reset
+- POST `/api/auth/reset-password` - update password
+- Handles all backend error responses
+- Displays user-friendly error messages
+
 ## 2026-02-09 (Vercel Deployment Configuration)
 - **Added Vercel deployment configuration for production deployment**
 - Configured static site deployment with SPA routing support

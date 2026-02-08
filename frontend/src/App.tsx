@@ -17,6 +17,8 @@ import CreateEventPage from './pages/CreateEventPage'
 import EditEventPage from './pages/EditEventPage'
 import EditProfilePage from './pages/EditProfilePage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 function App() {
@@ -40,6 +42,8 @@ function App() {
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="verify-email" element={<VerifyEmailPage />} />
+        <Route path="forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="reset-password" element={<ResetPasswordPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
