@@ -1,5 +1,48 @@
 # Updates
 
+## 2026-02-09 (Auto-delete Old Avatar from Cloudinary on Profile Update)
+- **Added automatic cleanup of old avatar images when user updates profile picture**
+- Prevents orphaned files in Cloudinary storage
+- Only deletes Cloudinary-hosted images (not Google OAuth avatars)
+
+**Changes:**
+- [profile.controller.ts](src/controllers/profile.controller.ts)
+  - Added `getPublicIdFromUrl()` helper to extract public_id from Cloudinary URL
+  - Added `deleteCloudinaryImage()` helper to delete image from Cloudinary
+  - Modified `updateProfile()` to delete old avatar before saving new one
+  - Checks if old avatar exists and is different from new one
+  - Only deletes if URL contains 'cloudinary.com' (not Google avatars)
+  - Configured Cloudinary client with credentials
+
+**Flow:**
+1. User updates profile with new avatar_url
+2. Backend fetches current profile to get old avatar_url
+3. If old avatar exists and is Cloudinary URL:
+   - Extract public_id from URL
+   - Delete from Cloudinary using `cloudinary.uploader.destroy()`
+4. Save new avatar_url to database
+5. Old file removed from Cloudinary storage
+
+**Benefits:**
+- ✅ Prevents storage waste from orphaned files
+- ✅ Reduces Cloudinary storage costs
+- ✅ Keeps storage clean and organized
+- ✅ Safe: Only deletes Cloudinary images, not Google OAuth avatars
+- ✅ Non-blocking: Delete errors don't prevent profile update
+- ✅ Automatic: No manual cleanup needed
+
+**Public ID Extraction:**
+- Handles standard Cloudinary URL format
+- Supports versioned URLs (v1234567890/...)
+- Extracts from path after /upload/
+- Removes file extension
+
+**Safety:**
+- Only deletes if old avatar is Cloudinary URL
+- Doesn't delete if same URL (no change)
+- Errors logged but don't block update
+- Google OAuth avatars are preserved
+
 ## 2026-02-09 (Complete Reset Password Feature)
 - **Fixed and completed reset password functionality**
 - Added proper validation schemas for forgot-password and reset-password endpoints
