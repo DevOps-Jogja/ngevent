@@ -370,25 +370,6 @@ export default function EventDetailPage() {
               </div>
             ) : null}
 
-            {/* Custom Images Gallery */}
-            {customImages.length > 0 ? (
-              <div className="bg-white dark:bg-dark-card rounded-xl shadow-md dark:shadow-xl p-4 sm:p-5 border border-gray-100 dark:border-gray-800">
-                <h3 className="text-base font-bold text-gray-900 dark:text-white mb-3">Galeri</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {customImages.map((img, idx) => (
-                    <button
-                      key={`${img.url}-${idx}`}
-                      type="button"
-                      onClick={() => setImageModal({ src: img.url, alt: img.title || `Image ${idx + 1}` })}
-                      className="rounded-lg overflow-hidden bg-gray-100 dark:bg-dark-secondary border border-gray-200 dark:border-gray-700 hover:shadow-md transition"
-                      title={img.title}
-                    >
-                      <img src={img.url} alt={img.title} className="w-full h-28 object-cover" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
           </div>
 
           {/* Right Column */}

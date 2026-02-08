@@ -1,5 +1,76 @@
 # Updates
 
+## 2026-02-09 (Re-Registration Support After Cancellation)
+- **Users can re-register for events after cancelling without encountering duplicate registration errors**
+- System reuses cancelled registration record instead of creating new one
+- Previous registration data can be retrieved for pre-filling forms
+- Email confirmation sent on re-registration
+
+**Changes:**
+- [registration.controller.ts](src/controllers/registration.controller.ts)
+  - Added `getPreviousRegistration()` endpoint to fetch last registration (including cancelled)
+  - Modified `registerForEvent()` to handle re-registration after cancellation
+  - Moved profile validation before registration check for better flow
+  - If existing registration status is 'cancelled': UPDATE record with new data
+  - If existing registration status is 'registered' or 'attended': throw error
+  - If no existing registration: INSERT new record
+  - Maintains unique constraint (event_id, user_id) without conflicts
+
+- [registration.routes.ts](src/routes/registration.routes.ts)
+  - Added GET `/api/registrations/previous/:eventId` endpoint
+  - Requires authentication
+  - Returns most recent registration for user+event combination
+
+**Backend Logic Flow:**
+```
+1. Validate event exists and has capacity
+2. Check profile completion (moved before registration check)
+3. Check existing registration for event_id + user_id
+4. If exists with status 'cancelled':
+   - UPDATE registration_data, status='registered', registered_at=NOW()
+   - Send email confirmation
+   - Return updated record
+5. If exists with status 'registered' or 'attended':
+   - Throw "Already registered" error
+6. If not exists:
+   - INSERT new registration
+   - Send email confirmation
+   - Return new record
+```
+
+**Database:**
+- Registration status enum: 'registered' | 'attended' | 'cancelled'
+- Unique constraint on (event_id, user_id) still enforced
+- No schema changes required
+- registration_data stored as jsonb (includes form fields and file URLs)
+
+**API Endpoints:**
+- POST `/api/registrations` - Create or update registration
+  - If cancelled registration exists: updates it
+  - If no registration exists: creates new one
+  - If active registration exists: returns error
+
+- GET `/api/registrations/previous/:eventId` - Get previous registration
+  - Returns most recent registration for current user + event
+  - Includes cancelled registrations
+  - Returns null if no previous registration
+
+**Benefits:**
+- ✅ Eliminates duplicate registration errors on re-registration
+- ✅ Preserves registration history in database
+- ✅ Enables pre-filling forms with previous data
+- ✅ Maintains data integrity with unique constraint
+- ✅ No database migration required
+- ✅ Email confirmation on re-registration
+
+**Security:**
+- Profile validation still enforced before registration
+- User can only access their own registration data
+- Authentication required for all endpoints
+- Rate limiting applied to registration endpoint
+
+---
+
 ## 2026-02-09 (Client-Side Image Upload with Cloudinary Signature)
 - **Migrated from server-side to client-side image uploads for better performance**
 - Backend generates secure signature, frontend uploads directly to Cloudinary

@@ -42,17 +42,7 @@ export const registerForEvent = async (req: AuthRequest, res: Response, next: Ne
       throw new AppError('Event is full', 400);
     }
 
-    // Check if already registered
-    const existingRegistration = await query(
-      'SELECT id FROM registrations WHERE event_id = $1 AND user_id = $2',
-      [finalEventId, req.user!.id]
-    );
-
-    if (existingRegistration.rows.length > 0) {
-      throw new AppError('Already registered for this event', 400);
-    }
-
-    // Require completed profile before registration
+    // Get profile data first (needed for validation and email)
     const profileResult = await query(
       'SELECT full_name, phone, institution, position, city FROM profiles WHERE id = $1',
       [req.user!.id]
@@ -82,6 +72,62 @@ export const registerForEvent = async (req: AuthRequest, res: Response, next: Ne
         `Lengkapi profil terlebih dahulu: ${missingFields.join(', ')}`,
         403
       );
+    }
+
+    // Check if already registered
+    const existingRegistration = await query(
+      'SELECT id, status FROM registrations WHERE event_id = $1 AND user_id = $2',
+      [finalEventId, req.user!.id]
+    );
+
+    if (existingRegistration.rows.length > 0) {
+      const registration = existingRegistration.rows[0];
+
+      // If status is 'cancelled', allow re-registration by updating the existing record
+      if (registration.status === 'cancelled') {
+        // Update existing cancelled registration
+        const updateResult = await query(
+          'UPDATE registrations SET registration_data = $1, status = $2, registered_at = NOW() WHERE id = $3 RETURNING *',
+          [JSON.stringify(registration_data), 'registered', registration.id]
+        );
+
+        // Get user email for sending confirmation
+        const userResult = await query(
+          'SELECT email FROM users WHERE id = $1',
+          [req.user!.id]
+        );
+
+        // Get event details for email
+        const eventDetailResult = await query(
+          'SELECT id, title, start_date, location FROM events WHERE id = $1',
+          [finalEventId]
+        );
+
+        // Send registration confirmation email (don't block response)
+        if (userResult.rows.length > 0 && eventDetailResult.rows.length > 0) {
+          const userEmail = userResult.rows[0].email;
+          const eventDetail = eventDetailResult.rows[0];
+
+          sendEventRegistrationEmail(
+            userEmail,
+            profile.full_name,
+            {
+              id: eventDetail.id,
+              title: eventDetail.title,
+              startDate: eventDetail.start_date,
+              location: eventDetail.location,
+            }
+          ).catch(err => {
+            logger.error('Failed to send event registration email:', err);
+          });
+        }
+
+        res.status(201).json(updateResult.rows[0]);
+        return;
+      }
+
+      // If status is not cancelled (registered or attended), throw error
+      throw new AppError('Already registered for this event', 400);
     }
 
     // Create registration
@@ -143,6 +189,33 @@ export const getMyRegistrations = async (req: AuthRequest, res: Response, next: 
     );
 
     res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPreviousRegistration = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { eventId } = req.params;
+
+    // Get the most recent registration (including cancelled) for this user and event
+    const result = await query(
+      `
+      SELECT id, event_id, user_id, registration_data, status, registered_at
+      FROM registrations
+      WHERE event_id = $1 AND user_id = $2
+      ORDER BY registered_at DESC
+      LIMIT 1
+      `,
+      [eventId, req.user!.id]
+    );
+
+    if (result.rows.length === 0) {
+      res.json(null);
+      return;
+    }
+
+    res.json(result.rows[0]);
   } catch (error) {
     next(error);
   }

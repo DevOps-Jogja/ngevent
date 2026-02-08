@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Calendar, MapPin, Users, DollarSign, Upload, X, Plus, Trash2 } from 'lucide-react';
+import { uploadToCloudinary } from '../lib/cloudinary';
 
 export type EventFormData = {
   title: string;
@@ -57,14 +58,14 @@ const CATEGORIES = [
   { value: 'other', label: 'Other' },
 ];
 
-export default function EventForm({ 
+export default function EventForm({
   initialData,
   initialFormFields = [],
   initialSpeakers = [],
   initialCustomImages = [],
-  onSubmit, 
+  onSubmit,
   submitLabel = 'Create Event',
-  isLoading = false 
+  isLoading = false
 }: EventFormProps) {
   const [formData, setFormData] = useState<EventFormData>({
     title: initialData?.title || '',
@@ -83,19 +84,20 @@ export default function EventForm({
   const [imagePreview, setImagePreview] = useState<string>(initialData?.image_url || '');
   const [errors, setErrors] = useState<Partial<Record<keyof EventFormData, string>>>({});
   const [activeTab, setActiveTab] = useState<'basic' | 'registration' | 'speakers' | 'images'>('basic');
-  
+
   // Custom form fields
   const [formFields, setFormFields] = useState<FormField[]>(initialFormFields);
-  
+
   // Speakers
   const [speakers, setSpeakers] = useState<Speaker[]>(initialSpeakers);
-  
+
   // Custom images
   const [customImages, setCustomImages] = useState<CustomImage[]>(initialCustomImages);
-  const [, setCustomImageFile] = useState<File | null>(null);
+  const [customImageFile, setCustomImageFile] = useState<File | null>(null);
   const [customImagePreview, setCustomImagePreview] = useState<string>('');
   const [customImageTitle, setCustomImageTitle] = useState('');
   const [customImageDesc, setCustomImageDesc] = useState('');
+  const [isUploadingCustomImage, setIsUploadingCustomImage] = useState(false);
 
   // Auto-generate payment proof field when registration fee is set
   useEffect(() => {
@@ -186,26 +188,56 @@ export default function EventForm({
     }
   };
 
-  const addCustomImage = () => {
-    if (!customImagePreview || !customImageTitle) {
+  const addCustomImage = async () => {
+    if (!customImageFile || !customImageTitle) {
       alert('Please add an image and title');
       return;
     }
 
-    setCustomImages([
-      ...customImages,
-      {
-        title: customImageTitle,
-        description: customImageDesc,
-        url: customImagePreview,
-      },
-    ]);
+    setIsUploadingCustomImage(true);
+    try {
+      const result = await uploadToCloudinary(customImageFile, 'event-images');
+      const uploadedUrl = result.secure_url;
 
-    // Reset custom image form
-    setCustomImageFile(null);
-    setCustomImagePreview('');
-    setCustomImageTitle('');
-    setCustomImageDesc('');
+      setCustomImages([
+        ...customImages,
+        {
+          title: customImageTitle,
+          description: customImageDesc,
+          url: uploadedUrl,
+        },
+      ]);
+
+      // Reset custom image form
+      setCustomImageFile(null);
+      setCustomImagePreview('');
+      setCustomImageTitle('');
+      setCustomImageDesc('');
+    } catch (error: any) {
+      console.error('Error uploading custom image:', error);
+
+      // More detailed error messages
+      let errorMessage = 'Failed to upload image';
+
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      // Check for specific errors
+      if (errorMessage.includes('Forbidden') || errorMessage.includes('organizer')) {
+        errorMessage = 'You need organizer or admin role to upload event images. Please contact administrator.';
+      } else if (errorMessage.includes('size')) {
+        errorMessage = 'Image file is too large. Maximum size is 10MB.';
+      } else if (errorMessage.includes('type') || errorMessage.includes('format')) {
+        errorMessage = 'Invalid file type. Please upload an image file (JPG, PNG, etc).';
+      }
+
+      alert(errorMessage);
+    } finally {
+      setIsUploadingCustomImage(false);
+    }
   };
 
   const removeCustomImage = (index: number) => {
@@ -256,14 +288,37 @@ export default function EventForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validate()) {
       setActiveTab('basic'); // Switch to basic tab if validation fails
       return;
     }
 
     try {
-      await onSubmit(formData, imageFile || undefined, formFields, speakers, customImages);
+      // If there's a pending custom image that hasn't been added yet, upload and include it
+      let finalCustomImages = [...customImages];
+      if (customImageFile && customImageTitle) {
+        try {
+          const result = await uploadToCloudinary(customImageFile, 'event-images');
+          finalCustomImages.push({
+            title: customImageTitle,
+            description: customImageDesc,
+            url: result.secure_url,
+          });
+          // Reset pending custom image
+          setCustomImageFile(null);
+          setCustomImagePreview('');
+          setCustomImageTitle('');
+          setCustomImageDesc('');
+          setCustomImages(finalCustomImages);
+        } catch (uploadErr: any) {
+          console.error('Failed to upload pending custom image:', uploadErr);
+          alert('Gagal mengupload custom image: ' + (uploadErr.message || 'Unknown error'));
+          return;
+        }
+      }
+
+      await onSubmit(formData, imageFile || undefined, formFields, speakers, finalCustomImages);
     } catch (error) {
       console.error('Form submission error:', error);
     }
@@ -318,11 +373,10 @@ export default function EventForm({
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm whitespace-nowrap transition-all duration-200 flex items-center justify-center gap-2 ${
-                activeTab === tab.id
-                  ? 'bg-primary-600 text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
-              }`}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm whitespace-nowrap transition-all duration-200 flex items-center justify-center gap-2 ${activeTab === tab.id
+                ? 'bg-primary-600 text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
             >
               {tab.icon}
               {tab.label}
@@ -347,9 +401,9 @@ export default function EventForm({
               </label>
               {imagePreview ? (
                 <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden group">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
                     className="w-full h-full object-cover"
                   />
                   <button
@@ -365,15 +419,15 @@ export default function EventForm({
                   <div className="flex flex-col items-center justify-center py-6">
                     <Upload className="w-10 h-10 mb-3 text-gray-400" />
                     <p className="text-sm text-gray-500 dark:text-gray-400 text-center px-2">
-                      <span className="font-semibold">Click to upload</span><br/>or drag and drop
+                      <span className="font-semibold">Click to upload</span><br />or drag and drop
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                       PNG, JPG (MAX. 5MB)
                     </p>
                   </div>
-                  <input 
-                    type="file" 
-                    className="hidden" 
+                  <input
+                    type="file"
+                    className="hidden"
                     accept="image/*"
                     onChange={handleImageChange}
                   />
@@ -785,16 +839,16 @@ export default function EventForm({
           {/* Add Custom Image Form */}
           <div className="bg-gray-50 dark:bg-dark-secondary/30 rounded-xl p-6 space-y-4">
             <h4 className="font-medium text-gray-900 dark:text-white">Add New Image</h4>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Image
               </label>
               {customImagePreview ? (
                 <div className="relative w-full h-48 rounded-lg overflow-hidden group">
-                  <img 
-                    src={customImagePreview} 
-                    alt="Preview" 
+                  <img
+                    src={customImagePreview}
+                    alt="Preview"
                     className="w-full h-full object-cover"
                   />
                   <button
@@ -812,9 +866,9 @@ export default function EventForm({
                 <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-white dark:bg-dark-secondary hover:bg-gray-100 dark:hover:bg-gray-800">
                   <Upload className="w-8 h-8 mb-2 text-gray-400" />
                   <p className="text-sm text-gray-500">Click to upload image</p>
-                  <input 
-                    type="file" 
-                    className="hidden" 
+                  <input
+                    type="file"
+                    className="hidden"
                     accept="image/*"
                     onChange={handleCustomImageChange}
                   />
@@ -851,10 +905,20 @@ export default function EventForm({
             <button
               type="button"
               onClick={addCustomImage}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              disabled={isUploadingCustomImage || !customImageFile || !customImageTitle}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Plus className="w-4 h-4" />
-              Add Image to Gallery
+              {isUploadingCustomImage ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" />
+                  Add Image to Gallery
+                </>
+              )}
             </button>
           </div>
 
@@ -865,8 +929,8 @@ export default function EventForm({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {customImages.map((image, index) => (
                   <div key={index} className="relative group border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                    <img 
-                      src={image.url} 
+                    <img
+                      src={image.url}
                       alt={image.title}
                       className="w-full h-48 object-cover"
                     />

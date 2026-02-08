@@ -9,6 +9,7 @@ const router = Router();
 // Protected routes
 router.post('/', authenticate, apiLimiter, validateSchema(schemas.registration), registrationController.registerForEvent);
 router.get('/my-events', authenticate, registrationController.getMyRegistrations);
+router.get('/previous/:eventId', authenticate, registrationController.getPreviousRegistration);
 router.delete('/:id', authenticate, registrationController.cancelRegistration);
 
 // Organizer routes

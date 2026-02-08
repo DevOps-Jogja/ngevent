@@ -1,5 +1,166 @@
 # Updates
 
+## 2026-02-09 (Fix Custom Image Upload di Event Form)
+- **Custom images sekarang di-upload ke Cloudinary via client-side upload**
+- Upload terjadi di 2 titik: saat klik "Add Image to Gallery" ATAU otomatis saat submit form
+- Jika user sudah pilih file + isi title tapi belum klik "Add Image", upload otomatis saat submit event
+- Menghapus debug UI dan console logs yang berlebihan
+
+**Changes:**
+- [EventForm.tsx](src/components/EventForm.tsx)
+  - Import `uploadToCloudinary` dari cloudinary library
+  - `addCustomImage()`: upload ke Cloudinary saat user klik "Add Image to Gallery"
+  - `handleSubmit()`: otomatis upload pending custom image sebelum submit form
+  - Jika upload gagal saat submit, form tidak dikirim dan user diberi pesan error
+  - State `customImageFile` digunakan untuk menyimpan file yang dipilih
+  - Loading state dengan spinner saat upload
+  - Error handling yang jelas untuk permission, size, dan format errors
+
+**Problem Sebelumnya:**
+- Custom images disimpan sebagai base64 data URL (dari FileReader)
+- Menyebabkan localStorage overflow
+- User tidak sadar harus klik "Add Image to Gallery" sebelum submit
+- Tidak ada auto-upload saat form di-submit
+
+**Solution:**
+- Upload ke Cloudinary via `uploadToCloudinary()` (client-side signed upload)
+- **2 jalur upload:**
+  1. Klik "Add Image to Gallery" → upload langsung, masuk gallery
+  2. Submit form ("Create Event" / "Update Event") → otomatis upload pending image
+- localStorage hanya menyimpan URL Cloudinary (kecil)
+- Konsisten dengan image handling lainnya (event image, avatar, speaker)
+
+**Problem Sebelumnya:**
+- Custom images disimpan sebagai base64 data URL (dari FileReader)
+- Menyebabkan localStorage overflow (base64 sangat besar)
+- Images tidak bisa di-load dengan baik karena data URL terlalu panjang
+- Tidak konsisten dengan main event image yang di-upload ke Cloudinary
+
+**Solution:**
+- Upload custom images ke Cloudinary seperti main event image
+- Simpan hanya URL hasil upload (bukan base64)
+- localStorage hanya menyimpan metadata kecil
+- Konsisten dengan image handling di aplikasi
+
+**User Flow:**
+1. User buka form Create/Edit Event (harus memiliki role organizer/admin)
+2. User ke tab "Custom Images"
+3. User pilih image file
+4. User isi title (required) dan description (optional)
+5. User klik "Add Image to Gallery"
+6. Image di-upload ke Cloudinary (loading spinner muncul)
+7. Console log menampilkan progress upload
+8. Setelah berhasil, muncul alert "Image uploaded successfully!"
+9. Image masuk ke gallery list
+10. URL Cloudinary disimpan ke localStorage/database
+ (client-side)
+- ✅ No localStorage overflow
+- ✅ Loading state memberi feedback ke user
+- ✅ Konsisten dengan image handling lainnya
+- ✅ Disabled button mencegah double upload
+- ✅ Enhanced error handling dengan pesan yang jelas
+- ✅ Console logging untuk debugging
+- ✅ Success alert untuk konfirmasi
+
+**Technical Notes:**
+- Upload ke folder 'event-images' di Cloudinary
+- Menggunakan uploadToCloudinary() helper function
+- Custom images tetap disimpan di localStorage per event
+- Format: `event_custom_images_{eventId}` di localStorage
+- Structure: `{ title: string, description: string, url: string }[]`
+
+**Permission Requirements:**
+- ⚠️ User HARUS memiliki role `organizer` atau `admin`
+- Backend endpoint `/api/upload/signature` memeriksa role user
+- Folder `event-images` restricted untuk organizer/admin only
+- Jika user bukan organizer/admin, akan muncul error:
+  "You need organizer or admin role to upload event images"
+
+**Error Messages:**
+- Role permission: "You need organizer or admin role..."
+- File size: "Image file is too large. Maximum size is 10MB"
+- File type: "Invalid file type. Please upload an image file (JPG, PNG, etc)"
+- Generic: "Failed to upload image"
+- ✅ Disabled button mencegah double upload
+- ✅ Error handling yang baik
+
+**Technical Notes:**
+- Upload ke folder 'event-images' di Cloudinary
+- Menggunakan uploadToCloudinary() helper function
+- Custom images tetap disimpan di localStorage per event
+- Format: `event_custom_images_{eventId}` di localStorage
+- Structure: `{ title: string, description: string, url: string }[]`
+
+---
+
+## 2026-02-09 (Re-Registration dengan Pre-fill Data Setelah Cancel)
+- **User yang melakukan cancel registrasi dapat mendaftar ulang tanpa perlu mengisi data atau upload file lagi**
+- Sistem otomatis mengambil data dari registrasi sebelumnya (yang di-cancel)
+- Data form dan file upload di-prefill secara otomatis
+- User tetap bisa mengubah data jika diperlukan sebelum submit
+
+**Changes - Backend:**
+- [registration.controller.ts](../backend/src/controllers/registration.controller.ts)
+  - Menambahkan function `getPreviousRegistration()` untuk mengambil data registrasi terakhir user (termasuk yang cancelled)
+  - Modifikasi function `registerForEvent()` untuk menangani re-registration setelah cancel
+  - Jika user sudah punya registrasi dengan status 'cancelled', sistem akan UPDATE record tersebut instead of INSERT baru
+  - Validasi profile tetap dilakukan sebelum re-registration
+  - Email confirmation tetap dikirim saat re-registration
+
+- [registration.routes.ts](../backend/src/routes/registration.routes.ts)
+  - Menambahkan route `GET /api/registrations/previous/:eventId`
+  - Route untuk mendapatkan data registrasi terakhir user pada event tertentu
+
+**Changes - Frontend:**
+- [EventRegistrationPage.tsx](src/pages/EventRegistrationPage.tsx)
+  - Menambahkan query untuk fetch previous registration data
+  - Menambahkan useEffect untuk pre-fill form dengan data dari registrasi yang di-cancel
+  - Pre-fill file preview (termasuk PDF files) dari registrasi sebelumnya
+  - Menambahkan info banner untuk memberitahu user bahwa data sudah di-prefill dari registrasi sebelumnya
+
+**User Flow:**
+1. User mendaftar event dengan mengisi form dan upload file
+2. User membatalkan registrasi dari dashboard (status → 'cancelled')
+3. User kembali ke halaman detail event dan klik "Daftar Sekarang"
+4. Sistem mengambil data registrasi terakhir yang di-cancel
+5. Form otomatis terisi dengan data sebelumnya (termasuk file upload)
+6. Banner biru muncul memberi info bahwa data sudah di-prefill
+7. User bisa mengubah data jika perlu atau langsung submit
+8. Sistem UPDATE record registrasi yang cancelled menjadi 'registered' lagi
+9. User menerima email konfirmasi pendaftaran
+
+**Backend Logic:**
+- Check profile completion terlebih dahulu
+- Check jika ada existing registration untuk event tersebut
+- Jika status = 'cancelled': UPDATE record dengan data baru + status 'registered' + registered_at NOW()
+- Jika status = 'registered' atau 'attended': throw error "Already registered"
+- Jika tidak ada record: INSERT new registration
+- Unique constraint tetap terjaga (event_id, user_id)
+
+**Features:**
+- ✅ Pre-fill form data dari registrasi yang di-cancel
+- ✅ Pre-fill file upload (image dan PDF)
+- ✅ User bisa edit data sebelum submit ulang
+- ✅ Update existing record instead of insert baru
+- ✅ Email confirmation tetap terkirim
+- ✅ Info banner memberi tahu user tentang pre-filled data
+- ✅ Validasi profile completion tetap dilakukan
+- ✅ No duplicate registration error
+
+**Security:**
+- Previous registration hanya untuk user yang login
+- Data registrasi hanya bisa diakses oleh user yang bersangkutan
+- Validasi profile completion tetap diterapkan
+- Unique constraint di database tetap terjaga
+
+**Technical Notes:**
+- Registration data disimpan di field `registration_data` (jsonb)
+- File URLs tersimpan dalam registration data
+- Status enum: 'registered' | 'attended' | 'cancelled'
+- Route `/api/registrations/previous/:eventId` memerlukan authentication
+
+---
+
 ## 2026-02-09 (Fungsi Batalkan Pendaftaran Event dari Dashboard User)
 - **Pengguna dapat membatalkan pendaftaran event dari dashboard mereka**
 - Tombol cancel hanya muncul untuk registration dengan status 'registered'

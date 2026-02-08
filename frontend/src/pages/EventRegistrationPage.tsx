@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Calendar, MapPin, Users, AlertCircle, CheckCircle2, Upload, X, FileText } from 'lucide-react'
@@ -162,7 +162,49 @@ export default function EventRegistrationPage() {
         enabled: !!id,
     })
 
-    const formFields = (Array.isArray(formFieldsRaw) ? formFieldsRaw : []).map(normalizeFormField)
+    const formFields = useMemo(
+        () => (Array.isArray(formFieldsRaw) ? formFieldsRaw : []).map(normalizeFormField),
+        [formFieldsRaw]
+    )
+
+    // Fetch previous registration data if user has cancelled registration
+    const { data: previousRegistration } = useQuery({
+        queryKey: ['previous-registration', id, user?.id],
+        queryFn: async () => {
+            const res = await apiClient.get(`/api/registrations/previous/${id}`)
+            return res.data
+        },
+        enabled: Boolean(user && id),
+    })
+
+    // Pre-fill form with previous registration data if available and status is cancelled
+    const hasPrefilled = useRef(false)
+    useEffect(() => {
+        if (hasPrefilled.current) return
+        if (previousRegistration && previousRegistration.status === 'cancelled' && previousRegistration.registration_data && formFields.length > 0) {
+            hasPrefilled.current = true
+            const prevData = previousRegistration.registration_data
+            setRegistrationData(prevData)
+
+            // Pre-fill file previews if any
+            const newFilePreviews: Record<string, string> = {}
+            formFields.forEach((field) => {
+                if (field.field_type === 'file' && prevData[field.field_name]) {
+                    const fileUrl = prevData[field.field_name]
+                    if (typeof fileUrl === 'string' && fileUrl.trim()) {
+                        if (fileUrl.toLowerCase().endsWith('.pdf')) {
+                            newFilePreviews[field.field_name] = 'PDF_FILE'
+                        } else {
+                            newFilePreviews[field.field_name] = fileUrl
+                        }
+                    }
+                }
+            })
+            if (Object.keys(newFilePreviews).length > 0) {
+                setFilePreview(newFilePreviews)
+            }
+        }
+    }, [previousRegistration, formFields])
 
     useEffect(() => {
         if (!id) return
@@ -478,6 +520,23 @@ export default function EventRegistrationPage() {
                 {/* Form Only if can register */}
                 {!isFull && !isAlreadyRegistered && isProfileComplete && (
                     <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg dark:shadow-xl border border-gray-100 dark:border-gray-800 p-6">
+                        {/* Previous Registration Notice */}
+                        {previousRegistration && previousRegistration.status === 'cancelled' && previousRegistration.registration_data && (
+                            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
+                                <div className="flex items-start gap-3">
+                                    <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-1">
+                                            Data Registrasi Sebelumnya Terdeteksi
+                                        </h4>
+                                        <p className="text-xs text-blue-700 dark:text-blue-400">
+                                            Kami telah mengisi form dengan data dari registrasi sebelumnya yang dibatalkan. Anda dapat mengubah data jika diperlukan.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* User Info */}
                         <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
                             <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Informasi Pendaftar</h2>
