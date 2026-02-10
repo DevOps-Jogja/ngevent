@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../lib/axios';
 import { Calendar, CheckCircle, TrendingUp, Plus, Edit, Trash2, Users, MapPin, Eye, UserPlus, Copy, Megaphone, Shield } from 'lucide-react';
@@ -49,6 +49,7 @@ type Registration = {
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [effectiveRole, setEffectiveRole] = useState<'participant' | 'organizer'>('participant');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -61,6 +62,16 @@ export default function DashboardPage() {
   useEffect(() => {
     document.title = 'Dashboard - NgEvent'
   }, [])
+
+  // Handle tab state from navigation
+  useEffect(() => {
+    const state = location.state as { tab?: string } | null;
+    if (state?.tab === 'organizer') {
+      setEffectiveRole('organizer');
+      // Clear the state to prevent re-triggering on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location])
 
   const safeFormatDateTime = (value?: string) => {
     if (!value) return '-';

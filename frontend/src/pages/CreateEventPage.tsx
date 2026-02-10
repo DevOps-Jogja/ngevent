@@ -84,8 +84,8 @@ export default function CreateEventPage() {
       await queryClient.invalidateQueries({ queryKey: ['my-events'] });
       await queryClient.invalidateQueries({ queryKey: ['events'] });
 
-      // Redirect to dashboard
-      navigate('/dashboard');
+      // Redirect to dashboard organizer tab
+      navigate('/dashboard', { state: { tab: 'organizer' } });
     } catch (error: any) {
       console.error('Error creating event:', error);
       console.error('Error response:', error.response?.data);

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { parseISO, format, isValid } from 'date-fns';
 import EventForm, { EventFormData, FormField, Speaker, CustomImage } from '../components/EventForm';
 import apiClient from '../lib/axios';
 import { uploadToCloudinary } from '../lib/cloudinary';
@@ -26,9 +25,20 @@ export default function EditEventPage() {
 
   const formatDateForInput = (dateString?: string | null) => {
     if (!dateString) return '';
-    const date = parseISO(dateString);
-    if (!isValid(date)) return '';
-    return format(date, "yyyy-MM-dd'T'HH:mm");
+
+    // Parse the UTC date from backend
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+
+    // Get local date components
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    // Format as YYYY-MM-DDTHH:mm for datetime-local input
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
   const loadEventData = async () => {
@@ -47,6 +57,9 @@ export default function EditEventPage() {
       const imageRaw = event?.imageUrl ?? event?.image_url ?? '';
       const feeRaw = event?.registrationFee ?? event?.registration_fee;
       const capacityRaw = event?.capacity;
+      const bankAccountName = event?.bankAccountName ?? event?.bank_account_name ?? '';
+      const bankAccountNumber = event?.bankAccountNumber ?? event?.bank_account_number ?? '';
+      const bankName = event?.bankName ?? event?.bank_name ?? '';
 
       setEventData({
         title: event?.title ?? '',
@@ -57,6 +70,9 @@ export default function EditEventPage() {
         category: event?.category || '',
         capacity: capacityRaw !== null && capacityRaw !== undefined ? String(capacityRaw) : '',
         registration_fee: feeRaw !== null && feeRaw !== undefined ? String(feeRaw) : '0',
+        bank_account_name: bankAccountName,
+        bank_account_number: bankAccountNumber,
+        bank_name: bankName,
         status: event?.status ?? 'draft',
         image_url: imageRaw,
       });
@@ -188,8 +204,8 @@ export default function EditEventPage() {
       // Show success message
       alert('Event updated successfully!');
 
-      // Redirect to dashboard
-      navigate('/dashboard');
+      // Redirect to dashboard organizer tab
+      navigate('/dashboard', { state: { tab: 'organizer' } });
     } catch (error: any) {
       console.error('Error updating event:', error);
       alert(error.response?.data?.message || 'Failed to update event');
