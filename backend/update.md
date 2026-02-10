@@ -1,5 +1,44 @@
 # Updates
 
+## 2026-02-10 (Fix Vercel Deployment Configuration)
+- **Fixed Express.js backend to properly run on Vercel as serverless function**
+- Updated vercel.json to use correct build and routing configuration
+- Routes now properly point to compiled dist/index.js file
+
+**Changes:**
+- [vercel.json](vercel.json)
+  - Changed from `rewrites` to `builds` and `routes` configuration
+  - Added `@vercel/node` builder for Node.js serverless functions
+  - Routes now point to `/dist/index.js` instead of `/src`
+  - This allows Vercel to properly run the compiled TypeScript Express app
+
+**Configuration:**
+```json
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "dist/index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/dist/index.js"
+    }
+  ]
+}
+```
+
+**Deployment Notes:**
+- The `vercel-build` script in package.json runs `tsc` to compile TypeScript
+- Vercel will automatically run this build script before deployment
+- All API routes work through the serverless function
+- The Express app is already properly exported as `export default app` in index.ts
+
+---
+
 ## 2026-02-09 (Re-Registration Support After Cancellation)
 - **Users can re-register for events after cancelling without encountering duplicate registration errors**
 - System reuses cancelled registration record instead of creating new one
