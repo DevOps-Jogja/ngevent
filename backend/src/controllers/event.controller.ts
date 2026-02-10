@@ -269,6 +269,9 @@ export const createEvent = async (req: AuthRequest, res: Response, next: NextFun
       image_url,
       capacity,
       registration_fee,
+      bank_account_name,
+      bank_account_number,
+      bank_name,
       category,
     } = req.body;
 
@@ -299,6 +302,9 @@ export const createEvent = async (req: AuthRequest, res: Response, next: NextFun
       imageUrl: image_url,
       capacity,
       registrationFee: registration_fee,
+      bankAccountName: bank_account_name,
+      bankAccountNumber: bank_account_number,
+      bankName: bank_name,
       category,
     }).returning();
 
@@ -358,6 +364,18 @@ export const updateEvent = async (req: AuthRequest, res: Response, next: NextFun
 
     if (hasProp('registration_fee')) {
       updateData.registrationFee = updates.registration_fee;
+    }
+
+    if (hasProp('bank_account_name')) {
+      updateData.bankAccountName = updates.bank_account_name;
+    }
+
+    if (hasProp('bank_account_number')) {
+      updateData.bankAccountNumber = updates.bank_account_number;
+    }
+
+    if (hasProp('bank_name')) {
+      updateData.bankName = updates.bank_name;
     }
 
     if (hasProp('category')) updateData.category = updates.category;

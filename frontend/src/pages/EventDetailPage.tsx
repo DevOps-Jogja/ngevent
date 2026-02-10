@@ -450,12 +450,15 @@ export default function EventDetailPage() {
                 <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3">Pendaftaran Event</h3>
 
                 {isPaidEvent ? (
-                  <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-3">
-                    <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">Biaya pendaftaran</div>
-                    <div className="text-xl sm:text-2xl font-bold text-primary-600 dark:text-primary-400">
-                      Rp {formatIDR(registrationFee)}
+                  <>
+                    <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-3 mb-4">
+                      <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">Biaya pendaftaran</div>
+                      <div className="text-xl sm:text-2xl font-bold text-primary-600 dark:text-primary-400">
+                        Rp {formatIDR(registrationFee)}
+                      </div>
                     </div>
-                  </div>
+
+                  </>
                 ) : (
                   <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
                     <div className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400">Gratis</div>

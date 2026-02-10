@@ -24,6 +24,12 @@ interface Event {
     registrationCount?: number
     registration_fee?: number | string
     registrationFee?: number | string
+    bank_account_name?: string
+    bankAccountName?: string
+    bank_account_number?: string
+    bankAccountNumber?: string
+    bank_name?: string
+    bankName?: string
     image_url?: string
     imageUrl?: string
     category?: string
@@ -446,13 +452,40 @@ export default function EventRegistrationPage() {
                         </div>
 
                         {isPaidEvent && (
-                            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
                                 <div className="flex items-center justify-between">
                                     <span className="text-gray-600 dark:text-gray-400">Biaya Pendaftaran</span>
                                     <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">
                                         Rp {formatIDR(registrationFee)}
                                     </span>
                                 </div>
+
+                                {/* Bank Account Information */}
+                                {(event?.bankAccountName || event?.bank_account_name) && (
+                                    <div className="bg-gray-50 dark:bg-dark-secondary/50 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                                        <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Informasi Transfer</h4>
+                                        <div className="space-y-1.5 text-xs">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">Bank:</span>
+                                                <span className="font-medium text-gray-900 dark:text-white">
+                                                    {event?.bankName || event?.bank_name || '-'}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">Nomor Rekening:</span>
+                                                <span className="font-mono font-medium text-gray-900 dark:text-white">
+                                                    {event?.bankAccountNumber || event?.bank_account_number || '-'}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">Atas Nama:</span>
+                                                <span className="font-medium text-gray-900 dark:text-white">
+                                                    {event?.bankAccountName || event?.bank_account_name || '-'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
