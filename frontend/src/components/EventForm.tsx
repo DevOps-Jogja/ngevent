@@ -11,6 +11,9 @@ export type EventFormData = {
   category: string;
   capacity: string;
   registration_fee: string;
+  bank_account_name?: string;
+  bank_account_number?: string;
+  bank_name?: string;
   status: 'draft' | 'published' | 'cancelled';
   image_url?: string;
 };
@@ -76,6 +79,9 @@ export default function EventForm({
     category: initialData?.category || '',
     capacity: initialData?.capacity || '',
     registration_fee: initialData?.registration_fee || '0',
+    bank_account_name: initialData?.bank_account_name || '',
+    bank_account_number: initialData?.bank_account_number || '',
+    bank_name: initialData?.bank_name || '',
     status: initialData?.status || 'draft',
     image_url: initialData?.image_url || '',
   });
@@ -573,6 +579,62 @@ export default function EventForm({
                 />
                 <p className="mt-1 text-xs text-gray-500">Leave as 0 for free events</p>
               </div>
+
+              {/* Bank Account Information - Show only for paid events */}
+              {parseFloat(formData.registration_fee || '0') > 0 && (
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Informasi Rekening Bank
+                  </h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Informasi ini akan ditampilkan kepada peserta untuk transfer pembayaran
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Nama Pemegang Rekening
+                      </label>
+                      <input
+                        type="text"
+                        name="bank_account_name"
+                        value={formData.bank_account_name || ''}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-dark-secondary dark:text-white"
+                        placeholder="e.g., PT Event Organizer"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Nomor Rekening
+                      </label>
+                      <input
+                        type="text"
+                        name="bank_account_number"
+                        value={formData.bank_account_number || ''}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-dark-secondary dark:text-white"
+                        placeholder="e.g., 1234567890"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Nama Bank
+                      </label>
+                      <input
+                        type="text"
+                        name="bank_name"
+                        value={formData.bank_name || ''}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-dark-secondary dark:text-white"
+                        placeholder="e.g., Bank BCA, Bank Mandiri"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Status */}
               <div>

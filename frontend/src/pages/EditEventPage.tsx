@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { parseISO, format, isValid } from 'date-fns';
 import EventForm, { EventFormData, FormField, Speaker, CustomImage } from '../components/EventForm';
 import apiClient from '../lib/axios';
 import { uploadToCloudinary } from '../lib/cloudinary';
@@ -25,14 +26,9 @@ export default function EditEventPage() {
 
   const formatDateForInput = (dateString?: string | null) => {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) return '';
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+    const date = parseISO(dateString);
+    if (!isValid(date)) return '';
+    return format(date, "yyyy-MM-dd'T'HH:mm");
   };
 
   const loadEventData = async () => {

@@ -100,7 +100,13 @@ export const getAllEvents = async (req: AuthRequest, res: Response, next: NextFu
       })
       .from(events)
       .leftJoin(profiles, eq(events.organizerId, profiles.id))
-      .leftJoin(registrations, eq(events.id, registrations.eventId))
+      .leftJoin(
+        registrations,
+        and(
+          eq(events.id, registrations.eventId),
+          sql`${registrations.status} != 'cancelled'`
+        )
+      )
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .groupBy(events.id, profiles.fullName)
       .orderBy(desc(events.startDate))
@@ -165,7 +171,13 @@ export const getMyEvents = async (req: AuthRequest, res: Response, next: NextFun
       })
       .from(events)
       .leftJoin(profiles, eq(events.organizerId, profiles.id))
-      .leftJoin(registrations, eq(events.id, registrations.eventId))
+      .leftJoin(
+        registrations,
+        and(
+          eq(events.id, registrations.eventId),
+          sql`${registrations.status} != 'cancelled'`
+        )
+      )
       .where(and(...conditions))
       .groupBy(events.id, profiles.fullName)
       .orderBy(desc(events.startDate))
@@ -208,7 +220,13 @@ export const getEventById = async (req: AuthRequest, res: Response, next: NextFu
       })
       .from(events)
       .leftJoin(profiles, eq(events.organizerId, profiles.id))
-      .leftJoin(registrations, eq(events.id, registrations.eventId))
+      .leftJoin(
+        registrations,
+        and(
+          eq(events.id, registrations.eventId),
+          sql`${registrations.status} != 'cancelled'`
+        )
+      )
       .where(eq(events.id, id))
       .groupBy(events.id, profiles.fullName, profiles.avatarUrl)
       .limit(1);
@@ -247,7 +265,13 @@ export const getEventsByCategory = async (req: AuthRequest, res: Response, next:
       })
       .from(events)
       .leftJoin(profiles, eq(events.organizerId, profiles.id))
-      .leftJoin(registrations, eq(events.id, registrations.eventId))
+      .leftJoin(
+        registrations,
+        and(
+          eq(events.id, registrations.eventId),
+          sql`${registrations.status} != 'cancelled'`
+        )
+      )
       .where(and(eq(events.category, category), eq(events.status, 'published')))
       .groupBy(events.id, profiles.fullName)
       .orderBy(desc(events.startDate));
@@ -269,6 +293,9 @@ export const createEvent = async (req: AuthRequest, res: Response, next: NextFun
       image_url,
       capacity,
       registration_fee,
+      bank_account_name,
+      bank_account_number,
+      bank_name,
       category,
     } = req.body;
 
@@ -299,6 +326,9 @@ export const createEvent = async (req: AuthRequest, res: Response, next: NextFun
       imageUrl: image_url,
       capacity,
       registrationFee: registration_fee,
+      bankAccountName: bank_account_name,
+      bankAccountNumber: bank_account_number,
+      bankName: bank_name,
       category,
     }).returning();
 
@@ -358,6 +388,18 @@ export const updateEvent = async (req: AuthRequest, res: Response, next: NextFun
 
     if (hasProp('registration_fee')) {
       updateData.registrationFee = updates.registration_fee;
+    }
+
+    if (hasProp('bank_account_name')) {
+      updateData.bankAccountName = updates.bank_account_name;
+    }
+
+    if (hasProp('bank_account_number')) {
+      updateData.bankAccountNumber = updates.bank_account_number;
+    }
+
+    if (hasProp('bank_name')) {
+      updateData.bankName = updates.bank_name;
     }
 
     if (hasProp('category')) updateData.category = updates.category;
@@ -505,6 +547,40 @@ export const getRegistrationCount = async (req: AuthRequest, res: Response, next
       );
 
     res.json({ count: result[0]?.count || 0 });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getEventRegistrants = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+
+    // Verify event exists
+    const [event] = await db.select().from(events).where(eq(events.id, id)).limit(1);
+    if (!event) {
+      throw new AppError('Event not found', 404);
+    }
+
+    // Fetch registrants with public information only
+    const registrantsList = await db
+      .select({
+        fullName: profiles.fullName,
+        institution: profiles.institution,
+        avatarUrl: profiles.avatarUrl,
+        registeredAt: registrations.registeredAt,
+      })
+      .from(registrations)
+      .innerJoin(profiles, eq(registrations.userId, profiles.id))
+      .where(
+        and(
+          eq(registrations.eventId, id),
+          sql`${registrations.status} != 'cancelled'`
+        )
+      )
+      .orderBy(desc(registrations.registeredAt));
+
+    res.json(registrantsList);
   } catch (error) {
     next(error);
   }
