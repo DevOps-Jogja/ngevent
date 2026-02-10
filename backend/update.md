@@ -2,15 +2,14 @@
 
 ## 2026-02-10 (Fix Vercel Deployment Configuration)
 - **Fixed Express.js backend to properly run on Vercel as serverless function**
-- Updated vercel.json to use correct build and routing configuration
-- Routes now properly point to compiled dist/index.js file
+- Updated vercel.json to use @vercel/node with direct TypeScript support
+- Vercel will handle TypeScript compilation automatically
 
 **Changes:**
 - [vercel.json](vercel.json)
-  - Changed from `rewrites` to `builds` and `routes` configuration
-  - Added `@vercel/node` builder for Node.js serverless functions
-  - Routes now point to `/dist/index.js` instead of `/src`
-  - This allows Vercel to properly run the compiled TypeScript Express app
+  - Changed to use `@vercel/node` builder with source TypeScript file
+  - Routes point to `/src/index.ts` - Vercel compiles TypeScript automatically
+  - No need for manual build step, @vercel/node handles it internally
 
 **Configuration:**
 ```json
@@ -18,24 +17,24 @@
   "version": 2,
   "builds": [
     {
-      "src": "dist/index.js",
+      "src": "src/index.ts",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/dist/index.js"
+      "dest": "/src/index.ts"
     }
   ]
 }
 ```
 
 **Deployment Notes:**
-- The `vercel-build` script in package.json runs `tsc` to compile TypeScript
-- Vercel will automatically run this build script before deployment
+- @vercel/node automatically compiles TypeScript files
+- All dependencies from package.json are installed
 - All API routes work through the serverless function
-- The Express app is already properly exported as `export default app` in index.ts
+- The Express app is properly exported as `export default app` in index.ts
 
 ---
 
