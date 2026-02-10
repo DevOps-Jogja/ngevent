@@ -22,27 +22,27 @@ export default function BottomNav() {
         {
             to: '/',
             label: 'Beranda',
-            icon: <Home className="w-6 h-6" />,
+            icon: <Home className="w-5 h-5" />,
         },
         {
             to: '/events',
             label: 'Event',
-            icon: <Calendar className="w-6 h-6" />,
+            icon: <Calendar className="w-5 h-5" />,
         },
         {
             to: '/discover',
             label: 'Jelajah',
-            icon: <Compass className="w-6 h-6" />,
+            icon: <Compass className="w-5 h-5" />,
         },
         {
             to: '/calendar',
             label: 'Kalender',
-            icon: <CalendarDays className="w-6 h-6" />,
+            icon: <CalendarDays className="w-5 h-5" />,
         },
         {
             to: user ? (user.role === 'admin' ? '/admin' : '/dashboard') : '/login',
             label: user ? (user.role === 'admin' ? 'Admin' : 'Dashboard') : 'Masuk',
-            icon: user ? (user.role === 'admin' ? <Shield className="w-6 h-6" /> : <LayoutDashboard className="w-6 h-6" />) : <LogIn className="w-6 h-6" />,
+            icon: user ? (user.role === 'admin' ? <Shield className="w-5 h-5" /> : <LayoutDashboard className="w-5 h-5" />) : <LogIn className="w-5 h-5" />,
         },
     ]
 
@@ -61,7 +61,7 @@ export default function BottomNav() {
                                 }`}
                         >
                             <div className={`transition-transform duration-200 ${active ? 'scale-110' : ''}`}>{item.icon}</div>
-                            <span className="text-xs mt-1 font-bold">{item.label}</span>
+                            <span className="text-xs mt-1 font-normal">{item.label}</span>
                             {active && (
                                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-primary-600 dark:bg-primary-400 rounded-b-full" />
                             )}

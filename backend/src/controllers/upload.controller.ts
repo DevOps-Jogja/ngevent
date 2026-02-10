@@ -1,5 +1,4 @@
 import { Response, NextFunction } from 'express';
-import { v2 as cloudinary } from 'cloudinary';
 import crypto from 'crypto';
 import { eq } from 'drizzle-orm';
 import db from '../db/connection';
@@ -7,20 +6,7 @@ import { profiles } from '../db/schema';
 import { AppError } from '../middlewares/errorHandler';
 import { AuthRequest } from '../middlewares/auth';
 import * as uploadConfig from '../config/upload.config';
-
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-// Helper to validate Cloudinary config
-function validateCloudinaryConfig() {
-  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-    throw new Error('Cloudinary configuration incomplete. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET');
-  }
-}
+import { cloudinary, validateCloudinaryConfig } from '../config/cloudinary.config';
 
 // Folders that require organizer/admin role
 const ORGANIZER_ONLY_FOLDERS = ['event-images', 'custom-images', 'speaker-images'];
@@ -69,10 +55,11 @@ export const getUploadSignature = async (req: AuthRequest, res: Response, next: 
     // Generate timestamp
     const timestamp = Math.round(Date.now() / 1000);
 
-    // Prepare upload parameters
+    // Prepare upload parameters with environment-based folder
+    const folder = uploadConfig.getFullCloudinaryPath(folderParam);
     const uploadParams: Record<string, any> = {
       timestamp,
-      folder: `ngevent/${folderConfig.name}`,
+      folder: folder,
       public_id: `${req.user!.id}-${Date.now()}`,
     };
 
@@ -196,11 +183,12 @@ export const uploadImage = async (req: AuthRequest, res: Response, next: NextFun
       transformations.push({ fetch_format: 'auto' });
     }
 
-    // Upload to Cloudinary using upload_stream
+    // Upload to Cloudinary using upload_stream with environment-based folder
+    const folder = uploadConfig.getFullCloudinaryPath(folderParam);
     const uploadResult = await new Promise<any>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: `ngevent/${folderConfig.name}`,
+          folder: folder,
           resource_type: 'auto',
           public_id: `${req.user!.id}-${Date.now()}`,
           transformation: transformations.length > 0 ? transformations : undefined,

@@ -14,16 +14,25 @@ export default function Navbar() {
   const desktopDropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Check initial theme
-    const checkTheme = () => {
-      const isDark = document.documentElement.classList.contains('dark')
-      setIsDarkMode(isDark)
+    // Initialize theme from localStorage
+    const savedTheme = localStorage.getItem('theme')
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+
+    // Apply saved theme or system preference
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      document.documentElement.classList.add('dark')
+      setIsDarkMode(true)
+    } else {
+      document.documentElement.classList.remove('dark')
+      setIsDarkMode(false)
     }
 
-    checkTheme()
-
     // Watch for theme changes
-    const observer = new MutationObserver(checkTheme)
+    const observer = new MutationObserver(() => {
+      const isDark = document.documentElement.classList.contains('dark')
+      setIsDarkMode(isDark)
+    })
+
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class']

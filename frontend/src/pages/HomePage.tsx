@@ -98,7 +98,7 @@ export default function HomePage() {
                     Event Terbaru
                   </h1>
                   <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 leading-relaxed max-w-3xl">
-                    Mari bergabung dengan komunitas DevOps melalui event-event yang dapat meningkatkan keterampilan dan jaringan profesional Anda.
+                    Temukan event-event menarik seputar DevOps dan teknologi lainnya di sini.
                   </p>
                 </div>
 
