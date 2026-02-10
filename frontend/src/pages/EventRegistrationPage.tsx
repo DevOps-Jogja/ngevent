@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Calendar, MapPin, Users, AlertCircle, CheckCircle2, Upload, X, FileText } from 'lucide-react'
+import { ArrowLeft, Calendar, MapPin, Users, AlertCircle, CheckCircle2, Upload, X, FileText, Copy, Check } from 'lucide-react'
 import { format, parseISO, isValid } from 'date-fns'
 import { id as idLocale } from 'date-fns/locale'
 import apiClient from '../lib/axios'
@@ -131,6 +131,7 @@ export default function EventRegistrationPage() {
     const [isRegistering, setIsRegistering] = useState(false)
     const [customImages, setCustomImages] = useState<CustomImage[]>([])
     const [imageModal, setImageModal] = useState<{ src: string; alt: string } | null>(null)
+    const [copiedAccountNumber, setCopiedAccountNumber] = useState(false)
 
     const { data: event, isLoading: isLoadingEvent } = useQuery({
         queryKey: ['event', id],
@@ -315,6 +316,19 @@ export default function EventRegistrationPage() {
         setRegistrationData(prev => ({ ...prev, [fieldName]: value }))
     }
 
+    const handleCopyAccountNumber = async () => {
+        const accountNumber = event?.bankAccountNumber || event?.bank_account_number
+        if (!accountNumber) return
+
+        try {
+            await navigator.clipboard.writeText(accountNumber)
+            setCopiedAccountNumber(true)
+            setTimeout(() => setCopiedAccountNumber(false), 2000)
+        } catch (err) {
+            console.error('Failed to copy:', err)
+        }
+    }
+
     const handleRegistrationFileChange = async (fieldName: string, file: File | undefined) => {
         if (!file) return
 
@@ -471,11 +485,25 @@ export default function EventRegistrationPage() {
                                                     {event?.bankName || event?.bank_name || '-'}
                                                 </span>
                                             </div>
-                                            <div className="flex justify-between">
+                                            <div className="flex justify-between items-center gap-2">
                                                 <span className="text-gray-600 dark:text-gray-400">Nomor Rekening:</span>
-                                                <span className="font-mono font-medium text-gray-900 dark:text-white">
-                                                    {event?.bankAccountNumber || event?.bank_account_number || '-'}
-                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-mono font-medium text-gray-900 dark:text-white">
+                                                        {event?.bankAccountNumber || event?.bank_account_number || '-'}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleCopyAccountNumber}
+                                                        className="p-1.5 hover:bg-gray-200 dark:hover:bg-dark-primary rounded transition-colors"
+                                                        title="Salin nomor rekening"
+                                                    >
+                                                        {copiedAccountNumber ? (
+                                                            <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                                        ) : (
+                                                            <Copy className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                                        )}
+                                                    </button>
+                                                </div>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600 dark:text-gray-400">Atas Nama:</span>
