@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage'
 import EventsPage from './pages/EventsPage'
 import EventDetailPage from './pages/EventDetailPage'
 import EventRegistrationPage from './pages/EventRegistrationPage'
+import EventRegistrantsPage from './pages/EventRegistrantsPage'
 import CalendarPage from './pages/CalendarPage'
 import DiscoverPage from './pages/DiscoverPage'
 import DashboardPage from './pages/DashboardPage'
@@ -29,6 +30,7 @@ function App() {
         <Route path="events" element={<EventsPage />} />
         <Route path="event/:id" element={<EventDetailPage />} />
         <Route path="event/:id/registration" element={<EventRegistrationPage />} />
+        <Route path="event/:id/registrants" element={<EventRegistrantsPage />} />
         <Route path="events/create" element={<CreateEventPage />} />
         <Route path="event/:id/edit" element={<EditEventPage />} />
         <Route path="calendar" element={<CalendarPage />} />

@@ -392,17 +392,37 @@ export default function EventDetailPage() {
 
                 {/* Capacity */}
                 {maxParticipants > 0 ? (
-                  <div className="flex items-start gap-3 sm:gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 dark:bg-dark-secondary rounded-lg flex items-center justify-center">
-                      <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600 dark:text-primary-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1">Kapasitas</div>
-                      <div className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
-                        {registeredCount} / {maxParticipants} Peserta
+                  registeredCount > 0 ? (
+                    <Link
+                      to={`/event/${id}/registrants`}
+                      className="flex items-start gap-3 sm:gap-4 group cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-secondary/50 -mx-2 px-2 py-2 rounded-lg transition-colors"
+                    >
+                      <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 dark:bg-dark-secondary rounded-lg flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/30 transition-colors">
+                        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600 dark:text-primary-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1">Kapasitas</div>
+                        <div className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                          {registeredCount} / {maxParticipants} Peserta
+                        </div>
+                        <div className="text-xs text-primary-600 dark:text-primary-400 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                          Klik untuk lihat daftar →
+                        </div>
+                      </div>
+                    </Link>
+                  ) : (
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 dark:bg-dark-secondary rounded-lg flex items-center justify-center">
+                        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600 dark:text-primary-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1">Kapasitas</div>
+                        <div className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
+                          {registeredCount} / {maxParticipants} Peserta
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )
                 ) : null}
               </div>
             </div>

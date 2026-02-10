@@ -92,6 +92,24 @@ router.get('/:id/registrations/count', apiLimiter, eventController.getRegistrati
 
 /**
  * @swagger
+ * /api/events/{id}/registrants:
+ *   get:
+ *     summary: Get public list of event registrants
+ *     tags: [Events]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of registrants with public info
+ */
+router.get('/:id/registrants', apiLimiter, eventController.getEventRegistrants);
+
+/**
+ * @swagger
  * /api/events/category/{category}:
  *   get:
  *     summary: Get events by category
