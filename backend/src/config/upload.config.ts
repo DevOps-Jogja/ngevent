@@ -1,3 +1,5 @@
+import { getCloudinaryFolder } from './cloudinary.config';
+
 export interface FolderConfig {
   name: string;
   maxSize: number; // in bytes
@@ -68,12 +70,28 @@ export const DEFAULT_FOLDER = 'event-images';
 export function getFolderConfig(folder?: string): FolderConfig {
   const folderName = folder || DEFAULT_FOLDER;
   const config = UPLOAD_FOLDERS[folderName];
-  
+
   if (!config) {
     throw new Error(`Invalid folder: ${folderName}. Allowed folders: ${Object.keys(UPLOAD_FOLDERS).join(', ')}`);
   }
-  
+
   return config;
+}
+
+/**
+ * Get the full Cloudinary folder path with environment prefix
+ * @param folder - Subfolder name (e.g., 'event-images', 'avatar-images')
+ * @returns Full folder path (e.g., 'prod/event-images' or 'dev/avatar-images')
+ */
+export function getFullCloudinaryPath(folder?: string): string {
+  const folderName = folder || DEFAULT_FOLDER;
+
+  // Validate folder exists
+  if (!isValidFolder(folderName)) {
+    throw new Error(`Invalid folder: ${folderName}. Allowed folders: ${Object.keys(UPLOAD_FOLDERS).join(', ')}`);
+  }
+
+  return getCloudinaryFolder(folderName);
 }
 
 export function isValidFolder(folder: string): boolean {
