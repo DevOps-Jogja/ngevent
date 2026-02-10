@@ -1,5 +1,23 @@
 # Updates
 
+## 2026-02-10 (Fix Winston Logger for Vercel Serverless)
+- **Fixed logger to work in Vercel's read-only serverless environment**
+- Disabled file-based transports in production
+- Vercel captures console logs automatically
+
+**Changes:**
+- [src/utils/logger.ts](src/utils/logger.ts)
+  - Made file transports conditional based on NODE_ENV
+  - Only use console transport in production (Vercel)
+  - File logging still works in development environment
+  - Prevents ENOENT error when trying to create logs directory
+
+**Logger Behavior:**
+- **Development:** Console + File transports (logs/error.log, logs/combined.log)
+- **Production/Vercel:** Console transport only (captured by Vercel logging system)
+
+---
+
 ## 2026-02-10 (Fix Vercel Deployment Configuration)
 - **Fixed Express.js backend to properly run on Vercel as serverless function**
 - Updated vercel.json to use @vercel/node with direct TypeScript support

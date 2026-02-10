@@ -37,30 +37,36 @@ const format = winston.format.combine(
   ),
 );
 
-// Define transports
-const transports = [
-  // Console transport
+// Define transports based on environment
+const transports: winston.transport[] = [
+  // Console transport (always enabled)
   new winston.transports.Console(),
-  
-  // Error log file
-  new winston.transports.File({
-    filename: path.join('logs', 'error.log'),
-    level: 'error',
-    format: winston.format.combine(
-      winston.format.timestamp(),
-      winston.format.json(),
-    ),
-  }),
-  
-  // Combined log file
-  new winston.transports.File({
-    filename: path.join('logs', 'combined.log'),
-    format: winston.format.combine(
-      winston.format.timestamp(),
-      winston.format.json(),
-    ),
-  }),
 ];
+
+// Only add file transports in non-production environment
+// Vercel serverless has read-only filesystem, so we use console logs only in production
+if (process.env.NODE_ENV !== 'production') {
+  transports.push(
+    // Error log file
+    new winston.transports.File({
+      filename: path.join('logs', 'error.log'),
+      level: 'error',
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json(),
+      ),
+    }),
+
+    // Combined log file
+    new winston.transports.File({
+      filename: path.join('logs', 'combined.log'),
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json(),
+      ),
+    })
+  );
+}
 
 // Create logger instance
 const logger = winston.createLogger({
