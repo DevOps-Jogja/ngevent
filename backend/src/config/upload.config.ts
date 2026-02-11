@@ -18,8 +18,7 @@ export const UPLOAD_FOLDERS: Record<string, FolderConfig> = {
     maxSize: 5 * 1024 * 1024, // 5MB
     allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'],
     transformation: {
-      width: 1200,
-      height: 800,
+      width: 800,
       crop: 'limit',
       quality: 'auto',
     },
@@ -29,8 +28,8 @@ export const UPLOAD_FOLDERS: Record<string, FolderConfig> = {
     maxSize: 2 * 1024 * 1024, // 2MB
     allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
     transformation: {
-      width: 500,
-      height: 500,
+      width: 300,
+      height: 300,
       crop: 'fill',
       quality: 'auto',
     },
@@ -40,14 +39,18 @@ export const UPLOAD_FOLDERS: Record<string, FolderConfig> = {
     maxSize: 5 * 1024 * 1024, // 5MB
     allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'],
     // No transformation for payment proofs to preserve original quality
+    transformation: {
+      width: 800,
+      crop: 'limit',
+      quality: 'auto',
+    },
   },
   'custom-images': {
     name: 'custom-images',
     maxSize: 5 * 1024 * 1024, // 5MB
     allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'],
     transformation: {
-      width: 1920,
-      height: 1080,
+      width: 800,
       crop: 'limit',
       quality: 'auto',
     },
@@ -57,8 +60,8 @@ export const UPLOAD_FOLDERS: Record<string, FolderConfig> = {
     maxSize: 3 * 1024 * 1024, // 3MB
     allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
     transformation: {
-      width: 800,
-      height: 800,
+      width: 300,
+      height: 300,
       crop: 'fill',
       quality: 'auto',
     },

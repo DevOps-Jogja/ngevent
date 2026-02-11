@@ -4,7 +4,8 @@ import db from '../db/connection';
 import { events, registrations, profiles, users, broadcastHistory } from '../db/schema';
 import { AppError } from '../middlewares/errorHandler';
 import { AuthRequest } from '../middlewares/auth';
-import { sendEventNotification } from '../utils/email';
+import { sendBatchEventNotifications } from '../utils/email';
+import { getEventNotificationTemplate } from '../utils/email-templates';
 
 export const broadcastToParticipants = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
@@ -76,10 +77,12 @@ export const broadcastToParticipants = async (req: AuthRequest, res: Response, n
           year: 'numeric',
           month: 'long',
           day: 'numeric',
+          timeZone: 'Asia/Jakarta',
         });
         eventTime = date.toLocaleTimeString('id-ID', {
           hour: '2-digit',
           minute: '2-digit',
+          timeZone: 'Asia/Jakarta',
         });
       } catch (e) {
         eventDate = event.startDate || '';
@@ -95,19 +98,32 @@ export const broadcastToParticipants = async (req: AuthRequest, res: Response, n
         .replace(/\{eventLocation\}/g, event.location || 'TBA');
     };
 
-    // Send personalized emails to all participants
-    const emailPromises = participants.map(participant => {
+    // Prepare all email objects
+    const allEmails = participants.map(participant => {
       const personalizedSubject = replacePlaceholders(subject, participant, event);
       const personalizedMessage = replacePlaceholders(message, participant, event);
+      const htmlContent = `<h2>${personalizedSubject}</h2><p style="white-space: pre-wrap;">${personalizedMessage}</p>`;
 
-      return sendEventNotification(
-        participant.email,
-        event.title,
-        `<h2>${personalizedSubject}</h2><p style="white-space: pre-wrap;">${personalizedMessage}</p>`
-      );
+      return {
+        to: participant.email,
+        subject: `Update Event: ${event.title}`,
+        html: getEventNotificationTemplate({
+          eventTitle: event.title,
+          message: htmlContent
+        })
+      };
     });
 
-    await Promise.allSettled(emailPromises);
+    // Chunk emails into batches of 100 (Resend limit)
+    const CHUNK_SIZE = 100;
+    const chunks = [];
+    for (let i = 0; i < allEmails.length; i += CHUNK_SIZE) {
+      chunks.push(allEmails.slice(i, i + CHUNK_SIZE));
+    }
+
+    // Send batches in parallel
+    const batchPromises = chunks.map(chunk => sendBatchEventNotifications(chunk));
+    await Promise.allSettled(batchPromises);
 
     // Save broadcast history
     await db.insert(broadcastHistory).values({
@@ -119,7 +135,7 @@ export const broadcastToParticipants = async (req: AuthRequest, res: Response, n
     });
 
     res.json({
-      message: `Broadcast sent to ${participants.length} participants`,
+      message: `Broadcast sent to ${participants.length} participants in ${chunks.length} batches`,
       sent: participants.length,
       eventTitle: event.title,
     });

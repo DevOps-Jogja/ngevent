@@ -152,3 +152,36 @@ export const sendEventRegistrationEmail = async (
     throw error;
   }
 };
+
+/**
+ * Send batch event notifications to multiple users
+ */
+export const sendBatchEventNotifications = async (
+  emails: {
+    to: string;
+    subject: string;
+    html: string;
+  }[]
+) => {
+  try {
+    // Map to Resend batch format
+    const batchEmails = emails.map(email => ({
+      from: getFromEmail(),
+      to: email.to,
+      subject: email.subject,
+      html: email.html,
+    }));
+
+    const { data, error } = await resend.batch.send(batchEmails);
+
+    if (error) {
+      console.error('Failed to send batch emails:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Failed to send batch emails:', error);
+    throw error;
+  }
+};

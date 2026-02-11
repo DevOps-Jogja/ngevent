@@ -27,6 +27,7 @@ export default function EditEventPage() {
     if (!dateString) return '';
 
     // Parse the UTC date from backend
+    // Parse the UTC date from backend
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '';
 
@@ -152,6 +153,8 @@ export default function EditEventPage() {
       // Update event
       const eventData = {
         ...formData,
+        start_date: new Date(formData.start_date).toISOString(),
+        end_date: new Date(formData.end_date).toISOString(),
         image_url: imageUrl,
         capacity: formData.capacity ? parseInt(formData.capacity) : null,
         registration_fee: formData.registration_fee ? parseFloat(formData.registration_fee) : 0,

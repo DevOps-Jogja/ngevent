@@ -611,21 +611,28 @@ export default function EventDetailPage() {
           role="dialog"
           aria-modal="true"
         >
-          <div className="max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="bg-white dark:bg-dark-card rounded-xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{imageModal.alt}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setImageModal(null)}
-                  className="px-3 py-1 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-secondary"
-                >
-                  Tutup
-                </button>
+          <div
+            className="max-w-[90vw] max-h-[90vh] bg-white dark:bg-dark-card rounded-xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 shrink-0 bg-white dark:bg-dark-card">
+              <div className="min-w-0 pr-4">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{imageModal.alt}</p>
               </div>
-              <img src={imageModal.src} alt={imageModal.alt} className="w-full h-auto object-contain bg-black" />
+              <button
+                type="button"
+                onClick={() => setImageModal(null)}
+                className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-secondary transition-colors"
+              >
+                Tutup
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto bg-black/95 flex items-center justify-center min-h-0 p-4">
+              <img
+                src={imageModal.src}
+                alt={imageModal.alt}
+                className="max-w-full max-h-full w-auto h-auto object-contain shadow-lg"
+              />
             </div>
           </div>
         </div>
