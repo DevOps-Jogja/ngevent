@@ -69,7 +69,11 @@ export const getUploadSignature = async (req: AuthRequest, res: Response, next: 
       const transformations: string[] = [];
 
       if (width || height) {
-        transformations.push(`w_${width || 'auto'},h_${height || 'auto'},c_${crop || 'limit'}`);
+        const parts: string[] = [];
+        if (width) parts.push(`w_${width}`);
+        if (height) parts.push(`h_${height}`);
+        parts.push(`c_${crop || 'limit'}`);
+        transformations.push(parts.join(','));
       }
       if (quality) {
         transformations.push(`q_${quality}`);
@@ -175,7 +179,10 @@ export const uploadImage = async (req: AuthRequest, res: Response, next: NextFun
     if (folderConfig.transformation) {
       const { width, height, crop, quality } = folderConfig.transformation;
       if (width || height) {
-        transformations.push({ width, height, crop: crop || 'limit' });
+        const transform: any = { crop: crop || 'limit' };
+        if (width) transform.width = width;
+        if (height) transform.height = height;
+        transformations.push(transform);
       }
       if (quality) {
         transformations.push({ quality });
