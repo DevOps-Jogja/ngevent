@@ -1,5 +1,175 @@
 # Updates
 
+## 2026-02-16 (Add Payment Proof Image to Telegram Notifications)
+- **Enhanced Telegram notifications to include payment proof images**
+- Automatically detects and sends payment proof from registration data
+- Supports both images (JPG, PNG, etc.) and PDF documents
+- Uses photo message with caption for images, document for PDFs
+
+**Changes:**
+- [src/utils/telegram.ts](src/utils/telegram.ts)
+  - Added `paymentProofUrl` field to `EventRegistrationData` interface
+  - Enhanced notification logic to check for payment proof
+  - Sends photo with caption if payment proof is an image
+  - Sends document separately if payment proof is PDF
+  - Maintains same fallback logic for thread errors
+
+- [src/controllers/registration.controller.ts](src/controllers/registration.controller.ts)
+  - Added payment proof extraction from `registration_data`
+  - Searches for fields containing 'bukti', 'payment', or 'proof' (case insensitive)
+  - Passes payment proof URL to Telegram notification function
+  - Applied to both new registrations and re-registrations
+
+**How it works:**
+1. User uploads payment proof during registration
+2. Payment proof URL stored in `registration_data` (e.g., `{"Bukti Pembayaran": "https://..."}`)
+3. Backend extracts the URL from registration data
+4. If it's an image (jpg, png, etc.): sends as photo with notification as caption
+5. If it's PDF: sends notification text first, then document separately
+6. Both methods support thread ID for group topics
+
+**Supported formats:**
+- **Images**: JPG, JPEG, PNG, GIF, WEBP → sent as photo with caption
+- **Documents**: PDF → sent as separate document
+
+**Example notification with image:**
+```
+[Photo of payment proof]
+Caption:
+🎉 Pendaftaran Event Baru
+
+📌 Event: Workshop React
+📊 Total Pendaftar: 25 / 100
+👤 Peserta: John Doe
+...
+```
+
+---
+
+## 2026-02-16 (Improve Telegram Error Handling and Add Health Check)
+- **Enhanced Telegram notification error handling with better logging**
+- **Added automatic fallback to send without thread if thread fails**
+- **Added Telegram health check endpoint for testing bot connection**
+
+**Changes:**
+- [src/utils/telegram.ts](src/utils/telegram.ts)
+  - Enhanced error logging with detailed error information
+  - Added try-catch with fallback: if sending to thread fails, retry without thread
+  - Added `testTelegramConnection()` function to test bot configuration
+  - Improved error messages showing chat ID, thread ID, and specific error details
+  - Non-blocking error handling - registration continues even if notification fails
+
+- [src/controllers/health.controller.ts](src/controllers/health.controller.ts)
+  - Added `telegramHealth()` endpoint to test Telegram bot connection
+  - Returns status and sends test message to verify bot is working
+  - Shows if bot is not configured, failed, or connected successfully
+
+- [src/routes/health.routes.ts](src/routes/health.routes.ts)
+  - Added `/api/health/telegram` route for Telegram health check
+  - Swagger documentation included
+
+**Usage:**
+1. Test Telegram connection: `GET /api/health/telegram`
+2. Returns:
+   - `200 OK` - Bot connected, test message sent
+   - `503 Service Unavailable` - Bot not configured or connection failed
+
+**Error Handling Flow:**
+1. Try to send message with thread ID (if configured)
+2. If fails, automatically retry without thread ID
+3. Log detailed error information for debugging
+4. Don't break registration process
+
+**Common Error Fixes:**
+- **AggregateError**: Usually thread-related, now auto-retries without thread
+- **ETELEGRAM**: Check bot token validity
+- **Chat not found**: Verify chat ID is correct
+- **Bot not in group**: Add bot to the Telegram group/channel
+
+---
+
+## 2026-02-16 (Add Total Registrations Count to Telegram Notifications)
+- **Enhanced Telegram notifications to include total registrations count**
+- Shows current registrations vs capacity (e.g., "25 / 100" or just "25" if no limit)
+- Helps monitor event capacity in real-time
+
+**Changes:**
+- [src/utils/telegram.ts](src/utils/telegram.ts)
+  - Added `totalRegistrations` and `capacity` fields to `EventRegistrationData` interface
+  - Updated message template to display total registrations
+  - Shows "X / Y" format when capacity is set, or just "X" when unlimited
+
+- [src/controllers/registration.controller.ts](src/controllers/registration.controller.ts)
+  - Added query to count total registrations (excluding cancelled ones)
+  - Updated both registration paths to fetch and include capacity from events table
+  - Pass total registrations and capacity to Telegram notification function
+
+**Notification Format Enhancement:**
+```
+🎉 Pendaftaran Event Baru
+
+📌 Event: Workshop React Advanced
+🆔 Event ID: evt_abc123
+📅 Tanggal: Sabtu, 20 Februari 2026, 10:00
+📍 Lokasi: Gedung A, Ruang 101
+📊 Total Pendaftar: 25 / 100
+
+👤 Peserta:
+• Nama: John Doe
+...
+```
+
+---
+
+## 2026-02-16 (Add Telegram Notifications for Event Registrations)
+- **Added Telegram bot integration to send notifications when users register for events**
+- Supports sending notifications to specific thread ID in Telegram groups
+- Notifications include event details and participant information
+
+**Changes:**
+- [src/utils/telegram.ts](src/utils/telegram.ts) (NEW)
+  - Created Telegram utility module with bot initialization
+  - `sendEventRegistrationToTelegram()` - sends formatted registration notifications
+  - `sendTelegramMessage()` - sends custom messages to Telegram
+  - `isTelegramConfigured()` - checks if bot is properly configured
+  - Supports thread ID for sending to specific threads in groups
+  - HTML formatting for better message readability
+
+- [src/controllers/registration.controller.ts](src/controllers/registration.controller.ts)
+  - Added import for `sendEventRegistrationToTelegram`
+  - Integrated Telegram notification in `registerForEvent()` function
+  - Notifications sent for both new registrations and re-registrations
+  - Non-blocking - registration continues even if notification fails
+
+- [.env.example](.env.example)
+  - Added `TELEGRAM_BOT_TOKEN` - Bot token from @BotFather
+  - Added `TELEGRAM_CHAT_ID` - Chat/group ID where notifications are sent
+  - Added `TELEGRAM_THREAD_ID` - Optional thread ID for group topics
+
+- [package.json](package.json)
+  - Added `node-telegram-bot-api` package
+  - Added `@types/node-telegram-bot-api` dev dependency
+
+**Setup Instructions:**
+1. Create a Telegram bot via @BotFather and get the bot token
+2. Add the bot to your group/channel
+3. Get the chat ID (use @userinfobot or check bot logs)
+4. If using topics/threads, get the thread ID
+5. Add the credentials to your `.env` file:
+```env
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+TELEGRAM_CHAT_ID=your_chat_id_here
+TELEGRAM_THREAD_ID=your_thread_id_here  # Optional
+```
+
+**Notification Format:**
+- Event title, ID, date, and location
+- Participant name, email, phone, institution, position, and city
+- Sent immediately after successful registration
+- Uses HTML formatting for better readability
+
+---
+
 ## 2026-02-10 (Fix Winston Logger for Vercel Serverless)
 - **Fixed logger to work in Vercel's read-only serverless environment**
 - Disabled file-based transports in production
