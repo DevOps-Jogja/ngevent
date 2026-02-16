@@ -1,5 +1,53 @@
 # Updates
 
+## 2026-02-16 (Fix Payment Proof Extraction and Add Debug Logging)
+- **Improved payment proof extraction from registration data**
+- **Added comprehensive logging for debugging notification issues**
+- **Fixed keyword matching to include 'pembayaran'**
+
+**Problem:**
+- Payment proof was not being detected properly
+- Not enough logging to debug why notifications weren't being sent
+- Extraction logic was too strict (required exact string type check)
+
+**Changes:**
+- [src/controllers/registration.controller.ts](src/controllers/registration.controller.ts)
+  - Added detailed logging when extracting payment proof from request data
+  - Logs the full `registration_data` object for debugging
+  - Logs extracted payment proof key and URL when found
+  - Logs warning with available keys when payment proof not found
+  - Added 'pembayaran' keyword to search terms (bukti, payment, proof, pembayaran)
+  - Removed strict `typeof === 'string'` check that might block valid URLs
+  - Applied to both new registrations and re-registrations
+  - Separate log labels for new vs re-registration flows
+
+**Flow Confirmation:**
+The flow already correctly uses data from request body (`req.body.registration_data`), NOT from database:
+1. Frontend sends registration with `registration_data: { "Bukti Pembayaran": "https://..." }`
+2. Backend receives in `req.body.registration_data`
+3. Backend extracts payment proof from request body (before/after DB save)
+4. Backend sends to Telegram with extracted URL
+5. No database query needed for payment proof extraction
+
+**Debug Output:**
+```
+Registration data from request (new registration): { 
+  "Bukti Pembayaran": "https://res.cloudinary.com/..." 
+}
+Payment proof extracted (new registration): { 
+  key: "Bukti Pembayaran", 
+  url: "https://res.cloudinary.com/..." 
+}
+```
+
+Or if not found:
+```
+No payment proof field found in registration_data (new registration)
+Available keys: ["Other Field 1", "Other Field 2"]
+```
+
+---
+
 ## 2026-02-16 (Add Payment Proof Image to Telegram Notifications)
 - **Enhanced Telegram notifications to include payment proof images**
 - Automatically detects and sends payment proof from registration data
