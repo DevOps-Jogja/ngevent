@@ -170,7 +170,27 @@ export default function EventRegistrationPage() {
     })
 
     const formFields = useMemo(
-        () => (Array.isArray(formFieldsRaw) ? formFieldsRaw : []).map(normalizeFormField),
+        () => {
+            const normalized = (Array.isArray(formFieldsRaw) ? formFieldsRaw : []).map(normalizeFormField);
+
+            // Deduplicate payment proof fields - keep only the first one
+            const seen = new Set<string>();
+            const deduped = normalized.filter(field => {
+                const fieldNameLower = field.field_name.toLowerCase();
+                const isPaymentProof = fieldNameLower.includes('bukti pembayaran') ||
+                    fieldNameLower.includes('payment proof');
+
+                if (isPaymentProof) {
+                    if (seen.has('payment_proof')) {
+                        return false; // Skip duplicate
+                    }
+                    seen.add('payment_proof');
+                }
+                return true;
+            });
+
+            return deduped;
+        },
         [formFieldsRaw]
     )
 

@@ -1,5 +1,42 @@
 # Updates
 
+## 2026-02-16 (Fix Duplicate Payment Proof Fields in Registration Form)
+- **Fixed issue where payment proof field appeared twice in registration form**
+- Added deduplication logic to prevent duplicate payment proof fields
+- Fixed infinite loop in auto-generate payment proof field
+
+**Problem:**
+- When an event with registration fee was created, the system auto-generated "Bukti Pembayaran" field
+- If the field already existed in database, useEffect would run again due to dependency on `formFields`
+- This caused duplicate fields to appear in the registration form
+
+**Changes:**
+- [EventForm.tsx](src/components/EventForm.tsx)
+  - Fixed useEffect dependency array for auto-generate payment proof field
+  - Removed `formFields` from dependencies, only using `formData.registration_fee`
+  - This prevents infinite loop and duplicate field generation
+  - Added ESLint comment to document the intentional dependency exclusion
+
+- [EventRegistrationPage.tsx](src/pages/EventRegistrationPage.tsx)
+  - Added deduplication logic in formFields useMemo
+  - Filters out duplicate payment proof fields (keeps only the first one)
+  - Checks for fields containing 'bukti pembayaran' or 'payment proof' (case insensitive)
+  - Ensures only one payment proof field is displayed regardless of database state
+
+**Solution Flow:**
+1. useEffect only runs when registration_fee changes (not when formFields changes)
+2. If fee > 0 and no payment proof field exists → add one
+3. If fee = 0 and payment proof field exists → remove it
+4. Additional deduplication in registration page ensures clean display
+
+**Impact:**
+- ✅ No more duplicate payment proof fields in registration form
+- ✅ Prevents infinite loop from useEffect
+- ✅ Handles both new events and existing events with database records
+- ✅ User sees exactly one payment proof upload field
+
+---
+
 ## 2026-02-09 (Fix Custom Image Upload di Event Form)
 - **Custom images sekarang di-upload ke Cloudinary via client-side upload**
 - Upload terjadi di 2 titik: saat klik "Add Image to Gallery" ATAU otomatis saat submit form

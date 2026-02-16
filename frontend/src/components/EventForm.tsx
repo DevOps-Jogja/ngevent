@@ -129,7 +129,8 @@ export default function EventForm({
         !field.field_name.toLowerCase().includes('payment proof')
       ));
     }
-  }, [formData.registration_fee, formFields]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.registration_fee]); // Only depend on registration_fee, not formFields
 
   // Form field management
   const addFormField = () => {

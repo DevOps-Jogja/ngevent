@@ -3,6 +3,7 @@ import { query } from '../db/connection';
 import { AppError } from '../middlewares/errorHandler';
 import { AuthRequest } from '../middlewares/auth';
 import { sendEventRegistrationEmail } from '../utils/email';
+import { sendEventRegistrationToTelegram } from '../utils/telegram';
 import logger from '../utils/logger';
 
 export const registerForEvent = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -99,14 +100,35 @@ export const registerForEvent = async (req: AuthRequest, res: Response, next: Ne
 
         // Get event details for email
         const eventDetailResult = await query(
-          'SELECT id, title, start_date, location FROM events WHERE id = $1',
+          'SELECT id, title, start_date, location, capacity FROM events WHERE id = $1',
           [finalEventId]
+        );
+
+        // Get total registrations count
+        const totalRegResult = await query(
+          'SELECT COUNT(*) as total FROM registrations WHERE event_id = $1 AND status != $2',
+          [finalEventId, 'cancelled']
         );
 
         // Send registration confirmation email (don't block response)
         if (userResult.rows.length > 0 && eventDetailResult.rows.length > 0) {
           const userEmail = userResult.rows[0].email;
           const eventDetail = eventDetailResult.rows[0];
+          const totalRegistrations = parseInt(totalRegResult.rows[0]?.total || '0');
+
+          // Extract payment proof URL from registration_data
+          let paymentProofUrl: string | undefined;
+          if (registration_data && typeof registration_data === 'object') {
+            // Look for payment proof field (case insensitive)
+            const paymentProofKey = Object.keys(registration_data).find(key =>
+              key.toLowerCase().includes('bukti') ||
+              key.toLowerCase().includes('payment') ||
+              key.toLowerCase().includes('proof')
+            );
+            if (paymentProofKey && typeof registration_data[paymentProofKey] === 'string') {
+              paymentProofUrl = registration_data[paymentProofKey];
+            }
+          }
 
           sendEventRegistrationEmail(
             userEmail,
@@ -119,6 +141,25 @@ export const registerForEvent = async (req: AuthRequest, res: Response, next: Ne
             }
           ).catch(err => {
             logger.error('Failed to send event registration email:', err);
+          });
+
+          // Send Telegram notification (don't block response)
+          sendEventRegistrationToTelegram({
+            eventTitle: eventDetail.title,
+            eventId: eventDetail.id,
+            eventDate: eventDetail.start_date,
+            eventLocation: eventDetail.location,
+            userName: profile.full_name,
+            userEmail: userEmail,
+            userPhone: profile.phone,
+            userInstitution: profile.institution,
+            userPosition: profile.position,
+            userCity: profile.city,
+            totalRegistrations: totalRegistrations,
+            capacity: eventDetail.capacity,
+            paymentProofUrl: paymentProofUrl,
+          }).catch(err => {
+            logger.error('Failed to send Telegram notification:', err);
           });
         }
 
@@ -144,14 +185,35 @@ export const registerForEvent = async (req: AuthRequest, res: Response, next: Ne
 
     // Get event details for email
     const eventDetailResult = await query(
-      'SELECT id, title, start_date, location FROM events WHERE id = $1',
+      'SELECT id, title, start_date, location, capacity FROM events WHERE id = $1',
       [finalEventId]
+    );
+
+    // Get total registrations count
+    const totalRegResult = await query(
+      'SELECT COUNT(*) as total FROM registrations WHERE event_id = $1 AND status != $2',
+      [finalEventId, 'cancelled']
     );
 
     // Send registration confirmation email (don't block response)
     if (userResult.rows.length > 0 && eventDetailResult.rows.length > 0) {
       const userEmail = userResult.rows[0].email;
       const eventDetail = eventDetailResult.rows[0];
+      const totalRegistrations = parseInt(totalRegResult.rows[0]?.total || '0');
+
+      // Extract payment proof URL from registration_data
+      let paymentProofUrl: string | undefined;
+      if (registration_data && typeof registration_data === 'object') {
+        // Look for payment proof field (case insensitive)
+        const paymentProofKey = Object.keys(registration_data).find(key =>
+          key.toLowerCase().includes('bukti') ||
+          key.toLowerCase().includes('payment') ||
+          key.toLowerCase().includes('proof')
+        );
+        if (paymentProofKey && typeof registration_data[paymentProofKey] === 'string') {
+          paymentProofUrl = registration_data[paymentProofKey];
+        }
+      }
 
       sendEventRegistrationEmail(
         userEmail,
@@ -164,6 +226,25 @@ export const registerForEvent = async (req: AuthRequest, res: Response, next: Ne
         }
       ).catch(err => {
         logger.error('Failed to send event registration email:', err);
+      });
+
+      // Send Telegram notification (don't block response)
+      sendEventRegistrationToTelegram({
+        eventTitle: eventDetail.title,
+        eventId: eventDetail.id,
+        eventDate: eventDetail.start_date,
+        eventLocation: eventDetail.location,
+        userName: profile.full_name,
+        userEmail: userEmail,
+        userPhone: profile.phone,
+        userInstitution: profile.institution,
+        userPosition: profile.position,
+        userCity: profile.city,
+        totalRegistrations: totalRegistrations,
+        capacity: eventDetail.capacity,
+        paymentProofUrl: paymentProofUrl,
+      }).catch(err => {
+        logger.error('Failed to send Telegram notification:', err);
       });
     }
 
