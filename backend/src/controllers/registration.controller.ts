@@ -116,17 +116,26 @@ export const registerForEvent = async (req: AuthRequest, res: Response, next: Ne
           const eventDetail = eventDetailResult.rows[0];
           const totalRegistrations = parseInt(totalRegResult.rows[0]?.total || '0');
 
-          // Extract payment proof URL from registration_data
+          // Extract payment proof URL from registration_data (from request body)
           let paymentProofUrl: string | undefined;
+          logger.info('Registration data from request (re-registration):', { registration_data });
+
           if (registration_data && typeof registration_data === 'object') {
             // Look for payment proof field (case insensitive)
             const paymentProofKey = Object.keys(registration_data).find(key =>
               key.toLowerCase().includes('bukti') ||
               key.toLowerCase().includes('payment') ||
-              key.toLowerCase().includes('proof')
+              key.toLowerCase().includes('proof') ||
+              key.toLowerCase().includes('pembayaran')
             );
-            if (paymentProofKey && typeof registration_data[paymentProofKey] === 'string') {
+
+            if (paymentProofKey) {
               paymentProofUrl = registration_data[paymentProofKey];
+              logger.info('Payment proof extracted (re-registration):', { key: paymentProofKey, url: paymentProofUrl });
+            } else {
+              logger.warn('No payment proof field found in registration_data (re-registration)', {
+                availableKeys: Object.keys(registration_data)
+              });
             }
           }
 
@@ -201,17 +210,26 @@ export const registerForEvent = async (req: AuthRequest, res: Response, next: Ne
       const eventDetail = eventDetailResult.rows[0];
       const totalRegistrations = parseInt(totalRegResult.rows[0]?.total || '0');
 
-      // Extract payment proof URL from registration_data
+      // Extract payment proof URL from registration_data (from request body)
       let paymentProofUrl: string | undefined;
+      logger.info('Registration data from request (new registration):', { registration_data });
+
       if (registration_data && typeof registration_data === 'object') {
         // Look for payment proof field (case insensitive)
         const paymentProofKey = Object.keys(registration_data).find(key =>
           key.toLowerCase().includes('bukti') ||
           key.toLowerCase().includes('payment') ||
-          key.toLowerCase().includes('proof')
+          key.toLowerCase().includes('proof') ||
+          key.toLowerCase().includes('pembayaran')
         );
-        if (paymentProofKey && typeof registration_data[paymentProofKey] === 'string') {
+
+        if (paymentProofKey) {
           paymentProofUrl = registration_data[paymentProofKey];
+          logger.info('Payment proof extracted (new registration):', { key: paymentProofKey, url: paymentProofUrl });
+        } else {
+          logger.warn('No payment proof field found in registration_data (new registration)', {
+            availableKeys: Object.keys(registration_data)
+          });
         }
       }
 
