@@ -35,8 +35,8 @@ export default function CreateEventPage() {
       // Create event
       const eventData = {
         ...formData,
-        start_date: new Date(formData.start_date).toISOString(),
-        end_date: new Date(formData.end_date).toISOString(),
+        start_date: formData.start_date,
+        end_date: formData.end_date,
         image_url: imageUrl,
         capacity: formData.capacity ? parseInt(formData.capacity) : null,
         registration_fee: formData.registration_fee ? parseFloat(formData.registration_fee) : 0,

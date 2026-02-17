@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query'
 import { format, isToday, isTomorrow } from 'date-fns'
 import { id } from 'date-fns/locale'
 import apiClient from '../lib/axios'
-import { normalizeEvent, parseEventDate, type NormalizedEvent } from '../lib/event-normalize'
+import { normalizeEvent, type NormalizedEvent } from '../lib/event-normalize'
+import { parseToWIB } from '../lib/date-wib'
 
 async function fetchEvents(): Promise<NormalizedEvent[]> {
   const response = await apiClient.get('/api/events')
@@ -31,7 +32,7 @@ export default function HomePage() {
   // Ensure events is always an array
   const events = Array.isArray(data) ? data : []
 
-  const getStart = (event: NormalizedEvent) => parseEventDate(event.start_date)
+  const getStart = (event: NormalizedEvent) => parseToWIB(event.start_date)
 
   // Filter events berdasarkan upcoming/past
   const now = new Date()
@@ -215,7 +216,7 @@ function TimelineEventList({
 }) {
   // Group events by date
   const groupedEvents = events.reduce((groups, event) => {
-    const date = parseEventDate(event.start_date)
+    const date = parseToWIB(event.start_date)
     if (!date) return groups
     const dateKey = format(date, 'yyyy-MM-dd')
 
@@ -283,7 +284,7 @@ function TimelineEventList({
 }
 
 function TimelineEventCard({ event }: { event: NormalizedEvent }) {
-  const startDate = parseEventDate(event.start_date)
+  const startDate = parseToWIB(event.start_date)
   const fee = event.registration_fee ?? 0
 
   return (

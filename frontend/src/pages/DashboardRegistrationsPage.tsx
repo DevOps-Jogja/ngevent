@@ -7,6 +7,7 @@ import { Search, Users } from 'lucide-react';
 
 import apiClient from '../lib/axios';
 import { useAuth } from '../contexts/AuthContext';
+import { parseToWIB } from '../lib/date-wib';
 
 type Event = {
     id: string;
@@ -24,8 +25,8 @@ type StatusFilter = 'all' | 'published' | 'draft' | 'archived' | 'cancelled' | '
 
 function safeFormatDateTime(value?: string) {
     if (!value) return '-';
-    const date = parseISO(value);
-    if (!isValid(date)) return '-';
+    const date = parseToWIB(value);
+    if (!date) return '-';
     return format(date, 'dd MMM yyyy, HH:mm', { locale: localeId });
 }
 

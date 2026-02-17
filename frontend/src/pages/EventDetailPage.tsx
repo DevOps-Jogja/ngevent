@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Calendar, MapPin, Users, ArrowLeft, Clock } from 'lucide-react'
 import { format, isValid, parseISO } from 'date-fns'
 import { id as idLocale } from 'date-fns/locale'
+import { parseToWIB } from '../lib/date-wib'
 import ReactMarkdown from 'react-markdown'
 import apiClient from '../lib/axios'
 import { useAuth } from '../contexts/AuthContext'
@@ -54,20 +55,14 @@ async function fetchEvent(id: string): Promise<Event> {
   return response.data
 }
 
-function parseEventDate(value?: string) {
-  if (!value) return null
-  const date = parseISO(value)
-  return isValid(date) ? date : null
-}
-
 function formatDateLabel(value?: string) {
-  const date = parseEventDate(value)
+  const date = parseToWIB(value)
   if (!date) return '-'
   return format(date, 'EEEE, d MMMM yyyy', { locale: idLocale })
 }
 
 function formatTimeLabel(value?: string) {
-  const date = parseEventDate(value)
+  const date = parseToWIB(value)
   if (!date) return '-'
   return format(date, 'HH:mm', { locale: idLocale })
 }

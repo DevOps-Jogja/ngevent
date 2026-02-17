@@ -7,6 +7,18 @@ import { AppError } from '../middlewares/errorHandler';
 import { AuthRequest } from '../middlewares/auth';
 import { generateUniqueEventId } from '../utils/id-generator';
 
+/**
+ * Parse a date string and store it as face-value UTC.
+ * The entered time is treated literally — 14:00 input = 14:00 in DB.
+ * If the string already contains timezone info, strip it and treat as face value.
+ */
+function parseWIBDate(dateStr: string): Date {
+  if (!dateStr) return new Date();
+  // Strip any existing timezone info and treat as face-value UTC
+  const cleaned = dateStr.replace(/Z$/, '').replace(/[+-]\d{2}:\d{2}$/, '');
+  return new Date(cleaned + 'Z');
+}
+
 function cloudinaryConfigured(): boolean {
   const ok = !!(
     process.env.CLOUDINARY_CLOUD_NAME &&
@@ -306,8 +318,8 @@ export const createEvent = async (req: AuthRequest, res: Response, next: NextFun
       id: eventId,
       organizerId: req.user!.id,
       title,
-      startDate: new Date(start_date),
-      endDate: new Date(end_date),
+      startDate: parseWIBDate(start_date),
+      endDate: parseWIBDate(end_date),
       location,
       imageUrl: image_url,
       capacity,
@@ -320,8 +332,8 @@ export const createEvent = async (req: AuthRequest, res: Response, next: NextFun
       organizerId: req.user!.id,
       title,
       description,
-      startDate: new Date(start_date),
-      endDate: new Date(end_date),
+      startDate: parseWIBDate(start_date),
+      endDate: parseWIBDate(end_date),
       location,
       imageUrl: image_url,
       capacity,
@@ -364,8 +376,8 @@ export const updateEvent = async (req: AuthRequest, res: Response, next: NextFun
     if (hasProp('title')) updateData.title = updates.title;
     if (hasProp('description')) updateData.description = updates.description;
 
-    if (hasProp('start_date') && updates.start_date) updateData.startDate = new Date(updates.start_date);
-    if (hasProp('end_date') && updates.end_date) updateData.endDate = new Date(updates.end_date);
+    if (hasProp('start_date') && updates.start_date) updateData.startDate = parseWIBDate(updates.start_date);
+    if (hasProp('end_date') && updates.end_date) updateData.endDate = parseWIBDate(updates.end_date);
 
     if (hasProp('location')) updateData.location = updates.location;
 

@@ -8,6 +8,7 @@ import apiClient from '../lib/axios'
 import { useAuth } from '../contexts/AuthContext'
 import CachedAvatar from '../components/CachedAvatar'
 import { uploadToCloudinary } from '../lib/cloudinary'
+import { parseToWIB } from '../lib/date-wib'
 
 interface Event {
     id: string
@@ -114,9 +115,7 @@ function formatIDR(value: unknown) {
 }
 
 function parseEventDate(value?: string) {
-    if (!value) return null
-    const date = parseISO(value)
-    return isValid(date) ? date : null
+    return parseToWIB(value)
 }
 
 export default function EventRegistrationPage() {

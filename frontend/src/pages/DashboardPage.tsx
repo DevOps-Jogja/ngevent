@@ -6,6 +6,7 @@ import { Calendar, CheckCircle, TrendingUp, Plus, Edit, Trash2, Users, MapPin, E
 import { format, isValid, parseISO } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { useAuth } from '../contexts/AuthContext';
+import { parseToWIB } from '../lib/date-wib';
 
 type Event = {
   id: string;
@@ -75,8 +76,8 @@ export default function DashboardPage() {
 
   const safeFormatDateTime = (value?: string) => {
     if (!value) return '-';
-    const date = parseISO(value);
-    if (!isValid(date)) return '-';
+    const date = parseToWIB(value);
+    if (!date) return '-';
     return format(date, 'dd MMM yyyy, HH:mm', { locale: id });
   };
 
