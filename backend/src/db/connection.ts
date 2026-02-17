@@ -21,7 +21,7 @@ const pool = new Pool({
   ssl: isProduction ? { rejectUnauthorized: false } : undefined,
 });
 
-pool.on('connect', () => {
+pool.on('connect', (client) => {
   logger.info('Database connected');
 });
 

@@ -7,6 +7,8 @@ export type BroadcastTemplate = {
     message: string;
 };
 
+import { parseToWIB } from './date-wib';
+
 export const broadcastTemplates: BroadcastTemplate[] = [
     {
         id: 'reminder',
@@ -187,17 +189,21 @@ export function applyTemplate(
 
     try {
         if (eventDate) {
-            const date = new Date(eventDate);
-            eventDateFormatted = date.toLocaleDateString('id-ID', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-            });
-            eventTimeFormatted = date.toLocaleTimeString('id-ID', {
-                hour: '2-digit',
-                minute: '2-digit',
-            });
+            const date = parseToWIB(eventDate);
+            if (date) {
+                eventDateFormatted = date.toLocaleDateString('id-ID', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    timeZone: 'UTC',
+                });
+                eventTimeFormatted = date.toLocaleTimeString('id-ID', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'UTC',
+                });
+            }
         }
     } catch (e) {
         // Keep original if parsing fails

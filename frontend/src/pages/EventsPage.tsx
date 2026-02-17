@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { format, isToday, isTomorrow, isValid, parseISO } from 'date-fns'
 import { id } from 'date-fns/locale'
+import { parseToWIB } from '../lib/date-wib'
 import apiClient from '../lib/axios'
 
 interface Event {
@@ -26,9 +27,7 @@ interface Event {
 }
 
 function parseEventDate(value?: string) {
-  if (!value) return null
-  const date = parseISO(value)
-  return isValid(date) ? date : null
+  return parseToWIB(value)
 }
 
 function formatFeeShort(value: unknown) {

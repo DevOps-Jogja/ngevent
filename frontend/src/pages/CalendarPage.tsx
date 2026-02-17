@@ -5,7 +5,8 @@ import apiClient from '../lib/axios';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, startOfWeek, endOfWeek } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
-import { normalizeEvent, parseEventDate, type NormalizedEvent } from '../lib/event-normalize';
+import { normalizeEvent, type NormalizedEvent } from '../lib/event-normalize';
+import { parseToWIB } from '../lib/date-wib';
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -34,7 +35,7 @@ export default function CalendarPage() {
   // Filter upcoming events (events from today onwards)
   const upcomingEvents = eventsList.filter(event =>
     (() => {
-      const start = parseEventDate(event.start_date);
+      const start = parseToWIB(event.start_date);
       return start ? start >= new Date(new Date().setHours(0, 0, 0, 0)) : false;
     })()
   ).slice(0, 5);
@@ -47,7 +48,7 @@ export default function CalendarPage() {
 
   const getEventsForDate = (date: Date) => {
     return eventsList.filter((event) => {
-      const start = parseEventDate(event.start_date);
+      const start = parseToWIB(event.start_date);
       return start ? isSameDay(start, date) : false;
     });
   };
@@ -173,7 +174,7 @@ export default function CalendarPage() {
                       <div className="flex items-center justify-between">
                         <p className="text-xs text-gray-500 dark:text-gray-500">
                           {(() => {
-                            const start = parseEventDate(event.start_date);
+                            const start = parseToWIB(event.start_date);
                             return start ? format(start, 'HH:mm', { locale: id }) : '-';
                           })()}
                         </p>
@@ -230,7 +231,7 @@ export default function CalendarPage() {
                       </h4>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {(() => {
-                          const start = parseEventDate(event.start_date);
+                          const start = parseToWIB(event.start_date);
                           return start ? format(start, 'dd MMM, HH:mm', { locale: id }) : '-';
                         })()}
                       </p>

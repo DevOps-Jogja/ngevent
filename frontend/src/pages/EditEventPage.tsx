@@ -26,17 +26,16 @@ export default function EditEventPage() {
   const formatDateForInput = (dateString?: string | null) => {
     if (!dateString) return '';
 
-    // Parse the UTC date from backend
-    // Parse the UTC date from backend
+    // Parse the date from backend (stored as face-value UTC)
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '';
 
-    // Get local date components
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
+    // Use UTC methods to get the exact value stored in DB
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const hours = String(date.getUTCHours()).padStart(2, '0');
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
 
     // Format as YYYY-MM-DDTHH:mm for datetime-local input
     return `${year}-${month}-${day}T${hours}:${minutes}`;
@@ -153,8 +152,8 @@ export default function EditEventPage() {
       // Update event
       const eventData = {
         ...formData,
-        start_date: new Date(formData.start_date).toISOString(),
-        end_date: new Date(formData.end_date).toISOString(),
+        start_date: formData.start_date,
+        end_date: formData.end_date,
         image_url: imageUrl,
         capacity: formData.capacity ? parseInt(formData.capacity) : null,
         registration_fee: formData.registration_fee ? parseFloat(formData.registration_fee) : 0,

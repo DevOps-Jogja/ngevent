@@ -18,6 +18,7 @@ import {
 import apiClient from '../lib/axios';
 import { useAuth } from '../contexts/AuthContext';
 import { broadcastTemplates, applyTemplate } from '../lib/broadcastTemplates';
+import { parseToWIB } from '../lib/date-wib';
 
 type Event = {
     id: string;
@@ -417,9 +418,10 @@ export default function EventBroadcastPage() {
                                             </p>
                                             <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                                                 <span>
-                                                    {format(new Date(item.sentAt || item.sent_at || new Date()), 'dd MMM yyyy, HH:mm', {
-                                                        locale: localeId,
-                                                    })}
+                                                    {(() => {
+                                                        const d = parseToWIB(item.sentAt || item.sent_at);
+                                                        return d ? format(d, 'dd MMM yyyy, HH:mm', { locale: localeId }) : '-';
+                                                    })()}
                                                 </span>
                                                 <span className="flex items-center gap-1">
                                                     <Users className="w-3 h-3" />
@@ -445,9 +447,10 @@ export default function EventBroadcastPage() {
                                 <div>
                                     <p className="text-gray-500 dark:text-gray-400 mb-1">Tanggal</p>
                                     <p className="text-gray-900 dark:text-white font-medium">
-                                        {event.start_date ? format(new Date(event.start_date), 'dd MMMM yyyy, HH:mm', {
-                                            locale: localeId,
-                                        }) : '-'}
+                                        {(() => {
+                                            const d = parseToWIB(event.start_date);
+                                            return d ? format(d, 'dd MMMM yyyy, HH:mm', { locale: localeId }) : '-';
+                                        })()}
                                     </p>
                                 </div>
                                 {event.location && (
